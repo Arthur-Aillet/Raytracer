@@ -3,7 +3,7 @@
 ## File : Makefile
 ##
 
-NAME = rustracer
+NAME = raytracer
 
 all: $(NAME)
 

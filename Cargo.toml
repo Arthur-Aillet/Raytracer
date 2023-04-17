@@ -1,5 +1,5 @@
 [package]
-name = "rustracer"
+name = "raytracer"
 version = "0.1.0"
 edition = "2021"
 
