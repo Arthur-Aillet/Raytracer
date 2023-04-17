@@ -6,16 +6,17 @@
 //
 
 pub struct Point {
-    x: f64,
-    y: f64,
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
 }
 
 pub struct VectorF {
-    origin : Point,
-    direction: Point,
+    pub origin : Point,
+    pub direction: Point,
 }
 
-pub fn number_of_solution(a: f64, b: f64, c: f64) -> u8 {
+pub fn number_of_solution(a: f64, b: f64, c: f64) -> i8 {
     let delta: f64 = (b.powf(2 as f64)) - (4 as f64 * a * c);
 
     if delta < 0 as f64 {

@@ -6,6 +6,9 @@
 //
 
 mod ppm_interface;
+mod renderer;
+mod vectors;
+
 use std::path::Path;
 use std::fs::File;
 use serde_json;
