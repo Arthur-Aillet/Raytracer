@@ -39,12 +39,18 @@ pub struct Transform {
     scale : Scale,
 }
 
+struct Lens {
+    distance : f64,
+    height : i64,
+    width : i64,
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Camera {
     transform : Transform,
-    height: i64,
-    width: i64,
+    lens : Lens,
+    fov : i16,
 }
 
 #[derive(Debug, Deserialize)]
@@ -66,6 +72,12 @@ pub struct Primitives {
 pub struct Renderer {
     camera: Camera,
     primitives : Primitives,
+}
+
+impl Camera {
+    fn calulate_lens_distance() {
+        lens.distance = (lens.height / 2) / fov.tan();
+    }
 }
 
 impl Renderer {
