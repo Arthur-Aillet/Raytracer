@@ -3,7 +3,7 @@
 ## File : Makefile
 ##
 
-NAME = rustests
+NAME = rustracer
 
 all: $(NAME)
 
