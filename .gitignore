@@ -14,3 +14,9 @@ Cargo.lock
 
 # Binary name
 raytracer
+
+# .idea folder
+.idea
+
+# ppm files
+*.ppm
