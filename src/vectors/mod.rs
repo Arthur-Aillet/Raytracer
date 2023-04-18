@@ -55,6 +55,14 @@ impl PartialEq for VectorF {
 }
 
 impl VectorF {
+    /* Doesn't take into account if the origins aren't identical */
+    pub fn dot_product(&self, other: &VectorF) -> f64 {
+        let dx = self.direction.x * other.direction.x;
+        let dy = self.direction.y * other.direction.y;
+        let dz = self.direction.z * other.direction.z;
+        dx + dy + dz
+    }
+
     pub fn rotate(&mut self, x: f64, y: f64, z: f64) {
         let mut direction_matrix = Matrix::new(3, 1);
         direction_matrix.data[0][0] = self.direction.x;
