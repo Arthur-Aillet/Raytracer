@@ -24,7 +24,7 @@ impl PartialEq for Point {
 
 #[derive(Debug, Clone, Copy)]
 pub struct VectorF {
-    pub origin: Point,
+    pub origin : Point,
     pub direction: Point,
 }
 
@@ -48,7 +48,9 @@ impl Add<VectorF> for VectorF {
 
 impl PartialEq for VectorF {
     fn eq(&self, other: &Self) -> bool {
-        self.origin == other.origin && self.direction == other.direction
+        let vec1: VectorF = self.to_origin();
+        let vec2: VectorF = other.to_origin();
+        vec1.direction == vec2.direction
     }
 }
 
@@ -78,6 +80,22 @@ impl VectorF {
             z: self.direction.z + other.direction.z,
         }
     }
+    pub fn to_origin(&self) -> VectorF {
+        VectorF { origin: Point {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        }, direction: Point {
+            x: self.direction.x - self.origin.x,
+            y: self.direction.y - self.origin.y,
+            z: self.direction.z - self.origin.z,
+        }
+        }
+    }
+    pub fn len(&self) -> f64 {
+        let origin_v = self.to_origin();
+        (origin_v.direction.x.powi(2) + origin_v.direction.y.powi(2) + origin_v.direction.z.powi(2)).sqrt()
+    }
 }
 
 pub fn number_of_solution(a: f64, b: f64, c: f64) -> i8 {
@@ -88,7 +106,7 @@ pub fn number_of_solution(a: f64, b: f64, c: f64) -> i8 {
     } else if delta == 0 as f64 {
         return 1;
     } else {
-        return 2;
+        return 2
     }
 }
 
