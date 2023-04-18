@@ -23,6 +23,6 @@ fclean: clean
 re: fclean all
 
 test:
-	cargo test
+	cargo test -- --nocapture
 
 .PHONY: all clean test fclean  re
