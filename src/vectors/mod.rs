@@ -5,8 +5,8 @@
 // vector
 //
 
-use matrix::Matrix;
 use crate::matrix;
+use matrix::Matrix;
 use std::ops::Add;
 
 #[derive(Debug, Clone)]
@@ -18,7 +18,7 @@ pub struct Point {
 
 #[derive(Debug)]
 pub struct VectorF {
-    pub origin : Point,
+    pub origin: Point,
     pub direction: Point,
 }
 
@@ -41,7 +41,7 @@ impl Add<VectorF> for VectorF {
 }
 
 impl VectorF {
-    pub fn rotate(&mut self, x : f64, y : f64, z : f64) {
+    pub fn rotate(&mut self, x: f64, y: f64, z: f64) {
         let mut rotated = Matrix::new(3, 1);
 
         rotated.multiply(&Matrix::euler_rotation(x, y, z));
@@ -71,7 +71,7 @@ pub fn number_of_solution(a: f64, b: f64, c: f64) -> i8 {
     } else if delta == 0 as f64 {
         return 1;
     } else {
-        return 2
+        return 2;
     }
 }
 

@@ -6,9 +6,9 @@
 //
 
 mod ppm_interface;
-mod renderer;
-mod vectors;
-mod matrix;
+pub mod renderer;
+pub mod vectors;
+pub mod matrix;
 
 use serde;
 use serde_json;

@@ -9,8 +9,8 @@ use std::ops::Mul;
 
 #[derive(Debug, Clone)]
 pub struct Matrix {
-    rows: usize,
-    cols: usize,
+    pub rows: usize,
+    pub cols: usize,
     pub data: Vec<Vec<f64>>,
 }
 
@@ -53,21 +53,16 @@ impl Matrix {
                 }
             }
         }
-
         result
     }
 
-    pub fn euler_rotation(phi_degrees: f64, theta_degrees: f64, psi_degrees: f64) -> Matrix {
-        let phi = phi_degrees * (std::f64::consts::PI / 180.0);
-        let theta = theta_degrees * (std::f64::consts::PI / 180.0);
-        let psi = psi_degrees * (std::f64::consts::PI / 180.0);
-
-        let cos_phi = phi.cos();
-        let sin_phi = phi.sin();
-        let cos_theta = theta.cos();
-        let sin_theta = theta.sin();
-        let cos_psi = psi.cos();
-        let sin_psi = psi.sin();
+    pub fn euler_rotation(phi: f64, theta: f64, psi: f64) -> Matrix {
+        let cos_phi = phi.to_radians().cos();
+        let sin_phi = phi.to_radians().sin();
+        let cos_theta = theta.to_radians().cos();
+        let sin_theta = theta.to_radians().sin();
+        let cos_psi = psi.to_radians().cos();
+        let sin_psi = psi.to_radians().sin();
 
         let mut result = Matrix::new(3, 3);
 
