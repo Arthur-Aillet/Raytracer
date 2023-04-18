@@ -5,15 +5,13 @@
 // renderer
 //
 
-use vectors::VectorF;
+pub mod primitives;
 use crate::vectors;
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Point {
-    x: f64,
-    y: f64,
-    z: f64,
+pub struct Camera {
+    pos: vectors::Point,
+    height: i64,
+    width: i64,
 }
 
 #[derive(Debug, Deserialize)]
@@ -99,6 +97,11 @@ impl Camera {
 impl Renderer {
     pub fn new() -> Renderer {
         Renderer {
+            Camera {
+                vectors::Point {0, 0},
+                0,
+                0,
+            }
         }
     }
 
