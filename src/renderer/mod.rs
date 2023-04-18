@@ -33,6 +33,7 @@ pub struct Transform {
 
 pub struct Camera {
     transform: Transform,
+    focal_lenght: f64,
     height: f64,
     width: f64,
     fov: i16,
@@ -167,9 +168,10 @@ pub struct Directional {
 }
 
 pub struct Ambiant {
-    collect: Color,
+    color: Color,
     strength: f64,
 }
+
 pub struct Lights {
     directional: Vect<Directional>,
     ambiant: Vect<Ambiant>,
