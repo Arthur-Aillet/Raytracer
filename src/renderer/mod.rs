@@ -127,6 +127,11 @@ impl Renderer {
     pub fn render(&self) -> Vec<u8> {
         let mut pixels:Vec<u8> = vec![0; (self.camera.lens.width * self.camera.lens.height) as usize];
 
+        for i in 0..self.camera.lens.height {
+            for j in 0..self.camera.lens.width {
+                self.camera.get_pixel_vector(i, j);
+            }
+        }
         pixels
     }
 }
