@@ -10,10 +10,10 @@ mod renderer;
 mod vectors;
 mod matrix;
 
-use std::path::Path;
-use std::fs::File;
-use serde_json;
 use serde;
+use serde_json;
+use std::fs::File;
+use std::path::Path;
 
 use std::env;
 
@@ -28,5 +28,3 @@ fn main() -> std::io::Result<()> {
     ppm.write(1000, 1000);
     Ok(())
 }
-
-
