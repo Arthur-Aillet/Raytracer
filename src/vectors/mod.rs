@@ -42,11 +42,11 @@ impl Add<VectorF> for VectorF {
 
 impl PartialEq for VectorF {
     fn eq(&self, other: &Self) -> bool {
-        let vec1: Point = self.to_origin();
-        let vec2: Point = other.to_origin();
-        vec1.x == vec2.x
-            && vec1.y == vec2.y
-            && vec1.z == vec2.z
+        let vec1: VectorF = self.to_origin();
+        let vec2: VectorF = other.to_origin();
+        vec1.direction.x == vec2.direction.x
+            && vec1.direction.y == vec2.direction.y
+            && vec1.direction.z == vec2.direction.z
     }
 }
 
@@ -59,16 +59,21 @@ impl VectorF {
         self.direction.y = rotated.data[0][1];
         self.direction.z = rotated.data[0][2];
     }
-    pub fn to_origin(&self) -> Point {
-        Point {
-            x: self.direction.x - self.origin.x,
-            y: self.direction.y - self.origin.y,
-            z: self.direction.z - self.origin.z,
+    pub fn to_origin(&self) -> VectorF {
+        VectorF { origin: Point {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            }, direction: Point {
+                x: self.direction.x - self.origin.x,
+                y: self.direction.y - self.origin.y,
+                z: self.direction.z - self.origin.z,
+            }
         }
     }
     pub fn len(&self) -> f64 {
         let origin_v = self.to_origin();
-        (origin_v.x.powi(2) + origin_v.y.powi(2) + origin_v.z.powi(2)).sqrt()
+        (origin_v.direction.x.powi(2) + origin_v.direction.y.powi(2) + origin_v.direction.z.powi(2)).sqrt()
     }
 }
 
