@@ -61,6 +61,13 @@ impl VectorF {
             z: self.direction.z + other.direction.z,
         }
     }
+    pub fn to_origin(self) -> Point {
+        Point {
+            x: self.direction.x - self.origin.x,
+            y: self.direction.y - self.origin.y,
+            z: self.direction.z - self.origin.z,
+        }
+    }
 }
 
 pub fn number_of_solution(a: f64, b: f64, c: f64) -> i8 {
