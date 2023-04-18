@@ -5,23 +5,21 @@
 // main
 //
 
+
 mod ppm_interface;
 use std::path::Path;
 use std::fs::File;
-use serde_json;
-use serde;
+use std::io::Read;
+use librustconfig::config::{Config, OptionType};
 
 use std::env;
 
 fn main() -> std::io::Result<()> {
-    let json_file_path = Path::new("../ex.json");
-    let file = File::open(json_file_path);
+    let mut file = std::fs::File::open("data.txt").unwrap();
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).unwrap();
+    print!("{}", contents);
 
-    println!("Hello, world!");
-    let args: Vec<String> = env::args().collect();
-    let mut ppm = ppm_interface::PPMInterface::new(String::from(args[1].clone()));
-
-    ppm.write(1000, 1000);
     Ok(())
 }
 
