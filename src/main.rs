@@ -8,6 +8,7 @@
 mod ppm_interface;
 mod renderer;
 mod vectors;
+mod matrix;
 
 use std::path::Path;
 use std::fs::File;
