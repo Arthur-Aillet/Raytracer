@@ -124,8 +124,8 @@ impl Renderer {
         }
     }
 
-    pub fn render() -> Vec<u8> {
-        let mut pixels:Vec<u8> = Vec::new();
+    pub fn render(&self) -> Vec<u8> {
+        let mut pixels:Vec<u8> = vec![0; (self.camera.lens.width * self.camera.lens.height) as usize];
 
         pixels
     }
