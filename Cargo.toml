@@ -10,4 +10,4 @@ serde_json = "1.0"
 
 [[test]]
 name = "matrix_tests"
-path = "tests/matrix.rs"
+path = "tests/matrix_test.rs"
