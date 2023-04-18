@@ -2,194 +2,136 @@
 // EPITECH PROJECT, 2023
 // Rustracer
 // File description:
-// mod
+// renderer
 //
 
-mod vectors;
+pub mod primitives;
+use crate::vectors;
+use vectors::Point;
+use vectors::VectorF;
 
-pub struct Point {
-    x: f64,
-    y: f64,
-    z: f64,
-}
-
-pub struct Rotation {
-    x: f64,
-    y: f64,
-    z: f64,
-}
-
-pub struct Scale {
-    x: f64,
-    y: f64,
-    z: f64,
-}
-
+#[derive(Debug, Clone)]
 pub struct Transform {
-    pos: Point,
-    rotation: Rotation,
-    scale: Scale,
+    pos: vectors::Point,
+    rotation : vectors::Point,
+    scale : vectors::Point,
 }
 
-pub struct Camera {
-    transform: Transform,
-    focal_lenght: f64,
-    height: f64,
-    width: f64,
-    fov: i16,
-}
-
-pub struct Color {
-    r: i8,
-    g: i8,
-    b: i8,
-    a: i8,
-}
-
-pub struct Texture {
-    texture_type: String,
-    color: Color,
-}
-
-impl Texture {
-    fn texture(&self, x: f64, y: f64) -> Color {
-        if (texture_type == "color") {
-            return (self.color);
+impl Transform {
+    pub fn new(
+        x_pos: f64,
+        y_pos: f64,
+        z_pos: f64,
+        x_rot: f64,
+        y_rot: f64,
+        z_rot: f64,
+        x_sca: f64,
+        y_sca: f64,
+        z_sca: f64,
+    ) -> Self {
+        Transform {
+            pos: Point {
+                x: x_pos,
+                y: y_pos,
+                z: z_pos,
+            },
+            rotation: Point {
+                x: x_rot,
+                y: y_rot,
+                z: z_rot,
+            },
+            scale: Point {
+                x: z_sca,
+                y: z_sca,
+                z: z_sca,
+            },
         }
     }
 }
 
-pub struct Sphere {
-    transform: Transform,
-    texture: Texture,
-    radius: f64,
-}
-
-impl Sphere {
-    fn diameter(&self) -> f64 {
-        radius * 2;
-    }
-
-    fn circumference(&self) -> f64 {
-        radius * std::f64::consts::PI * 2
-    }
-
-    fn surface(&self) -> f64 {
-        radius.powi(2) * std::f64::consts::PI * 4
-    }
-
-    fn volume(&self) -> f64 {
-        ((std::f64::consts::PI * radius.powi(3)) * 4) / 3
-    }
-}
-
-pub struct Plane {
-    transform: Transform,
-    texture: Texture,
-    origin: Point,
-    vector: Point,
-}
-
-impl Plane {
-    fn surface(&self) -> f64 {
-        height * width;
-    }
-
-    fn perimeter(&self) -> f64 {
-        2 * (height + width);
-    }
-}
-
-pub struct Cylinder {
-    transform: Transform,
-    texture: Texture,
-    height: f64,
-    radius: f64,
-}
-
-impl Cylinder {
-    fn lateral_surface(&self) -> f64 {
-        2 * std::f64::consts::PI * radius * height;
-    }
-
-    fn circle_surface(&self) -> f64 {
-        std::f64::consts::PI * radius.powi(2);
-    }
-
-    fn total_surface(&self) -> f64 {
-        2 * std::f64::consts::PI * radius * (height + radius);
-    }
-
-    fn volume(&self) -> f64 {
-        std::f64::consts::PI * radius.powi(2) * height;
-    }
-}
-
-pub struct Cone {
-    transform: Transform,
-    texture: Texture,
-    radius: f64,
-    height: f64,
-}
-
-impl Cone {
-    fn slanted_height(&self) -> f64 {
-        (radius.powi(2) + height.powi(2)).sqrt();
-    }
-
-    fn lateral_surface(&self) -> f64 {
-        std::f64::consts::PI * radius * (radius.powi(2) + height.powi(2)).sqrt();
-    }
-
-    fn circle_surface(&self) -> f64 {
-        std::f64::consts::PI * radius.powi(2);
-    }
-
-    fn total_surface(&self) -> f64 {
-        std::f64::consts::PI * radius.powi(2) + std::f64::consts::PI * radius * (radius.powi(2) + height.powi(2)).sqrt();
-    }
-
-    fn volume(&self) -> f64 {
-        (std::f64::consts::PI * radius.powi(2) * height) / 3;
-    }
-}
-
-pub struct Primitives {
-    spheres: Vec<Sphere>,
-    planes: Vec<Plane>,
-    cylinders: Vec<Cylinder>,
-    cones: Vec<Cone>,
-}
-
-pub struct Directional {
-    transform: Transform,
-    color: Color,
-    strength: f64,
-}
-
-pub struct Ambiant {
-    color: Color,
-    strength: f64,
-}
-
-pub struct Lights {
-    directional: Vect<Directional>,
-    ambiant: Vect<Ambiant>,
-}
-
+#[derive(Debug)]
 pub struct Renderer {
     camera: Camera,
-    primitives: Primitives,
-    lights: Lights,
+}
+
+#[derive(Debug)]
+struct Lens {
+    height: i64,
+    width: i64,
+    distance: f64,
+    vector_to_first_pixel: VectorF,
+}
+
+#[derive(Debug)]
+pub struct Camera {
+    transform : Transform,
+    lens : Lens,
+    fov : i16,
+}
+
+impl Camera {
+    fn new() -> Self {
+        let mut result = Camera {
+            transform: Transform::new(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+            fov: 70,
+            lens: Lens {
+                width: 1920,
+                height: 1080,
+                distance: 0.0,
+                vector_to_first_pixel: VectorF {
+                    origin: Point {
+                        x: 0.0,
+                        y: 0.0,
+                        z: 0.0,
+                    },
+                    direction: Point {
+                        x: 0.0,
+                        y: 0.0,
+                        z: 0.0,
+                    },
+                },
+            },
+        };
+        result.calculate_lens_distance();
+        result.lens.vector_to_first_pixel.direction.x = -result.lens.width as f64 / 2.0;
+        result.lens.vector_to_first_pixel.direction.y = result.lens.height as f64 / 2.0;
+        result.lens.vector_to_first_pixel.direction.z = result.lens.distance + result.lens.width as f64 / 2.0;
+        result
+    }
+
+    fn get_pixel_vector(&self, x: i64, y: i64) -> VectorF {
+        let mut vectors = vectors::VectorF {
+            origin: self.transform.pos.clone(),
+            direction: vectors::Point {
+                x: self.lens.vector_to_first_pixel.direction.x + x as f64,
+                y: self.lens.vector_to_first_pixel.direction.y + y as f64,
+                z: self.lens.vector_to_first_pixel.direction.z,
+            },
+        };
+        vectors.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        vectors
+    }
+
+    fn calculate_lens_distance(&mut self) {
+        self.lens.distance = (self.lens.height as f64 / 2.0) / (self.fov as f64).tan();
+    }
 }
 
 impl Renderer {
     pub fn new() -> Renderer {
         Renderer {
+            camera: Camera::new()
         }
     }
 
-    pub fn render() -> Vec<u8> {
-        let mut pixels = Vec::new();
+    pub fn render(&self) -> Vec<u8> {
+        let mut pixels:Vec<u8> = vec![0; (self.camera.lens.width * self.camera.lens.height) as usize];
+
+        for i in 0..self.camera.lens.height {
+            for j in 0..self.camera.lens.width {
+                self.camera.get_pixel_vector(i, j);
+            }
+        }
+        pixels
     }
 }

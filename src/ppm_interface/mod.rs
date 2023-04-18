@@ -19,14 +19,12 @@ impl PPMInterface {
         let file = File::create(file_path).unwrap();
         let content = Vec::new();
 
-        PPMInterface {
-            file,
-            content
-        }
+        PPMInterface { file, content }
     }
 
     fn create_header(&mut self, width: u32, height: u32) {
-        self.content.extend(format!("P6\n{} {}\n255\n", width, height).as_bytes());
+        self.content
+            .extend(format!("P6\n{} {}\n255\n", width, height).as_bytes());
     }
 
     fn write_white_pixel(&mut self) {

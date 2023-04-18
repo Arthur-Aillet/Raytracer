@@ -6,3 +6,11 @@ edition = "2021"
 
 [dependencies]
 librustconfig = "0.1.*"
+
+[[test]]
+name = "matrix_tests"
+path = "tests/matrix_test.rs"
+
+[[test]]
+name = "vector_tests"
+path = "tests/vector_test.rs"
