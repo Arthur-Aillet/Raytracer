@@ -9,14 +9,20 @@ use crate::matrix;
 use matrix::Matrix;
 use std::ops::Add;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Point {
     pub x: f64,
     pub y: f64,
     pub z: f64,
 }
 
-#[derive(Debug)]
+impl PartialEq for Point {
+    fn eq(&self, other: &Self) -> bool {
+        self.x == other.x && self.y == other.y && self.z == other.z
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
 pub struct VectorF {
     pub origin: Point,
     pub direction: Point,
@@ -40,16 +46,27 @@ impl Add<VectorF> for VectorF {
     }
 }
 
+impl PartialEq for VectorF {
+    fn eq(&self, other: &Self) -> bool {
+        self.origin == other.origin && self.direction == other.direction
+    }
+}
+
 impl VectorF {
     pub fn rotate(&mut self, x: f64, y: f64, z: f64) {
-        let mut rotated = Matrix::new(3, 1);
+        let mut direction_matrix = Matrix::new(3, 1);
+        direction_matrix.data[0][0] = self.direction.x;
+        direction_matrix.data[1][0] = self.direction.y;
+        direction_matrix.data[2][0] = self.direction.z;
 
-        rotated.multiply(&Matrix::euler_rotation(x, y, z));
-        self.direction.x = rotated.data[0][0];
-        self.direction.y = rotated.data[0][1];
-        self.direction.z = rotated.data[0][2];
+        let rotation_matrix = Matrix::euler_rotation(x, y, z);
+        let rotated_direction_matrix = rotation_matrix.multiply(&direction_matrix);
+
+        self.direction.x = rotated_direction_matrix.data[0][0];
+        self.direction.y = rotated_direction_matrix.data[1][0];
+        self.direction.z = rotated_direction_matrix.data[2][0];
     }
-    pub fn add(mut self, other: VectorF) {
+    pub fn add(&mut self, other: VectorF) {
         self.origin = Point {
             x: self.origin.x + other.origin.x,
             y: self.origin.y + other.origin.y,
