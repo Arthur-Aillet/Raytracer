@@ -6,14 +6,16 @@
 //
 
 use crate::vectors;
+use crate::vectors::resolve_quadratic_equation;
 
 pub trait Object {
     fn intersection(&self, ray: vectors::VectorF) -> bool;
 }
 
+#[derive(Debug)]
 pub struct Sphere {
-    origin: vectors::Point,
-    radius: f64,
+    pub origin: vectors::Point,
+    pub radius: f64,
 }
 
 pub struct Plan {
@@ -41,7 +43,12 @@ impl Plan {
 
 impl Object for Sphere {
     fn intersection(&self, ray: vectors::VectorF) -> bool {
-        return true;
+        //resolve_quadratic_equation(ray.direction * ray.direction, 2 * ray.origin * ray.direction, ray.origin * ray.origin - radius * radius);
+        if ray.direction.x > 50.0 {
+            true
+        } else {
+            false
+        }
     }
 }
 

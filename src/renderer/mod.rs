@@ -9,6 +9,7 @@ pub mod primitives;
 use crate::vectors;
 use vectors::Point;
 use vectors::VectorF;
+use crate::renderer::primitives::{Object, Sphere};
 
 #[derive(Debug, Clone)]
 pub struct Transform {
@@ -52,6 +53,7 @@ impl Transform {
 #[derive(Debug)]
 pub struct Renderer {
     camera: Camera,
+    object: Sphere,
 }
 
 #[derive(Debug)]
@@ -120,16 +122,24 @@ impl Camera {
 impl Renderer {
     pub fn new() -> Renderer {
         Renderer {
-            camera: Camera::new()
+            camera: Camera::new(),
+            object: Sphere {
+                origin: Point {x:0.0, y:0.0, z:0.0},
+                radius: 10.0
+            }
         }
     }
 
     pub fn render(&self) -> Vec<u8> {
-        let mut pixels:Vec<u8> = vec![0; (self.camera.lens.width * self.camera.lens.height) as usize];
+        let mut pixels:Vec<u8> = Vec::new();
 
         for i in 0..self.camera.lens.height {
             for j in 0..self.camera.lens.width {
-                self.camera.get_pixel_vector(i, j);
+                if self.object.intersection(self.camera.get_pixel_vector(i, j)) == true {
+                    pixels.extend(&[0xFF, 0x00, 0x00]);
+                } else {
+                    pixels.extend(&[0x00, 0xFF, 0xFF]);
+                }
             }
         }
         pixels
