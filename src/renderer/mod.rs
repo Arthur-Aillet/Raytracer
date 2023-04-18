@@ -7,65 +7,178 @@
 
 mod vectors;
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct Point {
     x: f64,
     y: f64,
     z: f64,
 }
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct Rotation {
     x: f64,
     y: f64,
     z: f64,
 }
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct Scale {
     x: f64,
     y: f64,
     z: f64,
 }
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct Transform {
     pos: Point,
-    rotation : Rotation,
-    scale : Scale,
+    rotation: Rotation,
+    scale: Scale,
 }
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct Camera {
-    transform : Transform,
-    height: i64,
-    width: i64,
+    transform: Transform,
+    height: f64,
+    width: f64,
+    fov: i16,
 }
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
+pub struct Color {
+    r: i8,
+    g: i8,
+    b: i8,
+    a: i8,
+}
+
+pub struct Texture {
+    texture_type: String,
+    color: Color,
+}
+
+impl Texture {
+    fn texture(&self, x: f64, y: f64) -> Color {
+        if (texture_type == "color") {
+            return (self.color);
+        }
+    }
+}
+
 pub struct Sphere {
-    transform : Transform,
-    color : Color
+    transform: Transform,
+    texture: Texture,
+    radius: f64,
 }
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
+impl Sphere {
+    fn diameter(&self) -> f64 {
+        radius * 2;
+    }
+
+    fn circumference(&self) -> f64 {
+        radius * std::f64::consts::PI * 2
+    }
+
+    fn surface(&self) -> f64 {
+        radius.powi(2) * std::f64::consts::PI * 4
+    }
+
+    fn volume(&self) -> f64 {
+        ((std::f64::consts::PI * radius.powi(3)) * 4) / 3
+    }
+}
+
+pub struct Plane {
+    transform: Transform,
+    texture: Texture,
+    origin: Point,
+    vector: Point,
+}
+
+impl Plane {
+    fn surface(&self) -> f64 {
+        height * width;
+    }
+
+    fn perimeter(&self) -> f64 {
+        2 * (height + width);
+    }
+}
+
+pub struct Cylinder {
+    transform: Transform,
+    texture: Texture,
+    height: f64,
+    radius: f64,
+}
+
+impl Cylinder {
+    fn lateral_surface(&self) -> f64 {
+        2 * std::f64::consts::PI * radius * height;
+    }
+
+    fn circle_surface(&self) -> f64 {
+        std::f64::consts::PI * radius.powi(2);
+    }
+
+    fn total_surface(&self) -> f64 {
+        2 * std::f64::consts::PI * radius * (height + radius);
+    }
+
+    fn volume(&self) -> f64 {
+        std::f64::consts::PI * radius.powi(2) * height;
+    }
+}
+
+pub struct Cone {
+    transform: Transform,
+    texture: Texture,
+    radius: f64,
+    height: f64,
+}
+
+impl Cone {
+    fn slanted_height(&self) -> f64 {
+        (radius.powi(2) + height.powi(2)).sqrt();
+    }
+
+    fn lateral_surface(&self) -> f64 {
+        std::f64::consts::PI * radius * (radius.powi(2) + height.powi(2)).sqrt();
+    }
+
+    fn circle_surface(&self) -> f64 {
+        std::f64::consts::PI * radius.powi(2);
+    }
+
+    fn total_surface(&self) -> f64 {
+        std::f64::consts::PI * radius.powi(2) + std::f64::consts::PI * radius * (radius.powi(2) + height.powi(2)).sqrt();
+    }
+
+    fn volume(&self) -> f64 {
+        (std::f64::consts::PI * radius.powi(2) * height) / 3;
+    }
+}
+
 pub struct Primitives {
     spheres: Vec<Sphere>,
-    lights: Vec<Lights>,
+    planes: Vec<Plane>,
+    cylinders: Vec<Cylinder>,
+    cones: Vec<Cone>,
 }
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
+pub struct Directional {
+    transform: Transform,
+    color: Color,
+    strength: f64,
+}
+
+pub struct Ambiant {
+    collect: Color,
+    strength: f64,
+}
+pub struct Lights {
+    directional: Vect<Directional>,
+    ambiant: Vect<Ambiant>,
+}
+
 pub struct Renderer {
     camera: Camera,
-    primitives : Primitives,
+    primitives: Primitives,
+    lights: Lights,
 }
 
 impl Renderer {
