@@ -7,36 +7,8 @@
 
 pub mod primitives;
 use crate::vectors;
-use crate::vectors::Point;
 
-<<<<<<< HEAD
-pub struct Camera {
-    pos: vectors::Point,
-    height: i64,
-    width: i64,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Rotation {
-    x: f64,
-    y: f64,
-    z: f64,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Scale {
-    x: f64,
-    y: f64,
-    z: f64,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-=======
 #[derive(Debug, Clone)]
->>>>>>> feat/renderer
 pub struct Transform {
     pos: vectors::Point,
     rotation : vectors::Point,
@@ -45,7 +17,7 @@ pub struct Transform {
 
 impl Transform {
     pub fn new (x_pos: f64, y_pos: f64, z_pos: f64, x_rot: f64, y_rot: f64, z_rot: f64, x_sca: f64, y_sca: f64,  z_sca: f64) -> Self {
-        Transform { pos: Point {x:x_pos, y:y_pos, z:z_pos}, rotation: Point{x:x_rot, y:y_rot, z:z_rot}, scale: Point{x:z_sca, y:z_sca, z:z_sca}}
+        Transform { pos: vectors::Point {x:x_pos, y:y_pos, z:z_pos}, rotation: vectors::Point{x:x_rot, y:y_rot, z:z_rot}, scale: vectors::Point{x:z_sca, y:z_sca, z:z_sca}}
     }
 }
 
@@ -59,7 +31,7 @@ struct Lens {
     height : i64,
     width : i64,
     distance : f64,
-    vector_to_first_pixel : VectorF,
+    vector_to_first_pixel : vectors::VectorF,
 }
 
 #[derive(Debug)]
@@ -78,7 +50,7 @@ impl Camera {
                 width : 1920,
                 height : 1080,
                 distance : 0.0,
-                vector_to_first_pixel : VectorF { origin: Point { x:0.0, y:0.0, z:0.0 }, direction: Point { x:0.0, y:0.0, z:0.0 } },
+                vector_to_first_pixel : vectors::VectorF { origin: vectors::Point { x:0.0, y:0.0, z:0.0 }, direction: vectors::Point { x:0.0, y:0.0, z:0.0 } },
             }
         };
         result.calculate_lens_distance();
@@ -88,7 +60,7 @@ impl Camera {
         result
     }
 
-    fn get_pixel_vector(&self, x:i64, y:i64) -> VectorF {
+    fn get_pixel_vector(&self, x:i64, y:i64) -> vectors::VectorF {
         let mut vectors = vectors::VectorF {
             origin: self.transform.pos.clone(),
             direction: vectors::Point {

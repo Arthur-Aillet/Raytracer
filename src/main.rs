@@ -8,6 +8,8 @@
 mod ppm_interface;
 pub mod vectors;
 pub mod renderer;
+use std::path::Path;
+use std::fs::File;
 
 use std::env;
 
