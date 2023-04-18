@@ -40,6 +40,16 @@ impl Add<VectorF> for VectorF {
     }
 }
 
+impl PartialEq for VectorF {
+    fn eq(&self, other: &Self) -> bool {
+        let vec1: Point = self.to_origin();
+        let vec2: Point = other.to_origin();
+        vec1.x == vec2.x
+            && vec1.y == vec2.y
+            && vec1.z == vec2.z
+    }
+}
+
 impl VectorF {
     pub fn rotate(&mut self, x : f64, y : f64, z : f64) {
         let mut rotated = Matrix::new(3, 1);
@@ -49,24 +59,16 @@ impl VectorF {
         self.direction.y = rotated.data[0][1];
         self.direction.z = rotated.data[0][2];
     }
-    pub fn add(mut self, other: VectorF) {
-        self.origin = Point {
-            x: self.origin.x + other.origin.x,
-            y: self.origin.y + other.origin.y,
-            z: self.origin.z + other.origin.z,
-        };
-        self.direction = Point {
-            x: self.direction.x + other.direction.x,
-            y: self.direction.y + other.direction.y,
-            z: self.direction.z + other.direction.z,
-        }
-    }
-    pub fn to_origin(self) -> Point {
+    pub fn to_origin(&self) -> Point {
         Point {
             x: self.direction.x - self.origin.x,
             y: self.direction.y - self.origin.y,
             z: self.direction.z - self.origin.z,
         }
+    }
+    pub fn len(&self) -> f64 {
+        let origin_v = self.to_origin();
+        (origin_v.x.powi(2) + origin_v.y.powi(2) + origin_v.z.powi(2)).sqrt()
     }
 }
 
