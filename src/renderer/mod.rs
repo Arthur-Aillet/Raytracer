@@ -33,7 +33,7 @@ pub struct Transform {
 
 pub struct Camera {
     transform: Transform,
-    focal_lenght: f64,
+    focal_length: f64,
     height: f64,
     width: f64,
     fov: i16,
