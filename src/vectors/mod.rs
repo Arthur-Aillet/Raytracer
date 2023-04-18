@@ -33,14 +33,14 @@ impl Add<VectorF> for VectorF {
     fn add(self, other: VectorF) -> VectorF {
         VectorF {
             origin: Point {
-                x: self.origin.x + other.origin.x,
-                y: self.origin.y + other.origin.y,
-                z: self.origin.z + other.origin.z,
+                x: self.origin.x,
+                y: self.origin.y,
+                z: self.origin.z,
             },
             direction: Point {
-                x: self.direction.x + other.direction.x,
-                y: self.direction.y + other.direction.y,
-                z: self.direction.z + other.direction.z,
+                x: self.direction.x + other.direction.x - other.origin.x,
+                y: self.direction.y + other.direction.y - other.origin.y,
+                z: self.direction.z + other.direction.z - other.origin.z,
             },
         }
     }
@@ -70,16 +70,17 @@ impl VectorF {
     }
     pub fn add(&mut self, other: VectorF) {
         self.origin = Point {
-            x: self.origin.x + other.origin.x,
-            y: self.origin.y + other.origin.y,
-            z: self.origin.z + other.origin.z,
+            x: self.origin.x,
+            y: self.origin.y,
+            z: self.origin.z,
         };
         self.direction = Point {
-            x: self.direction.x + other.direction.x,
-            y: self.direction.y + other.direction.y,
-            z: self.direction.z + other.direction.z,
+            x: self.direction.x + other.direction.x - other.origin.x,
+            y: self.direction.y + other.direction.y - other.origin.y,
+            z: self.direction.z + other.direction.z - other.origin.z,
         }
     }
+
     pub fn to_origin(&self) -> VectorF {
         VectorF { origin: Point {
             x: 0.0,
@@ -92,6 +93,7 @@ impl VectorF {
         }
         }
     }
+
     pub fn len(&self) -> f64 {
         let origin_v = self.to_origin();
         (origin_v.direction.x.powi(2) + origin_v.direction.y.powi(2) + origin_v.direction.z.powi(2)).sqrt()

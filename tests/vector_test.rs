@@ -44,18 +44,19 @@ mod tests {
         let result = vec1.clone() + vec2.clone();
 
         assert_eq!(
-            result,
-            VectorF {
-                origin: Point {
-                    x: 8.0,
-                    y: 10.0,
-                    z: 12.0,
-                },
-                direction: Point {
-                    x: 14.0,
-                    y: 16.0,
-                    z: 18.0,
-                },
+            result.origin,
+            Point {
+                x: 1.0,
+                y: 2.0,
+                z: 3.0,
+            }
+        );
+        assert_eq!(
+            result.direction,
+            Point {
+                x: 7.0,
+                y: 8.0,
+                z: 9.0,
             }
         );
     }
@@ -117,18 +118,19 @@ mod tests {
         vec3.add(vec2);
 
         assert_eq!(
-            vec3,
-            VectorF {
-                origin: Point {
-                    x: 8.0,
-                    y: 10.0,
-                    z: 12.0,
-                },
-                direction: Point {
-                    x: 14.0,
-                    y: 16.0,
-                    z: 18.0,
-                },
+            vec3.origin,
+            Point {
+                x: 1.0,
+                y: 2.0,
+                z: 3.0,
+            }
+        );
+        assert_eq!(
+            vec3.direction,
+            Point {
+                x: 7.0,
+                y: 8.0,
+                z: 9.0,
             }
         );
     }
