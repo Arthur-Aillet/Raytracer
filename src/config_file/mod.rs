@@ -40,10 +40,10 @@ pub struct Camera {
 }
 
 pub struct Color {
-    r: i8,
-    g: i8,
-    b: i8,
-    a: i8,
+    r: u8,
+    g: u8,
+    b: u8,
+    a: u8,
 }
 
 pub struct Texture {
