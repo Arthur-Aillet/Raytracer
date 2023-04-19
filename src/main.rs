@@ -5,14 +5,16 @@
 // main
 //
 
+// use json_parser::Renderer;
+use std::fs;
+use serde_json::{Result, Value};
+
 
 mod ppm_interface;
 mod renderer;
 mod vectors;
 mod matrix;
-
-use std::fs;
-use librustconfig::config::Config;
+// mod json_parser;
 
 // fn main() -> std::io::Result<()> {
 //     let mut file = std::fs::File::open("config_file/ex.cfg").unwrap();
@@ -23,20 +25,18 @@ use librustconfig::config::Config;
 //     Ok(())
 // }
 
-fn main() {
-    let mut cfg = Config::new();
-    if cfg.load_from_string(
-        "section1 : {
-            integer_value = -12;
-            boolean_value = true;
-            int64_value = 99999L;
-            float_value = 0.9999991;
-            string_value = \"test string value \";
-        }"
-    ).is_err() {
-        panic!("Can\t load configuration from string value!");
+// fn main() {
+    // let renderer : Renderer;
+    // renderer.get_renderer_from_file("src/jsom_parser/ex.json".to_string());
+    // print!("test:{}", renderer.camera.height)
+    // let data = fs::read_to_string("src/config_file/ex.json").expect("Unable to read file");
+    // let json: Value = serde_json::from_str(&data.to_string()).unwrap();
+    // for element in json["primitives"]["spheres"].as_array() {
+    //     print!("{}\n", element[0]);
+    // }
+    fn main() {
+        let data = fs::read_to_string("src/config_file/ex.json").expect("Unable to read file");
+        let v: Value = serde_json::from_str(&data.to_string()).unwrap();
+        println!("{}", v);
     }
-}
-
-
-
+// }
