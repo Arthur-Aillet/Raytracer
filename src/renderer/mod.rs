@@ -70,6 +70,9 @@ pub struct Camera {
     transform : Transform,
     lens : Lens,
     fov : i16,
+    diffuse: f64,
+    ambient: f64,
+    specular: f64,
 }
 
 impl Camera {
@@ -77,6 +80,9 @@ impl Camera {
         let mut result = Camera {
             transform: Transform::new(0.0, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, 0.0, 0.0),
             fov: 70,
+            diffuse: 0.7,
+            ambient: 0.1,
+            specular: 0.7,
             lens: Lens {
                 width: 1920,
                 height: 1080,
@@ -117,6 +123,15 @@ impl Camera {
     fn calculate_lens_distance(&mut self) {
         self.lens.distance = (self.lens.height as f64 / 2.0) / (self.fov as f64).tan();
     }
+
+    pub fn calculate_tone_mapping(val: f64) -> f64{
+        let a = 2.51;
+        let b = 0.03;
+        let c = 2.43;
+        let d = 0.59;
+        let e = 0.14;
+        ((val * (a * val + b))/(val * (c * val + d) + e)).clamp(0.0, 1.0)
+    }
 }
 
 impl Renderer {
@@ -124,11 +139,19 @@ impl Renderer {
         Renderer {
             camera: Camera::new(),
             object: Sphere {
-                origin: Point {x:0.0, y:40.0, z:0.0},
-                radius: 15.0
+                origin: Point {x:0.0, y:4.0, z:0.0},
+                radius: 1.5,
+                ambient: 0.1,
+                diffuse: 0.7,
+                specular: 0.8,
+                shiness: 10.0,
+                r: 0,
+                g: 255,
+                b: 255,
             },
             light: Light {
-                origin: Point {x:0.0, y:-10.0, z:20.0},
+                origin: Point {x:0.0, y:-30.0, z:25.0},
+                intensity: 1000.0,
             }
         }
     }
@@ -138,24 +161,37 @@ impl Renderer {
 
         for i in 0..self.camera.lens.height {
             for j in 0..self.camera.lens.width {
-
-                let intersect =  self.object.intersection(self.camera.get_pixel_vector(i, j));
+                let vector = self.camera.get_pixel_vector(i, j);
+                let intersect =  self.object.intersection(vector);
                 if intersect != None {
-                    let mut color: f64 = 255.0 * 0.1;
-
-                    let light_vector = Point {
+                    let mut light_vector = Point {
                         x: self.light.origin.x - intersect.unwrap().direction.x,
                         y: self.light.origin.y - intersect.unwrap().direction.y,
                         z: self.light.origin.z - intersect.unwrap().direction.z,
                     };
-                    let normal_vector = Point {
+                    let mut normal_vector = Point {
                         x: intersect.unwrap().direction.x - intersect.unwrap().origin.x,
                         y: intersect.unwrap().direction.y - intersect.unwrap().origin.y,
                         z: intersect.unwrap().direction.z - intersect.unwrap().origin.z,
                     };
 
-                    color += (light_vector.dot_product(&normal_vector)).max(0.0) * 0.7;
-                    pixels.extend(&[color as u8, color as u8, color as u8]);
+                    light_vector.normalize();
+                    normal_vector.normalize();
+
+                    let mut light_intensity: f64 = self.camera.diffuse * self.object.ambient;
+                    light_intensity += (light_vector.dot_product(normal_vector)).max(0.0) * self.camera.diffuse * self.object.diffuse;
+
+                    let mut reflected:Point = light_vector.clone() * -1.0;
+                    reflected.reflect(normal_vector);
+
+                    let rise = 0.6 * 0.8 * reflected.dot_product(normal_vector).max(0.0).powf(0.6);
+                    println!("{}", rise);
+
+                    pixels.extend(&[
+                        (light_intensity * self.object.r as f64 + rise * 255.0) as u8,
+                        (light_intensity * self.object.g as f64 + rise * 255.0) as u8,
+                        (light_intensity * self.object.b as f64 + rise * 255.0) as u8
+                    ]);
                 } else {
                     pixels.extend(&[0x00, 0x00, 0x00]);
                 }

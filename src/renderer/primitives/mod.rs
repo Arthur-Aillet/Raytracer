@@ -17,12 +17,20 @@ pub trait Object {
 #[derive(Debug)]
 pub struct Light {
     pub origin: Point,
+    pub intensity: f64,
 }
 
 #[derive(Debug)]
 pub struct Sphere {
     pub origin: Point,
     pub radius: f64,
+    pub diffuse: f64,
+    pub ambient: f64,
+    pub specular: f64,
+    pub shiness: f64,
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
 }
 
 pub struct Plan {
