@@ -135,7 +135,7 @@ impl Renderer {
         for i in 0..self.camera.lens.height {
             for j in 0..self.camera.lens.width {
 
-                if self.object.intersection(self.camera.get_pixel_vector(i, j)) {
+                if self.object.intersection(self.camera.get_pixel_vector(i, j)) != None {
                     pixels.extend(&[0xFF, 0xFF, 0xFF]);
                 } else {
                     pixels.extend(&[0x00, 0x00, 0x00]);
