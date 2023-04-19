@@ -161,8 +161,8 @@ impl Renderer {
 
         for i in 0..self.camera.lens.height {
             for j in 0..self.camera.lens.width {
-                let vector = self.camera.get_pixel_vector(i, j);
-                let intersect =  self.object.intersection(vector);
+                let camera_to_pixel = self.camera.get_pixel_vector(i, j);
+                let intersect = self.object.intersection(camera_to_pixel);
                 if intersect != None {
                     let mut light_vector = Point {
                         x: self.light.origin.x - intersect.unwrap().direction.x,
@@ -181,16 +181,19 @@ impl Renderer {
                     let mut light_intensity: f64 = self.camera.diffuse * self.object.ambient;
                     light_intensity += (light_vector.dot_product(normal_vector)).max(0.0) * self.camera.diffuse * self.object.diffuse;
 
-                    let mut reflected:Point = light_vector.clone() * -1.0;
+                    let mut reflected: Point = light_vector.clone() * -1.0;
                     reflected.reflect(normal_vector);
+                    reflected.normalize();
+                    let mut view = camera_to_pixel.to_origin().direction.clone();
+                    view.normalize();
 
-                    let rise = 0.6 * 0.8 * reflected.dot_product(normal_vector).max(0.0).powf(0.6);
-                    println!("{}", rise);
+                    let specular = 0.6 * 0.8 * reflected.dot_product(view).max(0.0).powf(8.0);
+                    println!("{}", specular);
 
                     pixels.extend(&[
-                        (light_intensity * self.object.r as f64 + rise * 255.0) as u8,
-                        (light_intensity * self.object.g as f64 + rise * 255.0) as u8,
-                        (light_intensity * self.object.b as f64 + rise * 255.0) as u8
+                        (light_intensity * self.object.r as f64 + specular * 255.0) as u8,
+                        (light_intensity * self.object.g as f64 + specular * 255.0) as u8,
+                        (light_intensity * self.object.b as f64 + specular * 255.0) as u8
                     ]);
                 } else {
                     pixels.extend(&[0x00, 0x00, 0x00]);

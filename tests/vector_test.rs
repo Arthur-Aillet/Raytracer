@@ -91,15 +91,15 @@ mod tests {
     fn test_dot_product() {
         let p1 = Point { x: 1.0, y: 2.0, z: 3.0 };
         let p2 = Point { x: 4.0, y: 5.0, z: 6.0 };
-        assert_eq!(p1.dot_product(&p2), 32.0);
+        assert_eq!(p1.dot_product(p2), 32.0);
 
         let p1 = Point { x: -1.0, y: 0.0, z: 2.0 };
         let p2 = Point { x: 3.0, y: 4.0, z: -5.0 };
-        assert_eq!(p1.dot_product(&p2), -13.0);
+        assert_eq!(p1.dot_product(p2), -13.0);
 
         let p1 = Point { x: 1.5, y: 2.5, z: -3.5 };
         let p2 = Point { x: 0.5, y: -0.5, z: 1.5 };
-        assert_eq!(p1.dot_product(&p2), -5.75);
+        assert_eq!(p1.dot_product(p2), -5.75);
     }
 
     #[test]
@@ -171,6 +171,31 @@ mod tests {
                 x: 7.0,
                 y: 8.0,
                 z: 9.0,
+            }
+        );
+    }
+
+    #[test]
+    fn test_reflect_vector() {
+        let mut vec = Point {
+            x: 2.0,
+            y: 4.0,
+            z: 4.0,
+        };
+
+        let mut refer = Point {
+            x: 0.0,
+            y: 0.0,
+            z: 1.0,
+        };
+
+        vec.reflect(refer);
+        assert_eq!(
+            vec,
+            Point {
+                x: -2.0,
+                y: -4.0,
+                z: 4.0,
             }
         );
     }

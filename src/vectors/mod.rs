@@ -44,9 +44,9 @@ impl Point {
 
     pub fn reflect(&mut self, reference: Point) {
         let reflected = reference * 2.0 * (self.dot_product(reference));
-        self.x = self.x - reflected.x;
-        self.y = self.y - reflected.y;
-        self.z = self.z - reflected.z;
+        self.x = reflected.x - self.x;
+        self.y = reflected.y - self.y;
+        self.z = reflected.z - self.z;
     }
 
     pub fn normalize(&mut self) {
