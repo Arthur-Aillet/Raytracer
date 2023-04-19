@@ -9,7 +9,7 @@ pub mod primitives;
 use crate::vectors;
 use vectors::Point;
 use vectors::VectorF;
-use crate::renderer::primitives::{Object, Sphere};
+use crate::renderer::primitives::{Object, Sphere, Light};
 
 #[derive(Debug, Clone)]
 pub struct Transform {
@@ -54,6 +54,7 @@ impl Transform {
 pub struct Renderer {
     camera: Camera,
     object: Sphere,
+    light: Light,
 }
 
 #[derive(Debug)]
@@ -123,8 +124,11 @@ impl Renderer {
         Renderer {
             camera: Camera::new(),
             object: Sphere {
-                origin: Point {x:0.0, y:30.0, z:10.0},
-                radius: 5.0
+                origin: Point {x:0.0, y:40.0, z:0.0},
+                radius: 15.0
+            },
+            light: Light {
+                origin: Point {x:0.0, y:-10.0, z:20.0},
             }
         }
     }
@@ -135,8 +139,23 @@ impl Renderer {
         for i in 0..self.camera.lens.height {
             for j in 0..self.camera.lens.width {
 
-                if self.object.intersection(self.camera.get_pixel_vector(i, j)) != None {
-                    pixels.extend(&[0xFF, 0xFF, 0xFF]);
+                let intersect =  self.object.intersection(self.camera.get_pixel_vector(i, j));
+                if intersect != None {
+                    let mut color: f64 = 255.0 * 0.1;
+
+                    let light_vector = Point {
+                        x: self.light.origin.x - intersect.unwrap().direction.x,
+                        y: self.light.origin.y - intersect.unwrap().direction.y,
+                        z: self.light.origin.z - intersect.unwrap().direction.z,
+                    };
+                    let normal_vector = Point {
+                        x: intersect.unwrap().direction.x - intersect.unwrap().origin.x,
+                        y: intersect.unwrap().direction.y - intersect.unwrap().origin.y,
+                        z: intersect.unwrap().direction.z - intersect.unwrap().origin.z,
+                    };
+
+                    color += (light_vector.dot_product(&normal_vector)).max(0.0) * 0.7;
+                    pixels.extend(&[color as u8, color as u8, color as u8]);
                 } else {
                     pixels.extend(&[0x00, 0x00, 0x00]);
                 }
