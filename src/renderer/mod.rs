@@ -74,7 +74,7 @@ pub struct Camera {
 impl Camera {
     fn new() -> Self {
         let mut result = Camera {
-            transform: Transform::new(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+            transform: Transform::new(0.0, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, 0.0, 0.0),
             fov: 70,
             lens: Lens {
                 width: 1920,
@@ -95,23 +95,22 @@ impl Camera {
             },
         };
         result.calculate_lens_distance();
-        result.lens.vector_to_first_pixel.direction.x = -result.lens.width as f64 / 2.0;
-        result.lens.vector_to_first_pixel.direction.y = result.lens.height as f64 / 2.0;
-        result.lens.vector_to_first_pixel.direction.z = result.lens.distance + result.lens.width as f64 / 2.0;
+        let mut vector_director = VectorF::new(0.0, result.lens.distance, 0.0);
+        result.lens.vector_to_first_pixel = VectorF::new(result.transform.pos.x, result.transform.pos.y, result.transform.pos.z);
+        result.lens.vector_to_first_pixel = result.lens.vector_to_first_pixel + VectorF::new(0.0, 0.0, 1.0) * (result.lens.height as f64 / 2.0);
+        result.lens.vector_to_first_pixel = result.lens.vector_to_first_pixel + vector_director;
+        result.lens.vector_to_first_pixel = result.lens.vector_to_first_pixel + VectorF::new(-1.0, 0.0, 0.0) * (result.lens.width as f64 / 2.0);
+        println!("{:?}", result.lens.vector_to_first_pixel);
         result
     }
 
     fn get_pixel_vector(&self, x: i64, y: i64) -> VectorF {
-        let mut vectors = vectors::VectorF {
-            origin: self.transform.pos.clone(),
-            direction: vectors::Point {
-                x: self.lens.vector_to_first_pixel.direction.x + x as f64,
-                y: self.lens.vector_to_first_pixel.direction.y + y as f64,
-                z: self.lens.vector_to_first_pixel.direction.z,
-            },
-        };
-        vectors.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
-        vectors
+        let mut pixel_vector = self.lens.vector_to_first_pixel.clone();
+
+        pixel_vector = pixel_vector + VectorF::new(0.0, 0.0, -1.0) * x as f64;
+        pixel_vector = pixel_vector + VectorF::new(1.0, 0.0, 0.0) * y as f64;
+        pixel_vector.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        pixel_vector
     }
 
     fn calculate_lens_distance(&mut self) {
@@ -124,8 +123,8 @@ impl Renderer {
         Renderer {
             camera: Camera::new(),
             object: Sphere {
-                origin: Point {x:0.0, y:0.0, z:0.0},
-                radius: 10.0
+                origin: Point {x:0.0, y:30.0, z:10.0},
+                radius: 5.0
             }
         }
     }
@@ -135,10 +134,11 @@ impl Renderer {
 
         for i in 0..self.camera.lens.height {
             for j in 0..self.camera.lens.width {
-                if self.object.intersection(self.camera.get_pixel_vector(i, j)) == true {
-                    pixels.extend(&[0xFF, 0x00, 0x00]);
+
+                if self.object.intersection(self.camera.get_pixel_vector(i, j)) {
+                    pixels.extend(&[0xFF, 0xFF, 0xFF]);
                 } else {
-                    pixels.extend(&[0x00, 0xFF, 0xFF]);
+                    pixels.extend(&[0x00, 0x00, 0x00]);
                 }
             }
         }

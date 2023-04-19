@@ -43,11 +43,15 @@ impl Plan {
 
 impl Object for Sphere {
     fn intersection(&self, ray: vectors::VectorF) -> bool {
-        //resolve_quadratic_equation(ray.direction * ray.direction, 2 * ray.origin * ray.direction, ray.origin * ray.origin - radius * radius);
-        if ray.direction.x > 50.0 {
-            true
-        } else {
+        let result = resolve_quadratic_equation(ray.direction.x.powf(2.0) + ray.direction.y.powf(2.0) + ray.direction.z.powf(2.0),
+                                   2.0 * (ray.direction.x * (ray.origin.x - self.origin.x) + ray.direction.y * (ray.origin.y - self.origin.y) + ray.direction.z * (ray.origin.z - self.origin.z)),
+                                   ((ray.origin.x - self.origin.x).powf(2.0) + (ray.origin.y - self.origin.y).powf(2.0) + (ray.origin.z - self.origin.z).powf(2.0)) - self.radius.powf(2.0));
+        if result.is_empty() {
             false
+        } else {
+            println!("Sphere: {:?} {:?}", self, ray);
+            println!("result: {:?}", result);
+            true
         }
     }
 }

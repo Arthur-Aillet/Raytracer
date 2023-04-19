@@ -7,7 +7,7 @@
 
 use crate::matrix;
 use matrix::Matrix;
-use std::ops::Add;
+use std::ops::{Add, Mul};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Point {
@@ -19,6 +19,15 @@ pub struct Point {
 impl PartialEq for Point {
     fn eq(&self, other: &Self) -> bool {
         self.x == other.x && self.y == other.y && self.z == other.z
+    }
+}
+
+impl Point {
+    pub fn dot_product(&self, other: &Point) -> f64 {
+        let dx = self.x * other.x;
+        let dy = self.y * other.y;
+        let dz = self.z * other.z;
+        dx + dy + dz
     }
 }
 
@@ -46,6 +55,24 @@ impl Add<VectorF> for VectorF {
     }
 }
 
+impl Mul<f64> for VectorF {
+    type Output = VectorF;
+    fn mul(self, other: f64) -> VectorF {
+        VectorF {
+            origin: Point {
+                x: self.origin.x,
+                y: self.origin.y,
+                z: self.origin.z,
+            },
+            direction: Point {
+                x: self.origin.x + (self.direction.x - self.origin.x) * other,
+                y: self.origin.y + (self.direction.y - self.origin.y) * other,
+                z: self.origin.z + (self.direction.z - self.origin.z) * other,
+            },
+        }
+    }
+}
+
 impl PartialEq for VectorF {
     fn eq(&self, other: &Self) -> bool {
         let vec1: VectorF = self.to_origin();
@@ -55,12 +82,17 @@ impl PartialEq for VectorF {
 }
 
 impl VectorF {
-    /* Doesn't take into account if the origins aren't identical */
-    pub fn dot_product(&self, other: &VectorF) -> f64 {
-        let dx = self.direction.x * other.direction.x;
-        let dy = self.direction.y * other.direction.y;
-        let dz = self.direction.z * other.direction.z;
-        dx + dy + dz
+    pub fn new(x:f64, y:f64, z:f64) -> VectorF {
+        VectorF { origin: Point {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        }, direction: Point {
+            x,
+            y,
+            z,
+        }
+        }
     }
 
     pub fn rotate(&mut self, x: f64, y: f64, z: f64) {
@@ -71,7 +103,6 @@ impl VectorF {
 
         let rotation_matrix = Matrix::euler_rotation(x, y, z);
         let rotated_direction_matrix = rotation_matrix.multiply(&direction_matrix);
-
         self.direction.x = rotated_direction_matrix.data[0][0];
         self.direction.y = rotated_direction_matrix.data[1][0];
         self.direction.z = rotated_direction_matrix.data[2][0];
