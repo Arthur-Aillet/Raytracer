@@ -18,6 +18,9 @@ pub trait Object {
 pub struct Light {
     pub origin: Vector,
     pub intensity: f64,
+    pub r: f64,
+    pub g: f64,
+    pub b: f64,
 }
 
 #[derive(Debug)]
@@ -28,9 +31,9 @@ pub struct Sphere {
     pub ambient: f64,
     pub specular: f64,
     pub shininess: f64,
-    pub r: u8,
-    pub g: u8,
-    pub b: u8,
+    pub r: f64,
+    pub g: f64,
+    pub b: f64,
 }
 
 pub struct Plan {

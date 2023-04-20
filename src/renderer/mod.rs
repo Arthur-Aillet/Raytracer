@@ -81,7 +81,7 @@ impl Camera {
             transform: Transform::new(0.0, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, 0.0, 0.0),
             fov: 60,
             diffuse: 0.7,
-            ambient: 0.1,
+            ambient: 0.3,
             specular: 0.6,
             lens: Lens {
                 width: 1920,
@@ -111,7 +111,7 @@ impl Camera {
         pixel_vector.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
         pixel_vector.normalize()
     }
-// Point { x: -960.0, y: 441.91302184715596, z: 540.0 } }
+
     fn calculate_lens_distance(&mut self) {
         self.lens.distance = (self.lens.height as f64 / 2.0) / (self.fov as f64).to_radians().tan();
     }
@@ -131,19 +131,22 @@ impl Renderer {
         Renderer {
             camera: Camera::new(),
             object: Sphere {
-                origin: Vector {x:0.0, y:4.0, z:0.0},
+                origin: Vector {x:0.0, y:1.8, z:0.0},
                 radius: 1.5,
-                ambient: 0.1,
+                ambient: 0.3,
                 diffuse: 0.7,
                 specular: 0.4,
                 shininess: 4.0,
-                r: 0,
-                g: 255,
-                b: 255,
+                r: 0.1,
+                g: 0.1,
+                b: 1.0,
             },
             light: Light {
                 origin: Vector {x:3.0, y:-5.0, z:4.0},
                 intensity: 1000.0,
+                r: 1.0,
+                g: 0.3,
+                b: 1.0,
             }
         }
     }
@@ -167,9 +170,9 @@ impl Renderer {
                     let specular = self.camera.specular * self.object.specular * reflected.dot_product(view).max(0.0).powf(self.object.shininess);
 
                     pixels.extend(&[
-                        ((ambient + diffuse) * self.object.r as f64 + specular * 255.0).clamp(0.0, 255.0) as u8,
-                        ((ambient + diffuse) * self.object.g as f64 + specular * 255.0).clamp(0.0, 255.0) as u8,
-                        ((ambient + diffuse) * self.object.b as f64 + specular * 255.0).clamp(0.0, 255.0) as u8
+                        ((ambient * self.object.r * self.light.r + diffuse * self.object.r * self.light.r + specular * self.light.r).clamp(0.0, 1.0) * 255.0) as u8,
+                        ((ambient * self.object.g * self.light.g + diffuse * self.object.g * self.light.g + specular * self.light.g).clamp(0.0, 1.0) * 255.0) as u8,
+                        ((ambient * self.object.b * self.light.b + diffuse * self.object.b * self.light.b + specular * self.light.b).clamp(0.0, 1.0) * 255.0) as u8
                     ]);
                 } else {
                     pixels.extend(&[0x00, 0x00, 0x00]);
