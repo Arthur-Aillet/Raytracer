@@ -77,18 +77,21 @@ impl Vector {
         dx + dy + dz
     }
 
-    pub fn reflect(&mut self, reference: Vector) {
+    pub fn reflect(&mut self, reference: Vector) -> Self {
         let reflected = reference * 2.0 * (self.dot_product(reference));
-        self.x = reflected.x - self.x;
-        self.y = reflected.y - self.y;
-        self.z = reflected.z - self.z;
+        Vector {
+            x: reflected.x - self.x,
+            y: reflected.y - self.y,
+            z: reflected.z - self.z,
+        }
     }
 
-    pub fn normalize(&mut self) -> Vector {
-        self.x = self.x/self.len();
-        self.y = self.y/self.len();
-        self.z = self.z/self.len();
-        Vector {x:self.x, y:self.y, z:self.z}
+    pub fn normalize(&self) -> Self {
+        Vector {
+            x: self.x / self.len(),
+            y: self.y / self.len(),
+            z: self.z / self.len(),
+        }
     }
 
     pub fn len(self) -> f64 {
