@@ -60,20 +60,20 @@ impl Object for Sphere {
     fn intersection(&self, ray: Vector, camera: Vector) -> Option<Segment> {
         let diff = camera - self.origin;
         let result = resolve_quadratic_equation(ray.dot_product(ray), // could be 1 if normalized
-                                   2.0 * (ray.dot_product(diff)),
-                                   (diff.dot_product(diff)) - self.radius.powi(2));
+                                                2.0 * (ray.dot_product(diff)),
+                                                (diff.dot_product(diff)) - self.radius.powi(2));
 
         let smallest_result: Option<&f64> = result.iter().min_by(|a, b| a.partial_cmp(b).unwrap());
-
+        //filter neg
         if smallest_result == None {
             None
         } else {
             Some ( Segment {
                 origin : self.origin.clone(),
                 end: Vector {
-                    x: camera.x + ray.x * smallest_result.unwrap_or(&0.0),
-                    y: camera.y + ray.y * smallest_result.unwrap_or(&0.0),
-                    z: camera.z + ray.z * smallest_result.unwrap_or(&0.0),
+                    x: camera.x + ray.x * smallest_result.unwrap(),
+                    y: camera.y + ray.y * smallest_result.unwrap(),
+                    z: camera.z + ray.z * smallest_result.unwrap(),
                 }
             })
         }

@@ -78,7 +78,7 @@ pub struct Camera {
 impl Camera {
     fn new() -> Self {
         let mut result = Camera {
-            transform: Transform::new(0.0, 0.0, 0.0, 0.0,1.0, 18.0, 0.0, 0.0, 0.0),
+            transform: Transform::new(0.0, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, 0.0, 0.0),
             fov: 70,
             diffuse: 0.7,
             ambient: 0.1,
@@ -110,7 +110,7 @@ impl Camera {
         pixel_vector = pixel_vector + Vector {x:0.0, y:0.0, z:-1.0} * x as f64;
         pixel_vector = pixel_vector + Vector {x:1.0, y:0.0, z:0.0} * y as f64;
         pixel_vector.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
-        pixel_vector
+        pixel_vector.normalize()
     }
 // Point { x: -960.0, y: 441.91302184715596, z: 540.0 } }
     fn calculate_lens_distance(&mut self) {
@@ -143,7 +143,7 @@ impl Renderer {
                 b: 255,
             },
             light: Light {
-                origin: Vector {x:0.0, y:-3.0, z:0.0},
+                origin: Vector {x:3.0, y:-5.0, z:4.0},
                 intensity: 1000.0,
             }
         }
@@ -168,24 +168,20 @@ impl Renderer {
                         z: intersect.unwrap().end.z - intersect.unwrap().origin.z,
                     };
 
-                    light_vector.normalize();
-                    normal_vector.normalize();
+                    light_vector = light_vector.normalize();
+                    normal_vector = normal_vector.normalize();
 
-                    let mut light_intensity: f64 = self.camera.diffuse * self.object.ambient;
-                    light_intensity += (light_vector.dot_product(normal_vector)).max(0.0) * self.camera.diffuse * self.object.diffuse;
+                    let ambient = self.camera.ambient * self.object.ambient;
+                    let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * self.object.diffuse;
 
-                    let mut reflected: Vector = light_vector.clone();
-                    reflected.reflect(normal_vector);
-                    reflected.normalize();
-                    let mut view = camera_to_pixel.clone() * -1.0;
-                    view.normalize();
-
-                    let specular = 0.6 * 0.8 * reflected.dot_product(view).max(0.0).powf(8.0);
+                    let reflected = light_vector.reflect(normal_vector).normalize();
+                    let view = (camera_to_pixel.clone() * -1.0).normalize();
+                    let specular = 0.6 * 0.4 * reflected.dot_product(view).max(0.0).powf(4.0);
 
                     pixels.extend(&[
-                        (light_intensity * self.object.r as f64 + specular * 255.0) as u8,
-                        (light_intensity * self.object.g as f64 + specular * 255.0) as u8,
-                        (light_intensity * self.object.b as f64 + specular * 255.0) as u8
+                        ((ambient + diffuse) * self.object.r as f64 + specular * 255.0).clamp(0.0, 255.0) as u8,
+                        ((ambient + diffuse) * self.object.g as f64 + specular * 255.0).clamp(0.0, 255.0) as u8,
+                        ((ambient + diffuse) * self.object.b as f64 + specular * 255.0).clamp(0.0, 255.0) as u8
                     ]);
                 } else {
                     pixels.extend(&[0x00, 0x00, 0x00]);
