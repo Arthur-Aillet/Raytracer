@@ -76,10 +76,10 @@ pub struct Camera {
 }
 
 impl Camera {
-    fn new(fov: i16) -> Self {
+    fn new() -> Self {
         let mut result = Camera {
             transform: Transform::new(0.0, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, 0.0, 0.0),
-            fov: fov,
+            fov: 90,
             diffuse: 0.7,
             ambient: 0.3,
             specular: 0.6,
@@ -127,9 +127,9 @@ impl Camera {
 }
 
 impl Renderer {
-    pub fn new(fov: i16) -> Renderer {
+    pub fn new() -> Renderer {
         Renderer {
-            camera: Camera::new(fov),
+            camera: Camera::new(),
             object: Sphere {
                 origin: Vector {x:0.0, y:3.0, z:0.0},
                 radius: 1.5,

@@ -21,14 +21,12 @@ fn main() -> std::io::Result<()> {
     let file = File::open(json_file_path);
     
     let args: Vec<String> = env::args().collect();
+    let mut ppm = ppm_interface::PPMInterface::new(String::from(args[1].clone()));
     let height = 1080;
     let width = 1920;
+    let mut renderer = Renderer::new();
 
-    for fov in (60..90).step_by(3) {
-        let mut ppm = ppm_interface::PPMInterface::new([String::from(args[1].clone()), fov.to_string()].join("-"));
-        let renderer = Renderer::new(fov);
-        ppm.write(width, height, renderer.render());
-    }
+    ppm.write(width, height, renderer.render());
     Ok(())
 }
 
