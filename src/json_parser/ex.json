@@ -43,7 +43,7 @@
                     }
                 },
                 "texture": {
-                    "texture_type": "color",
+                    "texture_type": 1,
                     "color": {
                         "r": 255,
                         "g": 255,
@@ -51,6 +51,34 @@
                     }
                 },
                 "radius": 10
+            },
+            {
+                "transform": {
+                    "pos": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 10
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    }
+                },
+                "texture": {
+                    "texture_type": 1,
+                    "color": {
+                        "r": 255,
+                        "g": 255,
+                        "b": 255
+                    }
+                },
+                "radius": 50
             }
         ],
         "planes": [
@@ -73,7 +101,7 @@
                     }
                 },
                 "texture": {
-                    "texture_type": "color",
+                    "texture_type": 1,
                     "color": {
                         "r": 255,
                         "g": 255,
@@ -112,7 +140,7 @@
                     }
                 },
                 "texture": {
-                    "texture_type": "color",
+                    "texture_type": 1,
                     "color": {
                         "r": 255,
                         "g": 255,
@@ -143,7 +171,7 @@
                     }
                 },
                 "texture": {
-                    "texture_type": "color",
+                    "texture_type": 1,
                     "color": {
                         "r": 255,
                         "g": 255,
