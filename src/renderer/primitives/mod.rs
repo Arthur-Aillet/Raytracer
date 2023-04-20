@@ -11,7 +11,7 @@ use vectors::Vector;
 use vectors::resolve_quadratic_equation;
 
 pub trait Object {
-    fn intersection(&self, ray: Vector, camera: Vector) -> Option<Intersection>;
+    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection>;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -63,8 +63,8 @@ impl Plan {
 }
 
 impl Object for Sphere {
-    fn intersection(&self, ray: Vector, camera: Vector) -> Option<Intersection> {
-        let diff = camera - self.origin;
+    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
+        let diff = origin - self.origin;
         let result = resolve_quadratic_equation(ray.dot_product(ray), // could be 1 if normalized
                                                 2.0 * (ray.dot_product(diff)),
                                                 (diff.dot_product(diff)) - self.radius.powi(2));
@@ -75,9 +75,9 @@ impl Object for Sphere {
             None
         } else {
             let point = Vector {
-                x: camera.x + ray.x * smallest_result.unwrap(),
-                y: camera.y + ray.y * smallest_result.unwrap(),
-                z: camera.z + ray.z * smallest_result.unwrap(),
+                x: origin.x + ray.x * smallest_result.unwrap(),
+                y: origin.y + ray.y * smallest_result.unwrap(),
+                z: origin.z + ray.z * smallest_result.unwrap(),
             };
             Some ( Intersection {
                 normal: point - self.origin,
@@ -89,7 +89,7 @@ impl Object for Sphere {
 }
 
 impl Object for Plan {
-    fn intersection(&self, ray: Vector, camera: Vector) -> Option<Intersection> {
+    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
         return None;
     }
 }

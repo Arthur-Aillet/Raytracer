@@ -222,12 +222,12 @@ impl Segment {
 pub fn number_of_solution(a: f64, b: f64, c: f64) -> i8 {
     let delta: f64 = (b.powi(2)) - (4 as f64 * a * c);
 
-    if delta < 0 as f64 {
-        return 0;
+    return if delta < 0 as f64 {
+        0
     } else if delta == 0 as f64 {
-        return 1;
+        1
     } else {
-        return 2
+        2
     }
 }
 

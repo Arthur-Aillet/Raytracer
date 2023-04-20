@@ -133,7 +133,7 @@ impl Renderer {
             camera: Camera::new(),
             objects: vec![
                 Sphere {
-                    origin: Vector {x:2.0, y:3.0, z:1.0},
+                    origin: Vector {x:0.0, y:3.0, z:0.0},
                     radius: 1.0,
                         ambient: 0.3,
                     diffuse: 0.5,
@@ -143,9 +143,9 @@ impl Renderer {
                         x: 1.0,
                         y: 1.0,
                         z: 1.0,
-                    }
+                    },
                 }, Sphere {
-                    origin: Vector {x:-2.0, y:3.0, z:-1.0},
+                    origin: Vector {x:1.0, y:5.0, z:-1.0},
                     radius: 1.0,
                     ambient: 0.3,
                     diffuse: 0.5,
@@ -155,83 +155,18 @@ impl Renderer {
                         x: 1.0,
                         y: 1.0,
                         z: 1.0,
-                    }
-                },
-                Sphere {
-                    origin: Vector {x:-2.0, y:6.0, z:0.5},
-                    radius: 1.0,
-                    ambient: 0.3,
-                    diffuse: 0.5,
-                    specular: 0.4,
-                    shininess: 4.0,
-                    color: Vector {
-                        x: 1.0,
-                        y: 1.0,
-                        z: 1.0,
-                    }
-                },                Sphere {
-                    origin: Vector {x:2.0, y:6.0, z:-0.5},
-                    radius: 1.0,
-                    ambient: 0.3,
-                    diffuse: 0.5,
-                    specular: 0.4,
-                    shininess: 4.0,
-                    color: Vector {
-                        x: 1.0,
-                        y: 1.0,
-                        z: 1.0,
-                    }
-                },                Sphere {
-                    origin: Vector {x:-2.0, y:9.0, z:0.7},
-                    radius: 1.0,
-                    ambient: 0.3,
-                    diffuse: 0.5,
-                    specular: 0.4,
-                    shininess: 4.0,
-                    color: Vector {
-                        x: 1.0,
-                        y: 1.0,
-                        z: 1.0,
-                    }
-                },                Sphere {
-                    origin: Vector {x:2.0, y:9.0, z:-0.7},
-                    radius: 1.0,
-                    ambient: 0.3,
-                    diffuse: 0.5,
-                    specular: 0.4,
-                    shininess: 4.0,
-                    color: Vector {
-                        x: 1.0,
-                        y: 1.0,
-                        z: 1.0,
-                    }
-                },
+                    },
+                }
             ],
             lights: vec![ Light {
-                origin: Vector {x:0.0, y:3.0, z:0.0},
+                origin: Vector {x:-4.0, y:-5.0, z:0.0},
                 intensity: 1000.0,
                 color: Vector {
                     x: 1.0,
                     y: 0.7,
                     z: 1.0,
                 }
-            }, Light {
-                origin: Vector {x:0.0, y:0.0, z:0.0},
-                intensity: 1000.0,
-                color: Vector {
-                    x: 0.1,
-                    y: 0.1,
-                    z: 1.0,
-                }
-            }, Light {
-                origin: Vector {x:0.0, y:7.0, z:0.0},
-                intensity: 1000.0,
-                color: Vector {
-                    x: 0.1,
-                    y: 1.0,
-                    z: 5.0,
-                }
-            },
+            }
             ]
         }
     }
@@ -240,6 +175,12 @@ impl Renderer {
         let light_vector = (light.origin - intersect.intersection_point).normalize();
         let normal_vector = intersect.normal.normalize();
 
+        for object_current in self.objects.iter() {
+            if *object_current == object { continue; }
+            let intersect = object_current.intersection(light_vector, intersect.intersection_point);
+
+            if intersect != None { return Vector {x: 0.0, y: 0.0, z: 0.0} };
+        };
         let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * object.diffuse;
 
         let reflected = light_vector.reflect(normal_vector).normalize();
