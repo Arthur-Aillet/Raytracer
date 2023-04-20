@@ -6,8 +6,8 @@
 //
 
 use raytracer::vectors;
-use vectors::Point;
-use vectors::VectorF;
+use vectors::Vector;
+use vectors::Segment;
 use vectors::resolve_quadratic_equation;
 
 #[cfg(test)]
@@ -16,26 +16,26 @@ mod tests {
 
     #[test]
     fn test_add() {
-        let vec1 = VectorF {
-            origin: Point {
+        let vec1 = Segment {
+            origin: Vector {
                 x: 1.0,
                 y: 2.0,
                 z: 3.0,
             },
-            direction: Point {
+            end: Vector {
                 x: 4.0,
                 y: 5.0,
                 z: 6.0,
             },
         };
 
-        let vec2 = VectorF {
-            origin: Point {
+        let vec2 = Segment {
+            origin: Vector {
                 x: 7.0,
                 y: 8.0,
                 z: 9.0,
             },
-            direction: Point {
+            end: Vector {
                 x: 10.0,
                 y: 11.0,
                 z: 12.0,
@@ -46,15 +46,15 @@ mod tests {
 
         assert_eq!(
             result.origin,
-            Point {
+            Vector {
                 x: 1.0,
                 y: 2.0,
                 z: 3.0,
             }
         );
         assert_eq!(
-            result.direction,
-            Point {
+            result.end,
+            Vector {
                 x: 7.0,
                 y: 8.0,
                 z: 9.0,
@@ -64,13 +64,13 @@ mod tests {
 
     #[test]
     fn test_rotate() {
-        let mut vec = VectorF {
-            origin: Point {
+        let mut vec = Segment {
+            origin: Vector {
                 x: 1.0,
                 y: 2.0,
                 z: 3.0,
             },
-            direction: Point {
+            end: Vector {
                 x: 4.0,
                 y: 5.0,
                 z: 6.0,
@@ -78,8 +78,8 @@ mod tests {
         };
         vec.rotate(0.0, 0.0, 90.0);
         assert_eq!(
-            vec.direction,
-            Point {
+            vec.end,
+            Vector {
                 x: -5.0,
                 y: 4.0,
                 z: 6.0,
@@ -89,17 +89,17 @@ mod tests {
 
     #[test]
     fn test_dot_product() {
-        let p1 = Point { x: 1.0, y: 2.0, z: 3.0 };
-        let p2 = Point { x: 4.0, y: 5.0, z: 6.0 };
-        assert_eq!(p1.dot_product(&p2), 32.0);
+        let p1 = Vector { x: 1.0, y: 2.0, z: 3.0 };
+        let p2 = Vector { x: 4.0, y: 5.0, z: 6.0 };
+        assert_eq!(p1.dot_product(p2), 32.0);
 
-        let p1 = Point { x: -1.0, y: 0.0, z: 2.0 };
-        let p2 = Point { x: 3.0, y: 4.0, z: -5.0 };
-        assert_eq!(p1.dot_product(&p2), -13.0);
+        let p1 = Vector { x: -1.0, y: 0.0, z: 2.0 };
+        let p2 = Vector { x: 3.0, y: 4.0, z: -5.0 };
+        assert_eq!(p1.dot_product(p2), -13.0);
 
-        let p1 = Point { x: 1.5, y: 2.5, z: -3.5 };
-        let p2 = Point { x: 0.5, y: -0.5, z: 1.5 };
-        assert_eq!(p1.dot_product(&p2), -5.75);
+        let p1 = Vector { x: 1.5, y: 2.5, z: -3.5 };
+        let p2 = Vector { x: 0.5, y: -0.5, z: 1.5 };
+        assert_eq!(p1.dot_product(p2), -5.75);
     }
 
     #[test]
@@ -128,26 +128,26 @@ mod tests {
 
     #[test]
     fn test_add_in_place() {
-        let vec1 = VectorF {
-            origin: Point {
+        let vec1 = Segment {
+            origin: Vector {
                 x: 1.0,
                 y: 2.0,
                 z: 3.0,
             },
-            direction: Point {
+            end: Vector {
                 x: 4.0,
                 y: 5.0,
                 z: 6.0,
             },
         };
 
-        let vec2 = VectorF {
-            origin: Point {
+        let vec2 = Segment {
+            origin: Vector {
                 x: 7.0,
                 y: 8.0,
                 z: 9.0,
             },
-            direction: Point {
+            end: Vector {
                 x: 10.0,
                 y: 11.0,
                 z: 12.0,
@@ -159,18 +159,42 @@ mod tests {
 
         assert_eq!(
             vec3.origin,
-            Point {
+            Vector {
                 x: 1.0,
                 y: 2.0,
                 z: 3.0,
             }
         );
         assert_eq!(
-            vec3.direction,
-            Point {
+            vec3.end,
+            Vector {
                 x: 7.0,
                 y: 8.0,
                 z: 9.0,
+            }
+        );
+    }
+
+    #[test]
+    fn test_reflect_vector() {
+        let vec = Vector {
+            x: 2.0,
+            y: 4.0,
+            z: 4.0,
+        };
+
+        let refer = Vector {
+            x: 0.0,
+            y: 0.0,
+            z: 1.0,
+        };
+
+        assert_eq!(
+            vec.reflect(refer),
+            Vector {
+                x: -2.0,
+                y: -4.0,
+                z: 4.0,
             }
         );
     }

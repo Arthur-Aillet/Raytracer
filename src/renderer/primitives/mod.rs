@@ -6,32 +6,40 @@
 //
 
 use crate::vectors;
-use vectors::VectorF;
-use vectors::Point;
+use vectors::Segment;
+use vectors::Vector;
 use vectors::resolve_quadratic_equation;
 
 pub trait Object {
-    fn intersection(&self, ray: VectorF) -> Option<VectorF>;
+    fn intersection(&self, ray: Vector, camera: Vector) -> Option<Segment>;
 }
 
 #[derive(Debug)]
 pub struct Light {
-    pub origin: Point,
+    pub origin: Vector,
+    pub intensity: f64,
 }
 
 #[derive(Debug)]
 pub struct Sphere {
-    pub origin: Point,
+    pub origin: Vector,
     pub radius: f64,
+    pub diffuse: f64,
+    pub ambient: f64,
+    pub specular: f64,
+    pub shininess: f64,
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
 }
 
 pub struct Plan {
-    pub normal: VectorF,
+    pub normal: Vector,
     pub distance: f64
 }
 
 impl Sphere {
-    pub fn set_origin(&mut self, origin: Point) {
+    pub fn set_origin(&mut self, origin: Vector) {
         self.origin = origin;
     }
     pub fn set_radius(&mut self, radius: f64) {
@@ -39,43 +47,33 @@ impl Sphere {
     }
 }
 
-// impl Plan {
-//     pub fn set_origin(&mut self, point: Point) {
-//         self.origin = point;
-//     }
-//     pub fn set_endPoint(&mut self, point: Point) {
-//         self.endPoint = point;
-//     }
-// }
+impl Plan {
+    pub fn set_origin(&mut self, point: Vector) {
+        self.origin = point;
+    }
+    pub fn set_endPoint(&mut self, point: Vector) {
+        self.endPoint = point;
+    }
+}
 
 impl Object for Sphere {
-    fn intersection(&self, ray: VectorF) -> Option<VectorF> {
-        let result = resolve_quadratic_equation(ray.direction.x.powf(2.0) + ray.direction.y.powf(2.0) + ray.direction.z.powf(2.0),
-            2.0 * (ray.direction.x * (ray.origin.x - self.origin.x) + ray.direction.y * (ray.origin.y - self.origin.y) + ray.direction.z * (ray.origin.z - self.origin.z)),
-            ((ray.origin.x - self.origin.x).powf(2.0) + (ray.origin.y - self.origin.y).powf(2.0) + (ray.origin.z - self.origin.z).powf(2.0)) - self.radius.powf(2.0));
+    fn intersection(&self, ray: Vector, camera: Vector) -> Option<Segment> {
+        let diff = camera - self.origin;
+        let result = resolve_quadratic_equation(ray.dot_product(ray), // could be 1 if normalized
+                                                2.0 * (ray.dot_product(diff)),
+                                                (diff.dot_product(diff)) - self.radius.powi(2));
 
-        let mut smallest_result: Option<f64> = None;
-
-        for num in result {
-            if num > 0.0 {
-                if smallest_result.is_none() || num < smallest_result.unwrap() {
-                    smallest_result = Some(num);
-                }
-            }
-        }
+        let smallest_result: Option<&f64> = result.iter().filter(|number| **number > 0.0).min_by(|a, b| a.partial_cmp(b).unwrap());
+        //filter neg
         if smallest_result == None {
             None
         } else {
-            Some ( VectorF {
-                origin : Point {
-                    x: self.origin.x,
-                    y: self.origin.y,
-                    z: self.origin.z,
-                },
-                direction: Point {
-                    x: ray.origin.x + ray.direction.x * smallest_result.unwrap_or(0.0),
-                    y: ray.origin.y + ray.direction.y * smallest_result.unwrap_or(0.0),
-                    z: ray.origin.z + ray.direction.z * smallest_result.unwrap_or(0.0),
+            Some ( Segment {
+                origin : self.origin.clone(),
+                end: Vector {
+                    x: camera.x + ray.x * smallest_result.unwrap(),
+                    y: camera.y + ray.y * smallest_result.unwrap(),
+                    z: camera.z + ray.z * smallest_result.unwrap(),
                 }
             })
         }
