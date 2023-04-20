@@ -5,15 +5,12 @@
 // main
 //
 
-use json_parser::Renderer;
+use renderer::Renderer;
 
 mod ppm_interface;
 mod vectors;
 mod matrix;
-mod json_parser;
-
-use std::path::Path;
-use std::fs::File;
+mod renderer;
 
 use std::env;
 
@@ -23,12 +20,7 @@ fn main() -> std::io::Result<()> {
     let height = 1080;
     let width = 1920;
     let mut renderer : Renderer = Renderer::new();
-    renderer.get_renderer_from_file("src/json_parser/ex.json".to_string());
-
-    for object in renderer.primitives.iter_mut() {
-        print!("{}\n", object.obj_type());
-    }
-
+    renderer.get_renderer_from_file(String::from(args[2].clone()));
     ppm.write(width, height, renderer.render());
     Ok(())
 }
