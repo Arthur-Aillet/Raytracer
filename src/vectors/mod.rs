@@ -56,6 +56,17 @@ impl Mul<f64> for Vector {
     }
 }
 
+impl Mul<Vector> for Vector {
+    type Output = Vector;
+    fn mul(self, other: Vector) -> Vector {
+        Vector {
+            x: self.x * other.x,
+            y: self.y * other.y,
+            z: self.z * other.z,
+        }
+    }
+}
+
 impl Vector {
     pub fn rotate(&mut self, x: f64, y: f64, z: f64) {
         let mut direction_matrix = Matrix::new(3, 1);

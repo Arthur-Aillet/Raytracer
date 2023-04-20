@@ -54,7 +54,7 @@ impl Transform {
 pub struct Renderer {
     camera: Camera,
     object: Sphere,
-    light: Light,
+    lights: Vec<Light>,
 }
 
 #[derive(Debug)]
@@ -76,10 +76,10 @@ pub struct Camera {
 }
 
 impl Camera {
-    fn new() -> Self {
+    fn new(fov: i16) -> Self {
         let mut result = Camera {
             transform: Transform::new(0.0, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, 0.0, 0.0),
-            fov: 60,
+            fov: fov,
             diffuse: 0.7,
             ambient: 0.3,
             specular: 0.6,
@@ -113,7 +113,7 @@ impl Camera {
     }
 
     fn calculate_lens_distance(&mut self) {
-        self.lens.distance = (self.lens.height as f64 / 2.0) / (self.fov as f64).to_radians().tan();
+        self.lens.distance = (self.lens.height as f64 / 2.0) / (self.fov as f64 / 2.0).to_radians().tan();
     }
 
     pub fn calculate_tone_mapping(val: f64) -> f64{
@@ -127,27 +127,50 @@ impl Camera {
 }
 
 impl Renderer {
-    pub fn new() -> Renderer {
+    pub fn new(fov: i16) -> Renderer {
         Renderer {
-            camera: Camera::new(),
+            camera: Camera::new(fov),
             object: Sphere {
-                origin: Vector {x:0.0, y:1.8, z:0.0},
+                origin: Vector {x:0.0, y:3.0, z:0.0},
                 radius: 1.5,
                 ambient: 0.3,
                 diffuse: 0.7,
                 specular: 0.4,
                 shininess: 4.0,
-                r: 0.1,
-                g: 0.1,
-                b: 1.0,
+                color: Vector {
+                    x: 1.0,
+                    y: 1.0,
+                    z: 1.0,
+                }
             },
-            light: Light {
+            lights: vec![ Light {
                 origin: Vector {x:3.0, y:-5.0, z:4.0},
                 intensity: 1000.0,
-                r: 1.0,
-                g: 0.3,
-                b: 1.0,
-            }
+                color: Vector {
+                    x: 1.0,
+                    y: 0.3,
+                    z: 1.0,
+                }
+            },
+            Light {
+                origin: Vector {x:-7.0, y:0.0, z:-3.0},
+                intensity: 1000.0,
+                color: Vector {
+                    x: 0.1,
+                    y: 0.1,
+                    z: 1.0,
+                }
+            },
+            Light {
+            origin: Vector {x:0.0, y:1.3, z:3.0},
+            intensity: 1000.0,
+            color: Vector {
+                x: 0.1,
+                y: 1.0,
+                z: 0.1,
+                }
+            },
+            ]
         }
     }
 
@@ -159,20 +182,25 @@ impl Renderer {
                 let camera_to_pixel = self.camera.get_pixel_vector(j, i);
                 let intersect = self.object.intersection(camera_to_pixel, self.camera.transform.pos);
                 if intersect != None {
-                    let light_vector = (self.light.origin - intersect.unwrap().end).normalize();
-                    let normal_vector = (intersect.unwrap().end - intersect.unwrap().origin).normalize();
+                    let mut color = self.object.color * self.camera.ambient * self.object.ambient;
+                    for light in self.lights.iter() {
 
-                    let ambient = self.camera.ambient * self.object.ambient;
-                    let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * self.object.diffuse;
+                        let light_vector = (light.origin - intersect.unwrap().end).normalize();
+                        let normal_vector = (intersect.unwrap().end - intersect.unwrap().origin).normalize();
 
-                    let reflected = light_vector.reflect(normal_vector).normalize();
-                    let view = (camera_to_pixel * -1.0).normalize();
-                    let specular = self.camera.specular * self.object.specular * reflected.dot_product(view).max(0.0).powf(self.object.shininess);
+                        let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * self.object.diffuse;
 
+                        let reflected = light_vector.reflect(normal_vector).normalize();
+                        let view = (camera_to_pixel * -1.0).normalize();
+                        let specular = self.camera.specular * self.object.specular * reflected.dot_product(view).max(0.0).powf(self.object.shininess);
+
+                        color = color + self.object.color * light.color * diffuse;
+                        color = color + light.color * specular;
+                    }
                     pixels.extend(&[
-                        ((ambient * self.object.r * self.light.r + diffuse * self.object.r * self.light.r + specular * self.light.r).clamp(0.0, 1.0) * 255.0) as u8,
-                        ((ambient * self.object.g * self.light.g + diffuse * self.object.g * self.light.g + specular * self.light.g).clamp(0.0, 1.0) * 255.0) as u8,
-                        ((ambient * self.object.b * self.light.b + diffuse * self.object.b * self.light.b + specular * self.light.b).clamp(0.0, 1.0) * 255.0) as u8
+                        ((color.x).clamp(0.0, 1.0) * 255.0) as u8,
+                        ((color.y).clamp(0.0, 1.0) * 255.0) as u8,
+                        ((color.z).clamp(0.0, 1.0) * 255.0) as u8
                     ]);
                 } else {
                     pixels.extend(&[0x00, 0x00, 0x00]);
