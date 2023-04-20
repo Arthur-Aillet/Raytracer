@@ -177,21 +177,20 @@ mod tests {
 
     #[test]
     fn test_reflect_vector() {
-        let mut vec = Vector {
+        let vec = Vector {
             x: 2.0,
             y: 4.0,
             z: 4.0,
         };
 
-        let mut refer = Vector {
+        let refer = Vector {
             x: 0.0,
             y: 0.0,
             z: 1.0,
         };
 
-        vec.reflect(refer);
         assert_eq!(
-            vec,
+            vec.reflect(refer),
             Vector {
                 x: -2.0,
                 y: -4.0,
