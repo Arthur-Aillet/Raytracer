@@ -7,15 +7,15 @@
 
 pub mod primitives;
 use crate::vectors;
-use vectors::Point;
-use vectors::VectorF;
+use vectors::Vector;
+use vectors::Segment;
 use crate::renderer::primitives::{Object, Sphere, Light};
 
 #[derive(Debug, Clone)]
 pub struct Transform {
-    pos: vectors::Point,
-    rotation : vectors::Point,
-    scale : vectors::Point,
+    pos: vectors::Vector,
+    rotation : vectors::Vector,
+    scale : vectors::Vector,
 }
 
 impl Transform {
@@ -31,17 +31,17 @@ impl Transform {
         z_sca: f64,
     ) -> Self {
         Transform {
-            pos: Point {
+            pos: Vector {
                 x: x_pos,
                 y: y_pos,
                 z: z_pos,
             },
-            rotation: Point {
+            rotation: Vector {
                 x: x_rot,
                 y: y_rot,
                 z: z_rot,
             },
-            scale: Point {
+            scale: Vector {
                 x: z_sca,
                 y: z_sca,
                 z: z_sca,
@@ -62,7 +62,7 @@ struct Lens {
     height: i64,
     width: i64,
     distance: f64,
-    vector_to_first_pixel: Point,
+    vector_to_first_pixel: Vector,
 }
 
 #[derive(Debug)]
@@ -87,7 +87,7 @@ impl Camera {
                 width: 1920,
                 height: 1080,
                 distance: 0.0,
-                vector_to_first_pixel: Point {
+                vector_to_first_pixel: Vector {
                         x: 0.0,
                         y: 0.0,
                         z: 0.0,
@@ -95,20 +95,20 @@ impl Camera {
             },
         };
         result.calculate_lens_distance();
-        let vector_director = Point {x:0.0, y:result.lens.distance, z:0.0};
-        result.lens.vector_to_first_pixel = Point {x:result.transform.pos.x, y:result.transform.pos.y, z:result.transform.pos.z};
-        result.lens.vector_to_first_pixel = result.lens.vector_to_first_pixel + Point {x:0.0, y:0.0, z:1.0} * (result.lens.height as f64 / 2.0);
+        let vector_director = Vector {x:0.0, y:result.lens.distance, z:0.0};
+        result.lens.vector_to_first_pixel = Vector {x:result.transform.pos.x, y:result.transform.pos.y, z:result.transform.pos.z};
+        result.lens.vector_to_first_pixel = result.lens.vector_to_first_pixel + Vector {x:0.0, y:0.0, z:1.0} * (result.lens.height as f64 / 2.0);
         result.lens.vector_to_first_pixel = result.lens.vector_to_first_pixel + vector_director;
-        result.lens.vector_to_first_pixel = result.lens.vector_to_first_pixel + Point {x:-1.0, y:0.0, z:0.0} * (result.lens.width as f64 / 2.0);
+        result.lens.vector_to_first_pixel = result.lens.vector_to_first_pixel + Vector {x:-1.0, y:0.0, z:0.0} * (result.lens.width as f64 / 2.0);
         println!("{:?}", result.lens.vector_to_first_pixel);
         result
     }
 
-    fn get_pixel_vector(&self, x: i64, y: i64) -> Point {
+    fn get_pixel_vector(&self, x: i64, y: i64) -> Vector {
         let mut pixel_vector = self.lens.vector_to_first_pixel.clone();
 
-        pixel_vector = pixel_vector + Point {x:0.0, y:0.0, z:-1.0} * x as f64;
-        pixel_vector = pixel_vector + Point {x:1.0, y:0.0, z:0.0} * y as f64;
+        pixel_vector = pixel_vector + Vector {x:0.0, y:0.0, z:-1.0} * x as f64;
+        pixel_vector = pixel_vector + Vector {x:1.0, y:0.0, z:0.0} * y as f64;
         pixel_vector.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
         pixel_vector
     }
@@ -132,7 +132,7 @@ impl Renderer {
         Renderer {
             camera: Camera::new(),
             object: Sphere {
-                origin: Point {x:0.0, y:4.0, z:0.0},
+                origin: Vector {x:0.0, y:4.0, z:0.0},
                 radius: 1.5,
                 ambient: 0.1,
                 diffuse: 0.7,
@@ -143,7 +143,7 @@ impl Renderer {
                 b: 255,
             },
             light: Light {
-                origin: Point {x:0.0, y:-3.0, z:0.0},
+                origin: Vector {x:0.0, y:-3.0, z:0.0},
                 intensity: 1000.0,
             }
         }
@@ -157,12 +157,12 @@ impl Renderer {
                 let camera_to_pixel = self.camera.get_pixel_vector(i, j);
                 let intersect = self.object.intersection(camera_to_pixel, self.camera.transform.pos);
                 if intersect != None {
-                    let mut light_vector = Point {
+                    let mut light_vector = Vector {
                         x: self.light.origin.x - intersect.unwrap().direction.x,
                         y: self.light.origin.y - intersect.unwrap().direction.y,
                         z: self.light.origin.z - intersect.unwrap().direction.z,
                     };
-                    let mut normal_vector = Point {
+                    let mut normal_vector = Vector {
                         x: intersect.unwrap().direction.x - intersect.unwrap().origin.x,
                         y: intersect.unwrap().direction.y - intersect.unwrap().origin.y,
                         z: intersect.unwrap().direction.z - intersect.unwrap().origin.z,
@@ -174,18 +174,18 @@ impl Renderer {
                     let mut light_intensity: f64 = self.camera.diffuse * self.object.ambient;
                     light_intensity += (light_vector.dot_product(normal_vector)).max(0.0) * self.camera.diffuse * self.object.diffuse;
 
-                    let mut reflected: Point = light_vector.clone();
+                    let mut reflected: Vector = light_vector.clone();
                     reflected.reflect(normal_vector);
                     reflected.normalize();
                     let mut view = camera_to_pixel.clone() * -1.0;
                     view.normalize();
 
-                    let specular = 0.6 * 0.8 * reflected.dot_product(view).max(0.0).powf(2.0);
+                    let specular = 0.6 * 0.8 * reflected.dot_product(view).max(0.0).powf(8.0);
 
                     pixels.extend(&[
-                        (light_intensity * self.object.r as f64 /*+ specular * 255.0*/) as u8,
-                        (light_intensity * self.object.g as f64 /*+ specular * 255.0*/) as u8,
-                        (light_intensity * self.object.b as f64 /*+ specular * 255.0*/) as u8
+                        (light_intensity * self.object.r as f64 + specular * 255.0) as u8,
+                        (light_intensity * self.object.g as f64 + specular * 255.0) as u8,
+                        (light_intensity * self.object.b as f64 + specular * 255.0) as u8
                     ]);
                 } else {
                     pixels.extend(&[0x00, 0x00, 0x00]);
