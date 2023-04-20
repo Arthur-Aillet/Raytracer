@@ -84,10 +84,35 @@ impl Object for Sphere {
 
 impl Object for Plan {
     fn intersection(&self, ray: VectorF) -> Option<VectorF> {
-        let a = ray.direction.x;
-        let b = ray.direction.y;
-        let c = ray.direction.z;
-        let t = -(a * ray.origin.x + b * ray.origin.y + c * ray.origin.x);
-        None
+        //R0 = ray.origin
+        //Rd = ray_dest
+        // Pn = plan_norm.direction normal du plan (normalisée)
+        let ray_dest = ray.normalize().direction;
+        let plan_norm = self.normal.normalize();
+        let vd = ray_dest.dot_product(&plan_norm.direction);
+
+        if vd == 0.0 { // ray parallel to the plan
+            return None;
+        }
+
+        let v0 = -(plan_norm.direction.dot_product(&ray.origin) + self.distance);
+        if v0 < 0.0 { // intersection behind the camera
+            return None;
+        }
+
+        let t = v0 / (plan_norm.direction.dot_product(&ray_dest));
+        let intersection_point = Point{
+            x: ray.origin.x + ray_dest.x * t,
+            y: ray.origin.y + ray_dest.y * t,
+            z: ray.origin.z + ray_dest.z * t
+        };
+        Some ( VectorF {
+            origin: intersection_point,
+            direction: Point {
+                x: intersection_point.x + plan_norm.to_origin().direction.x,
+                y: intersection_point.y + plan_norm.to_origin().direction.y,
+                z: intersection_point.z + plan_norm.to_origin().direction.z,
+            }
+        })
     }
 }
