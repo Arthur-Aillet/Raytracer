@@ -7,7 +7,7 @@
 
 use crate::matrix;
 use matrix::Matrix;
-use std::ops::{Add, Mul};
+use std::ops::{Add, Mul, Sub};
 use std::os::unix::raw::off_t;
 
 #[derive(Debug, Clone, Copy)]
@@ -23,6 +23,28 @@ impl PartialEq for Point {
     }
 }
 
+impl Add<Point> for Point {
+    type Output = Point;
+    fn add(self, other: Point) -> Point {
+        Point {
+            x: self.x + other.x,
+            y: self.y + other.y,
+            z: self.z + other.z,
+        }
+    }
+}
+
+impl Sub<Point> for Point {
+    type Output = Point;
+    fn sub(self, other: Point) -> Point {
+        Point {
+            x: self.x - other.x,
+            y: self.y - other.y,
+            z: self.z - other.z,
+        }
+    }
+}
+
 impl Mul<f64> for Point {
     type Output = Point;
     fn mul(self, other: f64) -> Point {
@@ -35,6 +57,19 @@ impl Mul<f64> for Point {
 }
 
 impl Point {
+    pub fn rotate(&mut self, x: f64, y: f64, z: f64) {
+        let mut direction_matrix = Matrix::new(3, 1);
+        direction_matrix.data[0][0] = self.x;
+        direction_matrix.data[1][0] = self.y;
+        direction_matrix.data[2][0] = self.z;
+
+        let rotation_matrix = Matrix::euler_rotation(x, y, z);
+        let rotated_direction_matrix = rotation_matrix.multiply(&direction_matrix);
+        self.x = rotated_direction_matrix.data[0][0];
+        self.y = rotated_direction_matrix.data[1][0];
+        self.z = rotated_direction_matrix.data[2][0];
+    }
+
     pub fn dot_product(&self, other: Point) -> f64 {
         let dx = self.x * other.x;
         let dy = self.y * other.y;
@@ -49,10 +84,11 @@ impl Point {
         self.z = reflected.z - self.z;
     }
 
-    pub fn normalize(&mut self) {
+    pub fn normalize(&mut self) -> Point {
         self.x = self.x/self.len();
         self.y = self.y/self.len();
         self.z = self.z/self.len();
+        Point {x:self.x, y:self.y, z:self.z}
     }
 
     pub fn len(self) -> f64 {
@@ -136,6 +172,7 @@ impl VectorF {
         self.direction.y = rotated_direction_matrix.data[1][0];
         self.direction.z = rotated_direction_matrix.data[2][0];
     }
+
     pub fn add(&mut self, other: VectorF) {
         self.origin = Point {
             x: self.origin.x,

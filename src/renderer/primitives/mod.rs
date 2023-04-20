@@ -11,7 +11,7 @@ use vectors::Point;
 use vectors::resolve_quadratic_equation;
 
 pub trait Object {
-    fn intersection(&self, ray: VectorF) -> Option<VectorF>;
+    fn intersection(&self, ray: Point, camera: Point) -> Option<VectorF>;
 }
 
 #[derive(Debug)]
@@ -27,7 +27,7 @@ pub struct Sphere {
     pub diffuse: f64,
     pub ambient: f64,
     pub specular: f64,
-    pub shiness: f64,
+    pub shininess: f64,
     pub r: u8,
     pub g: u8,
     pub b: u8,
@@ -57,10 +57,11 @@ impl Plan {
 }
 
 impl Object for Sphere {
-    fn intersection(&self, ray: VectorF) -> Option<VectorF> {
-        let result = resolve_quadratic_equation(ray.direction.x.powf(2.0) + ray.direction.y.powf(2.0) + ray.direction.z.powf(2.0),
-                                   2.0 * (ray.direction.x * (ray.origin.x - self.origin.x) + ray.direction.y * (ray.origin.y - self.origin.y) + ray.direction.z * (ray.origin.z - self.origin.z)),
-                                   ((ray.origin.x - self.origin.x).powf(2.0) + (ray.origin.y - self.origin.y).powf(2.0) + (ray.origin.z - self.origin.z).powf(2.0)) - self.radius.powf(2.0));
+    fn intersection(&self, ray: Point, camera: Point) -> Option<VectorF> {
+        let diff = camera - self.origin;
+        let result = resolve_quadratic_equation(ray.dot_product(ray),
+                                   2.0 * (ray.dot_product(diff)),
+                                   (diff.dot_product(diff)) - self.radius.powi(2));
 
         let mut smallest_result: Option<f64> = None;
 
@@ -81,9 +82,9 @@ impl Object for Sphere {
                     z: self.origin.z,
                 },
                 direction: Point {
-                    x: ray.origin.x + ray.direction.x * smallest_result.unwrap_or(0.0),
-                    y: ray.origin.y + ray.direction.y * smallest_result.unwrap_or(0.0),
-                    z: ray.origin.z + ray.direction.z * smallest_result.unwrap_or(0.0),
+                    x: camera.x + ray.x * smallest_result.unwrap_or(0.0),
+                    y: camera.y + ray.y * smallest_result.unwrap_or(0.0),
+                    z: camera.z + ray.z * smallest_result.unwrap_or(0.0),
                 }
             })
         }
@@ -91,7 +92,7 @@ impl Object for Sphere {
 }
 
 impl Object for Plan {
-    fn intersection(&self, ray: VectorF) -> Option<VectorF> {
+    fn intersection(&self, ray: Point, camera: Point) -> Option<VectorF> {
         return None;
     }
 }
