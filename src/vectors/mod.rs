@@ -137,6 +137,24 @@ impl VectorF {
         let origin_v = self.to_origin();
         (origin_v.direction.x.powi(2) + origin_v.direction.y.powi(2) + origin_v.direction.z.powi(2)).sqrt()
     }
+
+    pub fn normalize(&self) -> VectorF {
+        let my_len = self.len();
+        let mut origin_vect = self.to_origin();
+        if my_len == 0.0 {
+            return *self;
+        }
+        origin_vect.direction.x = origin_vect.direction.x / my_len;
+        origin_vect.direction.y = origin_vect.direction.y / my_len;
+        origin_vect.direction.z = origin_vect.direction.z / my_len;
+        origin_vect.direction.x = self.origin.x + origin_vect.direction.x;
+        origin_vect.direction.y = self.origin.y + origin_vect.direction.y;
+        origin_vect.direction.z = self.origin.z + origin_vect.direction.z;
+        origin_vect.origin.x = self.origin.x;
+        origin_vect.origin.y = self.origin.y;
+        origin_vect.origin.z = self.origin.z;
+        origin_vect
+    }
 }
 
 pub fn number_of_solution(a: f64, b: f64, c: f64) -> i8 {
