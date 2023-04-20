@@ -82,7 +82,7 @@ impl Camera {
             fov: 60,
             diffuse: 0.7,
             ambient: 0.1,
-            specular: 0.7,
+            specular: 0.6,
             lens: Lens {
                 width: 1920,
                 height: 1080,
@@ -135,8 +135,8 @@ impl Renderer {
                 radius: 1.5,
                 ambient: 0.1,
                 diffuse: 0.7,
-                specular: 0.8,
-                shininess: 10.0,
+                specular: 0.4,
+                shininess: 4.0,
                 r: 0,
                 g: 255,
                 b: 255,
@@ -163,8 +163,8 @@ impl Renderer {
                     let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * self.object.diffuse;
 
                     let reflected = light_vector.reflect(normal_vector).normalize();
-                    let view = (camera_to_pixel.clone() * -1.0).normalize();
-                    let specular = 0.6 * 0.4 * reflected.dot_product(view).max(0.0).powf(4.0);
+                    let view = (camera_to_pixel * -1.0).normalize();
+                    let specular = self.camera.specular * self.object.specular * reflected.dot_product(view).max(0.0).powf(self.object.shininess);
 
                     pixels.extend(&[
                         ((ambient + diffuse) * self.object.r as f64 + specular * 255.0).clamp(0.0, 255.0) as u8,
