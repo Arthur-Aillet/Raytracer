@@ -22,7 +22,7 @@ mod tests {
                 y: 2.0,
                 z: 3.0,
             },
-            direction: Vector {
+            end: Vector {
                 x: 4.0,
                 y: 5.0,
                 z: 6.0,
@@ -35,7 +35,7 @@ mod tests {
                 y: 8.0,
                 z: 9.0,
             },
-            direction: Vector {
+            end: Vector {
                 x: 10.0,
                 y: 11.0,
                 z: 12.0,
@@ -53,7 +53,7 @@ mod tests {
             }
         );
         assert_eq!(
-            result.direction,
+            result.end,
             Vector {
                 x: 7.0,
                 y: 8.0,
@@ -70,7 +70,7 @@ mod tests {
                 y: 2.0,
                 z: 3.0,
             },
-            direction: Vector {
+            end: Vector {
                 x: 4.0,
                 y: 5.0,
                 z: 6.0,
@@ -78,7 +78,7 @@ mod tests {
         };
         vec.rotate(0.0, 0.0, 90.0);
         assert_eq!(
-            vec.direction,
+            vec.end,
             Vector {
                 x: -5.0,
                 y: 4.0,
@@ -134,7 +134,7 @@ mod tests {
                 y: 2.0,
                 z: 3.0,
             },
-            direction: Vector {
+            end: Vector {
                 x: 4.0,
                 y: 5.0,
                 z: 6.0,
@@ -147,7 +147,7 @@ mod tests {
                 y: 8.0,
                 z: 9.0,
             },
-            direction: Vector {
+            end: Vector {
                 x: 10.0,
                 y: 11.0,
                 z: 12.0,
@@ -166,7 +166,7 @@ mod tests {
             }
         );
         assert_eq!(
-            vec3.direction,
+            vec3.end,
             Vector {
                 x: 7.0,
                 y: 8.0,

@@ -70,7 +70,7 @@ impl Object for Sphere {
         } else {
             Some ( Segment {
                 origin : self.origin.clone(),
-                direction: Vector {
+                end: Vector {
                     x: camera.x + ray.x * smallest_result.unwrap_or(&0.0),
                     y: camera.y + ray.y * smallest_result.unwrap_or(&0.0),
                     z: camera.z + ray.z * smallest_result.unwrap_or(&0.0),

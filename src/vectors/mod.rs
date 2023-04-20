@@ -99,7 +99,7 @@ impl Vector {
 #[derive(Debug, Clone, Copy)]
 pub struct Segment {
     pub origin : Vector,
-    pub direction: Vector,
+    pub end: Vector,
 }
 
 impl Add<Segment> for Segment {
@@ -111,10 +111,10 @@ impl Add<Segment> for Segment {
                 y: self.origin.y,
                 z: self.origin.z,
             },
-            direction: Vector {
-                x: self.direction.x + other.direction.x - other.origin.x,
-                y: self.direction.y + other.direction.y - other.origin.y,
-                z: self.direction.z + other.direction.z - other.origin.z,
+            end: Vector {
+                x: self.end.x + other.end.x - other.origin.x,
+                y: self.end.y + other.end.y - other.origin.y,
+                z: self.end.z + other.end.z - other.origin.z,
             },
         }
     }
@@ -129,10 +129,10 @@ impl Mul<f64> for Segment {
                 y: self.origin.y,
                 z: self.origin.z,
             },
-            direction: Vector {
-                x: self.origin.x + (self.direction.x - self.origin.x) * other,
-                y: self.origin.y + (self.direction.y - self.origin.y) * other,
-                z: self.origin.z + (self.direction.z - self.origin.z) * other,
+            end: Vector {
+                x: self.origin.x + (self.end.x - self.origin.x) * other,
+                y: self.origin.y + (self.end.y - self.origin.y) * other,
+                z: self.origin.z + (self.end.z - self.origin.z) * other,
             },
         }
     }
@@ -142,7 +142,7 @@ impl PartialEq for Segment {
     fn eq(&self, other: &Self) -> bool {
         let vec1: Segment = self.to_origin();
         let vec2: Segment = other.to_origin();
-        vec1.direction == vec2.direction
+        vec1.end == vec2.end
     }
 }
 
@@ -152,7 +152,7 @@ impl Segment {
             x: 0.0,
             y: 0.0,
             z: 0.0,
-        }, direction: Vector {
+        }, end: Vector {
             x,
             y,
             z,
@@ -162,15 +162,15 @@ impl Segment {
 
     pub fn rotate(&mut self, x: f64, y: f64, z: f64) {
         let mut direction_matrix = Matrix::new(3, 1);
-        direction_matrix.data[0][0] = self.direction.x;
-        direction_matrix.data[1][0] = self.direction.y;
-        direction_matrix.data[2][0] = self.direction.z;
+        direction_matrix.data[0][0] = self.end.x;
+        direction_matrix.data[1][0] = self.end.y;
+        direction_matrix.data[2][0] = self.end.z;
 
         let rotation_matrix = Matrix::euler_rotation(x, y, z);
         let rotated_direction_matrix = rotation_matrix.multiply(&direction_matrix);
-        self.direction.x = rotated_direction_matrix.data[0][0];
-        self.direction.y = rotated_direction_matrix.data[1][0];
-        self.direction.z = rotated_direction_matrix.data[2][0];
+        self.end.x = rotated_direction_matrix.data[0][0];
+        self.end.y = rotated_direction_matrix.data[1][0];
+        self.end.z = rotated_direction_matrix.data[2][0];
     }
 
     pub fn add(&mut self, other: Segment) {
@@ -179,10 +179,10 @@ impl Segment {
             y: self.origin.y,
             z: self.origin.z,
         };
-        self.direction = Vector {
-            x: self.direction.x + other.direction.x - other.origin.x,
-            y: self.direction.y + other.direction.y - other.origin.y,
-            z: self.direction.z + other.direction.z - other.origin.z,
+        self.end = Vector {
+            x: self.end.x + other.end.x - other.origin.x,
+            y: self.end.y + other.end.y - other.origin.y,
+            z: self.end.z + other.end.z - other.origin.z,
         }
     }
 
@@ -191,17 +191,17 @@ impl Segment {
             x: 0.0,
             y: 0.0,
             z: 0.0,
-        }, direction: Vector {
-            x: self.direction.x - self.origin.x,
-            y: self.direction.y - self.origin.y,
-            z: self.direction.z - self.origin.z,
+        }, end: Vector {
+            x: self.end.x - self.origin.x,
+            y: self.end.y - self.origin.y,
+            z: self.end.z - self.origin.z,
         }
         }
     }
 
     pub fn len(&self) -> f64 {
         let origin_v = self.to_origin();
-        (origin_v.direction.x.powi(2) + origin_v.direction.y.powi(2) + origin_v.direction.z.powi(2)).sqrt()
+        (origin_v.end.x.powi(2) + origin_v.end.y.powi(2) + origin_v.end.z.powi(2)).sqrt()
     }
 }
 

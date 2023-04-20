@@ -158,14 +158,14 @@ impl Renderer {
                 let intersect = self.object.intersection(camera_to_pixel, self.camera.transform.pos);
                 if intersect != None {
                     let mut light_vector = Vector {
-                        x: self.light.origin.x - intersect.unwrap().direction.x,
-                        y: self.light.origin.y - intersect.unwrap().direction.y,
-                        z: self.light.origin.z - intersect.unwrap().direction.z,
+                        x: self.light.origin.x - intersect.unwrap().end.x,
+                        y: self.light.origin.y - intersect.unwrap().end.y,
+                        z: self.light.origin.z - intersect.unwrap().end.z,
                     };
                     let mut normal_vector = Vector {
-                        x: intersect.unwrap().direction.x - intersect.unwrap().origin.x,
-                        y: intersect.unwrap().direction.y - intersect.unwrap().origin.y,
-                        z: intersect.unwrap().direction.z - intersect.unwrap().origin.z,
+                        x: intersect.unwrap().end.x - intersect.unwrap().origin.x,
+                        y: intersect.unwrap().end.y - intersect.unwrap().origin.y,
+                        z: intersect.unwrap().end.z - intersect.unwrap().origin.z,
                     };
 
                     light_vector.normalize();
