@@ -63,7 +63,7 @@ impl Object for Sphere {
                                                 2.0 * (ray.dot_product(diff)),
                                                 (diff.dot_product(diff)) - self.radius.powi(2));
 
-        let smallest_result: Option<&f64> = result.iter().min_by(|a, b| a.partial_cmp(b).unwrap());
+        let smallest_result: Option<&f64> = result.iter().filter(|number| **number > 0.0).min_by(|a, b| a.partial_cmp(b).unwrap());
         //filter neg
         if smallest_result == None {
             None
