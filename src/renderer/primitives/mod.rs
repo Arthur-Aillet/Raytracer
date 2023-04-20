@@ -26,8 +26,8 @@ pub struct Sphere {
 }
 
 pub struct Plan {
-    origin: Point,
-    endPoint: Point,
+    pub normal: VectorF,
+    pub distance: f64
 }
 
 impl Sphere {
@@ -39,20 +39,20 @@ impl Sphere {
     }
 }
 
-impl Plan {
-    pub fn set_origin(&mut self, point: Point) {
-        self.origin = point;
-    }
-    pub fn set_endPoint(&mut self, point: Point) {
-        self.endPoint = point;
-    }
-}
+// impl Plan {
+//     pub fn set_origin(&mut self, point: Point) {
+//         self.origin = point;
+//     }
+//     pub fn set_endPoint(&mut self, point: Point) {
+//         self.endPoint = point;
+//     }
+// }
 
 impl Object for Sphere {
     fn intersection(&self, ray: VectorF) -> Option<VectorF> {
         let result = resolve_quadratic_equation(ray.direction.x.powf(2.0) + ray.direction.y.powf(2.0) + ray.direction.z.powf(2.0),
-                                   2.0 * (ray.direction.x * (ray.origin.x - self.origin.x) + ray.direction.y * (ray.origin.y - self.origin.y) + ray.direction.z * (ray.origin.z - self.origin.z)),
-                                   ((ray.origin.x - self.origin.x).powf(2.0) + (ray.origin.y - self.origin.y).powf(2.0) + (ray.origin.z - self.origin.z).powf(2.0)) - self.radius.powf(2.0));
+            2.0 * (ray.direction.x * (ray.origin.x - self.origin.x) + ray.direction.y * (ray.origin.y - self.origin.y) + ray.direction.z * (ray.origin.z - self.origin.z)),
+            ((ray.origin.x - self.origin.x).powf(2.0) + (ray.origin.y - self.origin.y).powf(2.0) + (ray.origin.z - self.origin.z).powf(2.0)) - self.radius.powf(2.0));
 
         let mut smallest_result: Option<f64> = None;
 
@@ -84,6 +84,10 @@ impl Object for Sphere {
 
 impl Object for Plan {
     fn intersection(&self, ray: VectorF) -> Option<VectorF> {
-        return None;
+        let a = ray.direction.x;
+        let b = ray.direction.y;
+        let c = ray.direction.z;
+        let t = -(a * ray.origin.x + b * ray.origin.y + c * ray.origin.x);
+        None
     }
 }
