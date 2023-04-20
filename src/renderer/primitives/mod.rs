@@ -21,7 +21,7 @@ pub struct Light {
     pub color: Vector,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Sphere {
     pub origin: Vector,
     pub radius: f64,
