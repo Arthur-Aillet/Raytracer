@@ -79,7 +79,7 @@ impl Camera {
     fn new() -> Self {
         let mut result = Camera {
             transform: Transform::new(0.0, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, 0.0, 0.0),
-            fov: 70,
+            fov: 60,
             diffuse: 0.7,
             ambient: 0.1,
             specular: 0.7,
@@ -100,7 +100,6 @@ impl Camera {
         result.lens.vector_to_first_pixel = result.lens.vector_to_first_pixel + Vector {x:0.0, y:0.0, z:1.0} * (result.lens.height as f64 / 2.0);
         result.lens.vector_to_first_pixel = result.lens.vector_to_first_pixel + vector_director;
         result.lens.vector_to_first_pixel = result.lens.vector_to_first_pixel + Vector {x:-1.0, y:0.0, z:0.0} * (result.lens.width as f64 / 2.0);
-        println!("{:?}", result.lens.vector_to_first_pixel);
         result
     }
 
@@ -114,7 +113,7 @@ impl Camera {
     }
 // Point { x: -960.0, y: 441.91302184715596, z: 540.0 } }
     fn calculate_lens_distance(&mut self) {
-        self.lens.distance = (self.lens.height as f64 / 2.0) / (self.fov as f64).tan();
+        self.lens.distance = (self.lens.height as f64 / 2.0) / (self.fov as f64).to_radians().tan();
     }
 
     pub fn calculate_tone_mapping(val: f64) -> f64{
