@@ -6,10 +6,11 @@
 //
 
 pub mod primitives;
+
+use std::f64::INFINITY;
 use crate::vectors;
 use vectors::Vector;
-use vectors::Segment;
-use crate::renderer::primitives::{Object, Sphere, Light};
+use crate::renderer::primitives::{Object, Sphere, Light, Intersection};
 
 #[derive(Debug, Clone)]
 pub struct Transform {
@@ -79,7 +80,7 @@ impl Camera {
     fn new() -> Self {
         let mut result = Camera {
             transform: Transform::new(0.0, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, 0.0, 0.0),
-            fov: 90,
+            fov: 80,
             diffuse: 0.7,
             ambient: 0.3,
             specular: 0.6,
@@ -132,10 +133,22 @@ impl Renderer {
             camera: Camera::new(),
             objects: vec![
                 Sphere {
-                    origin: Vector {x:0.0, y:3.0, z:0.0},
-                    radius: 1.5,
+                    origin: Vector {x:2.0, y:3.0, z:1.0},
+                    radius: 1.0,
                         ambient: 0.3,
-                    diffuse: 0.7,
+                    diffuse: 0.5,
+                    specular: 0.4,
+                    shininess: 4.0,
+                    color: Vector {
+                        x: 1.0,
+                        y: 1.0,
+                        z: 1.0,
+                    }
+                }, Sphere {
+                    origin: Vector {x:-2.0, y:3.0, z:-1.0},
+                    radius: 1.0,
+                    ambient: 0.3,
+                    diffuse: 0.5,
                     specular: 0.4,
                     shininess: 4.0,
                     color: Vector {
@@ -145,10 +158,46 @@ impl Renderer {
                     }
                 },
                 Sphere {
-                    origin: Vector {x:3.0, y:5.0, z:-1.0},
-                    radius: 1.5,
+                    origin: Vector {x:-2.0, y:6.0, z:0.5},
+                    radius: 1.0,
                     ambient: 0.3,
-                    diffuse: 0.7,
+                    diffuse: 0.5,
+                    specular: 0.4,
+                    shininess: 4.0,
+                    color: Vector {
+                        x: 1.0,
+                        y: 1.0,
+                        z: 1.0,
+                    }
+                },                Sphere {
+                    origin: Vector {x:2.0, y:6.0, z:-0.5},
+                    radius: 1.0,
+                    ambient: 0.3,
+                    diffuse: 0.5,
+                    specular: 0.4,
+                    shininess: 4.0,
+                    color: Vector {
+                        x: 1.0,
+                        y: 1.0,
+                        z: 1.0,
+                    }
+                },                Sphere {
+                    origin: Vector {x:-2.0, y:9.0, z:0.7},
+                    radius: 1.0,
+                    ambient: 0.3,
+                    diffuse: 0.5,
+                    specular: 0.4,
+                    shininess: 4.0,
+                    color: Vector {
+                        x: 1.0,
+                        y: 1.0,
+                        z: 1.0,
+                    }
+                },                Sphere {
+                    origin: Vector {x:2.0, y:9.0, z:-0.7},
+                    radius: 1.0,
+                    ambient: 0.3,
+                    diffuse: 0.5,
                     specular: 0.4,
                     shininess: 4.0,
                     color: Vector {
@@ -159,39 +208,37 @@ impl Renderer {
                 },
             ],
             lights: vec![ Light {
-                origin: Vector {x:3.0, y:-5.0, z:4.0},
+                origin: Vector {x:0.0, y:3.0, z:0.0},
                 intensity: 1000.0,
                 color: Vector {
                     x: 1.0,
-                    y: 0.3,
+                    y: 0.7,
                     z: 1.0,
                 }
-            },
-            Light {
-                origin: Vector {x:-7.0, y:0.0, z:-3.0},
+            }, Light {
+                origin: Vector {x:0.0, y:0.0, z:0.0},
                 intensity: 1000.0,
                 color: Vector {
                     x: 0.1,
                     y: 0.1,
                     z: 1.0,
                 }
-            },
-            Light {
-            origin: Vector {x:0.0, y:1.3, z:3.0},
-            intensity: 1000.0,
-            color: Vector {
-                x: 0.1,
-                y: 1.0,
-                z: 0.1,
+            }, Light {
+                origin: Vector {x:0.0, y:7.0, z:0.0},
+                intensity: 1000.0,
+                color: Vector {
+                    x: 0.1,
+                    y: 1.0,
+                    z: 5.0,
                 }
             },
             ]
         }
     }
 
-    fn calculate_light(&self, light: &Light, intersect: Segment, camera_to_pixel: Vector, object: Sphere) -> Vector {
-        let light_vector = (light.origin - intersect.end).normalize();
-        let normal_vector = (intersect.end - intersect.origin).normalize();
+    fn calculate_light(&self, light: &Light, intersect: Intersection, camera_to_pixel: Vector, object: Sphere) -> Vector {
+        let light_vector = (light.origin - intersect.intersection_point).normalize();
+        let normal_vector = intersect.normal.normalize();
 
         let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * object.diffuse;
 
@@ -202,24 +249,40 @@ impl Renderer {
         object.color * light.color * diffuse + light.color * specular
     }
 
+    fn found_nearest_intersection(&self, camera_to_pixel: Vector) -> Option<Intersection> {
+        let mut found_intersection: Option<Intersection> = None;
+        let mut smallest_distance: f64 = f64::INFINITY;
+
+        for object in self.objects.iter() {
+            let intersect = object.intersection(camera_to_pixel, self.camera.transform.pos);
+
+            if intersect != None {
+
+                let distance_found = (intersect.unwrap().intersection_point - self.camera.transform.pos).len();
+                if distance_found < smallest_distance {
+                    smallest_distance = distance_found;
+                    found_intersection = Some (Intersection{
+                        intersection_point: intersect.unwrap().intersection_point,
+                        normal: intersect.unwrap().normal,
+                        object: Some(*object)
+                    });
+                }
+            }
+        }
+        found_intersection
+    }
+
     pub fn render(&self) -> Vec<u8> {
         let mut pixels:Vec<u8> = Vec::new();
 
         for i in 0..self.camera.lens.height {
             for j in 0..self.camera.lens.width {
                 let camera_to_pixel = self.camera.get_pixel_vector(j, i);
-                /*let intersect : Option<Segment> = None;
-                let found_object: Sphere;
-                for object in self.objects.iter() {*/
-                    let intersect = self.objects[0].intersection(camera_to_pixel, self.camera.transform.pos);
-                /*    if intersect != None {
-
-                    }
-                }*/
+                let intersect = self.found_nearest_intersection(camera_to_pixel);
                 if intersect != None {
-                    let mut color = self.objects[0].color * self.camera.ambient * self.objects[0].ambient;
+                    let mut color = intersect.unwrap().object.unwrap().color * self.camera.ambient * intersect.unwrap().object.unwrap().ambient;
                     for light in self.lights.iter() {
-                        color = color + self.calculate_light(light, intersect.unwrap(), camera_to_pixel, self.objects[0]);
+                        color = color + self.calculate_light(light, intersect.unwrap(), camera_to_pixel, intersect.unwrap().object.unwrap());
                     }
                     pixels.extend(&[
                         ((color.x).clamp(0.0, 1.0) * 255.0) as u8,
@@ -227,7 +290,11 @@ impl Renderer {
                         ((color.z).clamp(0.0, 1.0) * 255.0) as u8
                     ]);
                 } else {
-                    pixels.extend(&[0x00, 0x00, 0x00]);
+                    pixels.extend(&[
+                        (0 as f64) as u8,
+                        (0 as f64) as u8,
+                        (0 as f64) as u8
+                    ]);
                 }
             }
         }

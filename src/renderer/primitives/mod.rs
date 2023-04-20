@@ -11,7 +11,14 @@ use vectors::Vector;
 use vectors::resolve_quadratic_equation;
 
 pub trait Object {
-    fn intersection(&self, ray: Vector, camera: Vector) -> Option<Segment>;
+    fn intersection(&self, ray: Vector, camera: Vector) -> Option<Intersection>;
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Intersection {
+    pub intersection_point: Vector,
+    pub normal: Vector,
+    pub object: Option<Sphere>,
 }
 
 #[derive(Debug)]
@@ -21,7 +28,7 @@ pub struct Light {
     pub color: Vector,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Sphere {
     pub origin: Vector,
     pub radius: f64,
@@ -56,7 +63,7 @@ impl Plan {
 }
 
 impl Object for Sphere {
-    fn intersection(&self, ray: Vector, camera: Vector) -> Option<Segment> {
+    fn intersection(&self, ray: Vector, camera: Vector) -> Option<Intersection> {
         let diff = camera - self.origin;
         let result = resolve_quadratic_equation(ray.dot_product(ray), // could be 1 if normalized
                                                 2.0 * (ray.dot_product(diff)),
@@ -67,20 +74,22 @@ impl Object for Sphere {
         if smallest_result == None {
             None
         } else {
-            Some ( Segment {
-                origin : self.origin.clone(),
-                end: Vector {
-                    x: camera.x + ray.x * smallest_result.unwrap(),
-                    y: camera.y + ray.y * smallest_result.unwrap(),
-                    z: camera.z + ray.z * smallest_result.unwrap(),
-                }
+            let point = Vector {
+                x: camera.x + ray.x * smallest_result.unwrap(),
+                y: camera.y + ray.y * smallest_result.unwrap(),
+                z: camera.z + ray.z * smallest_result.unwrap(),
+            };
+            Some ( Intersection {
+                normal: point - self.origin,
+                intersection_point: point,
+                object: None
             })
         }
     }
 }
 
 impl Object for Plan {
-    fn intersection(&self, ray: Vector, camera: Vector) -> Option<Segment> {
+    fn intersection(&self, ray: Vector, camera: Vector) -> Option<Intersection> {
         return None;
     }
 }
