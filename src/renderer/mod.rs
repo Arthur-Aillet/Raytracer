@@ -107,8 +107,8 @@ impl Camera {
     fn get_pixel_vector(&self, x: i64, y: i64) -> Vector {
         let mut pixel_vector = self.lens.vector_to_first_pixel.clone();
 
-        pixel_vector = pixel_vector + Vector {x:0.0, y:0.0, z:-1.0} * x as f64;
-        pixel_vector = pixel_vector + Vector {x:1.0, y:0.0, z:0.0} * y as f64;
+        pixel_vector = pixel_vector + Vector {x:1.0, y:0.0, z:0.0} * x as f64;
+        pixel_vector = pixel_vector + Vector {x:0.0, y:0.0, z:-1.0} * y as f64;
         pixel_vector.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
         pixel_vector.normalize()
     }
@@ -154,7 +154,7 @@ impl Renderer {
 
         for i in 0..self.camera.lens.height {
             for j in 0..self.camera.lens.width {
-                let camera_to_pixel = self.camera.get_pixel_vector(i, j);
+                let camera_to_pixel = self.camera.get_pixel_vector(j, i);
                 let intersect = self.object.intersection(camera_to_pixel, self.camera.transform.pos);
                 if intersect != None {
                     let light_vector = (self.light.origin - intersect.unwrap().end).normalize();
