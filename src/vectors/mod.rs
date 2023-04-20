@@ -77,7 +77,7 @@ impl Vector {
         dx + dy + dz
     }
 
-    pub fn reflect(&mut self, reference: Vector) -> Self {
+    pub fn reflect(&self, reference: Vector) -> Self {
         let reflected = reference * 2.0 * (self.dot_product(reference));
         Vector {
             x: reflected.x - self.x,
