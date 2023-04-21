@@ -145,8 +145,20 @@ impl Renderer {
                         z: 1.0,
                     },
                 }, Sphere {
-                    origin: Vector {x:1.0, y:5.0, z:-1.0},
-                    radius: 1.0,
+                    origin: Vector {x:25.0, y:40.0, z:-25.0},
+                    radius: 2.0,
+                    ambient: 0.3,
+                    diffuse: 0.5,
+                    specular: 0.4,
+                    shininess: 4.0,
+                    color: Vector {
+                        x: 1.0,
+                        y: 1.0,
+                        z: 1.0,
+                    },
+                }, Sphere {
+                    origin: Vector {x:7.0, y:20.0, z:-7.0},
+                    radius: 2.0,
                     ambient: 0.3,
                     diffuse: 0.5,
                     specular: 0.4,
@@ -160,7 +172,7 @@ impl Renderer {
             ],
             lights: vec![ Light {
                 origin: Vector {x:-4.0, y:-5.0, z:0.0},
-                intensity: 1000.0,
+                intensity: 100.0,
                 color: Vector {
                     x: 1.0,
                     y: 1.0,
@@ -186,8 +198,9 @@ impl Renderer {
         let reflected = light_vector.reflect(normal_vector).normalize();
         let view = (camera_to_pixel * -1.0).normalize();
         let specular = self.camera.specular * object.specular * reflected.dot_product(view).max(0.0).powf(object.shininess);
-
-        object.color * light.color * diffuse + light.color * specular
+        let distance = intersect.intersection_point.distance(light.origin);
+        let light_falloff = (light.intensity / distance.powi(2)).max(0.0);
+        object.color * light.color * diffuse * light_falloff + light.color * specular * light_falloff
     }
 
     fn found_nearest_intersection(&self, camera_to_pixel: Vector) -> Option<Intersection> {

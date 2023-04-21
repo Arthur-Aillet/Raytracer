@@ -105,6 +105,10 @@ impl Vector {
         }
     }
 
+    pub fn distance(&self, other: Vector) -> f64 {
+        ((self.x - other.x).powi(2) + (self.y - other.y).powi(2) + (self.z - other.z).powi(2)).sqrt()
+    }
+
     pub fn len(self) -> f64 {
         (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
     }
