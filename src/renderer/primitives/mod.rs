@@ -97,7 +97,7 @@ impl Object for Plan {
         let plan_norm = self.normal.normalize();
         let vd = ray_dest.dot_product(plan_norm);
 
-        if vd == 0.0 { // ray parallel to the plan
+        if vd >= 0.0 { // ray parallel to the plan
             return None;
         }
 
@@ -107,6 +107,9 @@ impl Object for Plan {
         }
 
         let t = v0 / (plan_norm.dot_product(ray_dest));
+        //if v0 < 0.0 {
+        //    return None;
+        //}
         let intersection_point = Vector{
             x: camera.x + ray_dest.x * t,
             y: camera.y + ray_dest.y * t,
