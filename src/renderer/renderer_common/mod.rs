@@ -18,7 +18,7 @@ pub struct Transform {
 
 impl Transform {
     pub fn default() -> Transform {
-        let transform = Transform {
+        Transform {
             pos: Vector {
                 x: 0.0,
                 y: 0.0,
@@ -34,8 +34,7 @@ impl Transform {
                 y: 1.0,
                 z: 1.0,
             },
-        };
-        transform
+        }
     }
 }
 
@@ -48,12 +47,11 @@ pub struct Color {
 
 impl Color {
     pub fn default() -> Color {
-        let color = Color {
+        Color {
             r: 255.0,
             g: 255.0,
             b: 255.0,
-        };
-        color
+        }
     }
 }
 
@@ -70,15 +68,14 @@ pub struct Texture {
 impl Texture {
 
     pub fn default() -> Texture {
-        let texture = Texture {
+        Texture {
             texture_type: 1,
             color: Color::default(),
             diffuse: 0.7,
             ambient: 0.1,
             specular: 0.4,
             shininess: 4.0,
-        };
-        texture
+        }
     }
 
     pub fn texture(&self, _x: f64, _y: f64) -> Color {

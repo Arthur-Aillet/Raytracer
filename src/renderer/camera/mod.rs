@@ -20,7 +20,7 @@ pub struct Lens {
 
 impl Lens  {
     pub fn default() -> Lens {
-        let lens = Lens {
+        Lens {
             height: 1080,
             width: 1920,
             distance : 0.0,
@@ -29,8 +29,7 @@ impl Lens  {
                 y: 0.0,
                 z: 0.0
             },
-        };
-        lens
+        }
     }
 }
 

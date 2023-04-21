@@ -32,63 +32,35 @@ impl Parser {
     }
 
     pub fn get_transform_from_json(&self, json: &Value) -> Transform {
-        let is_pos = json["pos"].is_object();
-        let is_rot = json["rotation"].is_object();
-        let is_scale = json["scale"].is_object();
-        let posval: Vector;
-        let rotval: Vector;
-        let scaleval: Vector;
-
-
-        if is_pos {posval = self.get_vector_from_json(&json["pos"]);}
-        else {posval = Vector {x: 0.0, y: 0.0, z: 0.0};}
-        if is_rot {rotval = self.get_vector_from_json(&json["rotation"]);}
-        else {rotval = Vector {x: 0.0, y: 0.0, z: 0.0};}
-        if is_scale {scaleval = self.get_vector_from_json(&json["scale"]);}
-        else {scaleval = Vector {x: 1.0, y: 1.0, z: 1.0};}
-        let transform = Transform {
-            pos: posval,
-            rotation: rotval,
-            scale:  scaleval,
-        };
-        transform
+        Transform {
+            pos: if json["pos"].is_object() {self.get_vector_from_json(&json["pos"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
+            rotation: if json["rotation"].is_object() {self.get_vector_from_json(&json["rotation"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
+            scale: if json["scale"].is_object() {self.get_vector_from_json(&json["scale"])} else {Vector {x: 1.0, y: 1.0, z: 1.0}},
+        }
     }
 
     pub fn get_lens_from_json(&self, json: &Value) -> Lens {
         let option_h = json["height"].as_i64();
         let option_w = json["width"].as_i64();
         let option_d =json["distance"].as_f64();
-        let is_vec = json["vector_to_first_pixel"].is_object();
-        let vecval: Vector;
 
-        if is_vec {vecval = self.get_vector_from_json(&json["vector_to_first_pixel"]);}
-        else {vecval = Vector {x: 0.0, y: 0.0, z: 0.0};}
-        let lens = Lens {
+        Lens {
             height: option_h.unwrap_or(0),
             width: option_w.unwrap_or(0),
             distance: option_d.unwrap_or(0.0),
-            vector_to_first_pixel: vecval,
-        };
-        lens
+            vector_to_first_pixel: if json["vector_to_first_pixel"].is_object() {self.get_vector_from_json(&json["vector_to_first_pixel"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
+        }
     }
 
     pub fn get_camera_from_json(&self, json: &Value) -> Camera {
-        let is_trans = json["transform"].is_object();
-        let is_lens = json["lens"].is_object();
         let option_f = json["fov"].as_i64();
         let option_d = json["diffuse"].as_f64();
         let option_a = json["ambient"].as_f64();
         let option_s = json["specular"].as_f64();
-        let transval : Transform;
-        let lensval : Lens;
 
-        if is_trans {transval = self.get_transform_from_json(&json["transform"]);}
-        else {transval = Transform::default();}
-        if is_lens {lensval = self.get_lens_from_json(&json["lens"]);}
-        else {lensval = Lens::default();}
         let mut camera = Camera {
-            transform: transval,
-            lens: lensval,
+            transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
+            lens: if json["lens"].is_object() {self.get_lens_from_json(&json["lens"])} else {Lens::default()},
             fov: option_f.unwrap_or(60),
             diffuse: option_d.unwrap_or(0.7),
             ambient: option_a.unwrap_or(0.1),
@@ -108,140 +80,101 @@ impl Parser {
         let option_g = json["g"].as_f64();
         let option_b = json["b"].as_f64();
 
-        let color = Color {
+        Color {
             r: (option_r.unwrap_or(255.0) % 256.0),
             g: (option_g.unwrap_or(255.0) % 256.0),
             b: (option_b.unwrap_or(255.0) % 256.0),
-        };
-        color
+        }
     }
 
     pub fn get_texture_from_json(&self, json: &Value) -> Texture {
         let option_t = json["texture_type"].as_u64();
-        let is_col = json["color"].is_object();
         let option_d = json["diffuse"].as_f64();
         let option_a = json["ambient"].as_f64();
         let option_sp = json["specular"].as_f64();
         let option_sh = json["shininess"].as_f64();
-        let colval: Color;
 
-        if is_col {colval = self.get_color_from_json(&json["color"]);}
-        else {colval = Color::default();}
-        let texture = Texture {
+        Texture {
             texture_type: option_t.unwrap_or(1),
-            color: colval,
+            color: if json["color"].is_object(){self.get_color_from_json(&json["color"])} else {Color::default()},
             diffuse: option_d.unwrap_or(0.7),
             ambient: option_a.unwrap_or(0.1),
             specular: option_sp.unwrap_or(0.4),
             shininess: option_sh.unwrap_or(4.0),
-        };
-
-        texture
+        }
     }
 
     pub fn get_sphere_from_json(&self, json: &Value) -> Box::<Sphere> {
-        let is_trans = json["transform"].is_object();
-        let is_tex = json["texture"].is_object();
         let option_r = json["radius"].as_f64();
-        let transval : Transform;
-        let texval : Texture;
 
-        if is_trans {transval = self.get_transform_from_json(&json["transform"]);}
-        else {transval = Transform::default();}
-        if is_tex {texval = self.get_texture_from_json(&json["texture"]);}
-        else {texval = Texture::default();}
-        let sphere = Sphere {
-            transform: transval,
-            texture: texval,
-            radius: option_r.unwrap_or(1.0),
-        };
-        Box::new(sphere)
+        Box::new(
+            Sphere {
+                transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
+                texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
+                radius: option_r.unwrap_or(1.0),
+            }
+        )
     }
 
     pub fn get_plane_from_json(&self, json: &Value) -> Box::<Plane> {
-        let is_tex = json["texture"].is_object();
-        let is_norm = json["normal"].is_object();
         let option_d = json["vector"].as_f64();
-        let texval : Texture;
-        let normval : Vector;
 
-        if is_tex {texval = self.get_texture_from_json(&json["texture"]);}
-        else {texval = Texture::default();}
-        if is_norm {normval = self.get_vector_from_json(&json["normal"]);}
-        else {normval = Vector {x: 0.0, y: 0.0, z: 0.0};}
-        let plane = Plane {
-            texture: texval,
-            normal: normval,
-            distance: option_d.unwrap_or(0.0),
-        };
-        Box::new(plane)
+        Box::new(
+            Plane {
+                texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
+                normal: if json["normal"].is_object(){self.get_vector_from_json(&json["normal"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
+                distance: option_d.unwrap_or(0.0),
+            }
+        )
     }
 
     pub fn get_cylinder_from_json(&self, json: &Value) -> Box::<Cylinder> {
-        let is_trans = json["transform"].is_object();
-        let is_tex = json["texture"].is_object();
         let option_h = json["height"].as_f64();
         let option_r = json["radius"].as_f64();
-        let transval : Transform;
-        let texval : Texture;
 
-        if is_trans {transval = self.get_transform_from_json(&json["transform"]);}
-        else {transval = Transform::default();}
-        if is_tex {texval = self.get_texture_from_json(&json["texture"]);}
-        else {texval = Texture::default();}
-        let cylinder = Cylinder {
-            transform: transval,
-            texture: texval,
-            height: option_h.unwrap_or(2.0),
-            radius: option_r.unwrap_or(1.0),
-        };
-        Box::new(cylinder)
+        Box::new(
+            Cylinder {
+                transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
+                texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
+                height: option_h.unwrap_or(2.0),
+                radius: option_r.unwrap_or(1.0),
+            }
+        )
     }
 
     pub fn get_cone_from_json(&self, json: &Value) -> Box::<Cone> {
-        let is_trans = json["transform"].is_object();
-        let is_tex = json["texture"].is_object();
         let option_h = json["height"].as_f64();
         let option_r = json["radius"].as_f64();
-        let transval: Transform;
-        let texval: Texture;
 
-        if is_trans {transval = self.get_transform_from_json(&json["transform"]);}
-        else {transval = Transform::default();}
-        if is_tex {texval = self.get_texture_from_json(&json["texture"]);}
-        else {texval = Texture::default();}
-        let cone = Cone {
-            transform: transval,
-            texture: texval,
-            height: option_h.unwrap_or(3.0),
-            radius: option_r.unwrap_or(1.0),
-        };
-        Box::new(cone)
+        Box::new(
+            Cone {
+                transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
+                texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
+                height: option_h.unwrap_or(3.0),
+                radius: option_r.unwrap_or(1.0),
+            }
+        )
     }
 
     pub fn get_objects_from_json(&self, json: &Value) -> Vec::<Box::<dyn Object>> {
         let mut objects: Vec::<Box::<dyn Object>> = Vec::new();
-        let is_sph = json["spheres"].is_array();
-        let is_pla = json["planes"].is_array();
-        let is_cyl = json["cylinders"].is_array();
-        let is_con = json["cones"].is_array();
 
-        if is_sph {
+        if json["spheres"].is_array() {
             for sphere in json["spheres"].as_array().unwrap().iter() {
                 objects.push(self.get_sphere_from_json(sphere))
             }
         }
-        if is_pla {
+        if json["planes"].is_array() {
             for plane in json["planes"].as_array().unwrap().iter() {
                 objects.push(self.get_plane_from_json(plane))
             }
         }
-        if is_cyl {
+        if json["cylinders"].is_array() {
             for cylinder in json["cylinders"].as_array().unwrap().iter() {
                 objects.push(self.get_cylinder_from_json(cylinder))
             }
         }
-        if is_con {
+        if json["cones"].is_array() {
             for cone in json["cones"].as_array().unwrap().iter() {
                 objects.push(self.get_cone_from_json(cone))
             }
@@ -250,29 +183,21 @@ impl Parser {
     }
 
     pub fn get_directional_from_json(&self, json: &Value) -> Box::<Directional> {
-        let is_trans = json["transform"].is_object();
-        let is_col = json["color"].is_object();
         let option_s = json["strength"].as_f64();
-        let transval: Transform;
-        let colval: Color;
 
-        if is_trans {transval = self.get_transform_from_json(&json["transform"]);}
-        else {transval = Transform::default();}
-        if is_col {colval = self.get_color_from_json(&json["transform"]);}
-        else {colval = Color::default();}
-        let directional = Directional {
-            transform: transval,
-            color: colval,
-            strength: option_s.unwrap_or(1000.0),
-        };
-        Box::new(directional)
+        Box::new(
+            Directional {
+                transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
+                color: if json["color"].is_object() {self.get_color_from_json(&json["transform"])} else {Color::default()},
+                strength: option_s.unwrap_or(1000.0),
+            }
+        )
     }
 
     pub fn get_object_lights_from_json(&self, json: &Value) -> Vec::<Box::<dyn Light>> {
         let mut lights: Vec::<Box::<dyn Light>> = Vec::new();
-        let isdir = json["directional"].is_array();
 
-        if isdir {
+        if json["directional"].is_array(){
             for directional in json["directional"].as_array().unwrap().iter() {
                 lights.push(self.get_directional_from_json(directional))
             }
@@ -281,24 +206,21 @@ impl Parser {
     }
 
     pub fn get_ambiant_from_json(&self, json: &Value) -> Ambiant {
-        let is_col = json["color"].is_object();
         let option_s = json["strength"].as_f64();
         let colval: Color;
 
-        if is_col {colval = self.get_color_from_json(&json["transform"]);}
+        if json["color"].is_object() {colval = self.get_color_from_json(&json["transform"]);}
         else {colval = Color::default();}
-        let ambiant = Ambiant {
+        Ambiant {
             color: colval,
             strength: option_s.unwrap_or(1000.0),
-        };
-        ambiant
+        }
     }
 
     pub fn get_ambiants_from_json(&self, json: &Value) -> Vec::<Ambiant> {
         let mut lights: Vec::<Ambiant> = Vec::new();
-        let is_amb = json["ambiant"].is_array();
 
-        if is_amb {
+        if json["ambiant"].is_array() {
             for ambiant in json["ambiant"].as_array().unwrap().iter() {
                 lights.push(self.get_ambiant_from_json(ambiant))
             }
@@ -307,16 +229,14 @@ impl Parser {
     }
 
     pub fn get_lights_from_json(&self, json: &Value) -> Lights {
-        let is_obj = json["objects"].is_object();
         let objval : Vec::<Box::<dyn Light>>;
 
-        if is_obj {objval = self.get_object_lights_from_json(&json["objects"]);}
+        if json["objects"].is_object() {objval = self.get_object_lights_from_json(&json["objects"]);}
         else {objval = Vec::new()}
-        let lights = Lights {
+        Lights {
             lights: objval,
             ambiant: self.get_ambiants_from_json(&json),
-        };
-        lights
+        }
     }
 
 }

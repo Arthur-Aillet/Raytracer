@@ -42,11 +42,10 @@ pub struct Ambiant {
 
 impl Ambiant {
     pub fn default() -> Ambiant {
-        let ambiant = Ambiant {
+        Ambiant {
             color: Color::default(),
             strength: 1000.0,
-        };
-        ambiant
+        }
     }
 }
 

@@ -39,26 +39,13 @@ pub struct Cone {
 
 pub trait Object {
     fn intersection(&self, ray: Vector, camera: Vector) -> Option<Segment>;
-    fn obj_type(&self) -> String;
-    fn get_transform(&self) -> Transform;
     fn set_transform(&mut self, new: Transform);
     fn get_texture(&self) -> Texture;
     fn set_texture(&mut self, new: Texture);
-    fn get_radius(&self) -> f64;
     fn set_radius(&mut self, new: f64);
-    fn get_distance(&self) -> f64;
     fn set_distance(&mut self, new: f64);
-    fn get_height(&self) -> f64;
     fn set_height(&mut self, new: f64);
-    fn get_normal(&self) -> Vector;
     fn set_normal(&mut self, new: Vector);
-    fn slanted_height(&self) -> f64;
-    fn diameter(&self) -> f64;
-    fn perimeter(&self) -> f64;
-    fn surface(&self) -> f64;
-    fn lateral_surface(&self) -> f64;
-    fn base_surface(&self) -> f64;
-    fn volume(&self) -> f64;
 }
 
 impl Object for Sphere {
@@ -83,100 +70,48 @@ impl Object for Sphere {
             })
         }
     }
-    fn obj_type(&self) -> String {format!("sphere")}
-    fn get_transform(&self) -> Transform {self.transform}
     fn set_transform(&mut self, new: Transform) {self.transform = new}
     fn get_texture(&self) -> Texture {self.texture}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
-    fn get_radius(&self) -> f64 {self.radius}
     fn set_radius(&mut self, new: f64) {self.radius = new}
-    fn diameter(&self) -> f64 {self.radius * 2.0}
-    fn perimeter(&self) -> f64 {self.radius * std::f64::consts::PI * 2.0}
-    fn surface(&self) -> f64 {self.radius.powi(2) * std::f64::consts::PI * 4.0}
-    fn volume(&self) -> f64 {((std::f64::consts::PI * self.radius.powi(3)) * 4.0) / 3.0}
 
-    fn get_height(&self) -> f64 {1.0}
     fn set_height(&mut self, _new: f64) {}
-    fn get_normal(&self) -> Vector {Vector {x: 0.0, y: 0.0, z: 0.0}}
     fn set_normal(&mut self, _new: Vector) {}
-    fn get_distance(&self) -> f64 {1.0}
-    fn set_distance(&mut self, new: f64) {}
-    fn slanted_height(&self) -> f64 {1.0}
-    fn lateral_surface(&self) -> f64 {self.surface()}
-    fn base_surface(&self) -> f64 {self.surface()}
+    fn set_distance(&mut self, _new: f64) {}
 }
 
 impl Object for Plane {
     fn intersection(&self, ray: Vector, camera: Vector) -> Option<Segment> {return None;}
-    fn obj_type(&self) -> String {format!("plane")}
     fn get_texture(&self) -> Texture {self.texture}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
-    fn get_normal(&self) -> Vector {self.normal}
     fn set_normal(&mut self, new: Vector) {self.normal = new}
-    fn get_distance(&self) -> f64 {self.distance}
     fn set_distance(&mut self, new: f64) {self.distance = new}
 
-    fn get_transform(&self) -> Transform {Transform::default()}
     fn set_transform(&mut self, _new: Transform) {}
-    fn get_radius(&self) -> f64 {1.0}
     fn set_radius(&mut self, _new: f64) {}
-    fn get_height(&self) -> f64 {1.0}
     fn set_height(&mut self, _new: f64) {}
-    fn slanted_height(&self) -> f64 {1.0}
-    fn diameter(&self) -> f64 {1.0}
-    fn perimeter(&self) -> f64 {1.0}
-    fn surface(&self) -> f64 {1.0}
-    fn lateral_surface(&self) -> f64 {1.0}
-    fn base_surface(&self) -> f64 {1.0}
-    fn volume(&self) -> f64 {1.0}
 }
 
 impl Object for Cylinder {
     fn intersection(&self, ray: Vector, camera: Vector) -> Option<Segment> {return None;}
-    fn obj_type(&self) -> String {format!("cylinder")}
-    fn get_transform(&self) -> Transform {self.transform}
     fn set_transform(&mut self, new: Transform) {self.transform = new}
     fn get_texture(&self) -> Texture {self.texture}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
-    fn get_radius(&self) -> f64 {self.radius}
     fn set_radius(&mut self, new: f64) {self.radius = new}
-    fn get_height(&self) -> f64 {self.height}
     fn set_height(&mut self, new: f64) {self.height = new}
-    fn diameter(&self) -> f64 {self.radius * 2.0}
-    fn perimeter(&self) -> f64 {self.radius * std::f64::consts::PI * 2.0}
-    fn surface(&self) -> f64 {2.0 * self.base_surface() + self.lateral_surface()}
-    fn lateral_surface(&self) -> f64 {2.0 * std::f64::consts::PI * self.radius * self.height}
-    fn base_surface(&self) -> f64 {std::f64::consts::PI * self.radius.powi(2)}
-    fn volume(&self) -> f64 {std::f64::consts::PI * self.radius.powi(2) * self.height}
 
-    fn get_normal(&self) -> Vector {Vector {x: 0.0, y: 0.0, z: 0.0}}
     fn set_normal(&mut self, _new: Vector) {}
-    fn get_distance(&self) -> f64 {1.0}
-    fn set_distance(&mut self, new: f64) {}
-    fn slanted_height(&self) -> f64 {1.0}
+    fn set_distance(&mut self, _new: f64) {}
 }
 
 impl Object for Cone {
     fn intersection(&self, ray: Vector, camera: Vector) -> Option<Segment> {return None;}
-    fn obj_type(&self) -> String {format!("cone")}
-    fn get_transform(&self) -> Transform {self.transform}
     fn set_transform(&mut self, new: Transform) {self.transform = new}
     fn get_texture(&self) -> Texture {self.texture}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
-    fn get_radius(&self) -> f64 {self.radius}
     fn set_radius(&mut self, new: f64) {self.radius = new}
-    fn get_height(&self) -> f64 {self.height}
     fn set_height(&mut self, new: f64) {self.height = new}
-    fn slanted_height(&self) -> f64 {(self.radius.powi(2) + self.height.powi(2)).sqrt()}
-    fn diameter(&self) -> f64 {self.radius * 2.0}
-    fn perimeter(&self) -> f64 {self.radius * std::f64::consts::PI * 2.0}
-    fn surface(&self) -> f64 {self.lateral_surface() + self.base_surface()}
-    fn lateral_surface(&self) -> f64 {std::f64::consts::PI * self.radius * self.slanted_height()}
-    fn base_surface(&self) -> f64 {std::f64::consts::PI * self.radius.powi(2)}
-    fn volume(&self) -> f64 {(std::f64::consts::PI * self.radius.powi(2) * self.height) / 3.0}
 
-    fn get_normal(&self) -> Vector {Vector {x: 0.0, y: 0.0, z: 0.0}}
     fn set_normal(&mut self, _new: Vector) {}
-    fn get_distance(&self) -> f64 {1.0}
-    fn set_distance(&mut self, new: f64) {}
+    fn set_distance(&mut self, _new: f64) {}
 }
