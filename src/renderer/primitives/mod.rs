@@ -39,9 +39,17 @@ pub struct Sphere {
     pub color: Vector,
 }
 
+#[derive(Debug)]
 pub struct Plan {
-    origin: Vector,
-    endPoint: Vector,
+    pub normal: Vector,
+    pub distance: f64,
+    pub diffuse: f64,
+    pub ambient: f64,
+    pub specular: f64,
+    pub shininess: f64,
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
 }
 
 impl Sphere {
@@ -54,11 +62,11 @@ impl Sphere {
 }
 
 impl Plan {
-    pub fn set_origin(&mut self, point: Vector) {
-        self.origin = point;
+    pub fn set_normal(&mut self, point: Vector) {
+        self.normal = point;
     }
-    pub fn set_endPoint(&mut self, point: Vector) {
-        self.endPoint = point;
+    pub fn set_distance(&mut self, distance: f64) {
+        self.distance = distance;
     }
 }
 
@@ -89,7 +97,39 @@ impl Object for Sphere {
 }
 
 impl Object for Plan {
-    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
-        return None;
+    fn intersection(&self, ray: Vector, camera: Vector) -> Option<Segment> {
+        //R0 = camera
+        //Rd = ray_dest
+        // Pn = plan_norm normal du plan (normalisée)
+        let ray_dest = ray.normalize();
+        let plan_norm = self.normal.normalize();
+        let vd = ray_dest.dot_product(plan_norm);
+
+        if vd >= 0.0 { // ray parallel to the plan
+            return None;
+        }
+
+        let v0 = -(plan_norm.dot_product(camera) + self.distance);
+        if v0 < 0.0 { // intersection behind the camera
+            return None;
+        }
+
+        let t = v0 / (plan_norm.dot_product(ray_dest));
+        //if v0 < 0.0 {
+        //    return None;
+        //}
+        let intersection_point = Vector{
+            x: camera.x + ray_dest.x * t,
+            y: camera.y + ray_dest.y * t,
+            z: camera.z + ray_dest.z * t
+        };
+        Some ( Segment {
+            origin: intersection_point,
+            end: Vector{
+                x: intersection_point.x + plan_norm.x,
+                y: intersection_point.y + plan_norm.y,
+                z: intersection_point.z + plan_norm.z,
+            }
+        })
     }
 }
