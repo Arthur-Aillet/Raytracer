@@ -16,11 +16,45 @@ pub struct Transform {
     pub scale: Vector,
 }
 
+impl Transform {
+    pub fn default() -> Transform {
+        let transform = Transform {
+            pos: Vector {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            rotation: Vector {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            scale: Vector {
+                x: 1.0,
+                y: 1.0,
+                z: 1.0,
+            },
+        };
+        transform
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct Color {
     pub r: f64,
     pub g: f64,
     pub b: f64,
+}
+
+impl Color {
+    pub fn default() -> Color {
+        let color = Color {
+            r: 255.0,
+            g: 255.0,
+            b: 255.0,
+        };
+        color
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -34,7 +68,20 @@ pub struct Texture {
 }
 
 impl Texture {
-    fn texture(&self, _x: f64, _y: f64) -> Color {
+
+    pub fn default() -> Texture {
+        let texture = Texture {
+            texture_type: 1,
+            color: Color::default(),
+            diffuse: 0.7,
+            ambient: 0.1,
+            specular: 0.4,
+            shininess: 4.0,
+        };
+        texture
+    }
+
+    pub fn texture(&self, _x: f64, _y: f64) -> Color {
         if self.texture_type == 1 {
             self.color
         } else {self.color}

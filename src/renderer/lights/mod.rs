@@ -40,7 +40,28 @@ pub struct Ambiant {
     pub strength: f64,
 }
 
+impl Ambiant {
+    pub fn default() -> Ambiant {
+        let ambiant = Ambiant {
+            color: Color::default(),
+            strength: 1000.0,
+        };
+        ambiant
+    }
+}
+
 pub struct Lights {
     pub lights: Vec::<Box::<dyn Light>>,
     pub ambiant: Vec<Ambiant>,
+}
+
+impl Lights {
+    pub fn default() -> Lights {
+        let mut lights = Lights {
+            lights: Vec::new(),
+            ambiant: Vec::new(),
+        };
+        lights.ambiant.push(Ambiant::default());
+        lights
+    }
 }
