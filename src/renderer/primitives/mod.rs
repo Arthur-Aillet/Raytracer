@@ -26,6 +26,7 @@ pub struct Light {
     pub origin: Vector,
     pub intensity: f64,
     pub color: Vector,
+    pub radius: f64,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]

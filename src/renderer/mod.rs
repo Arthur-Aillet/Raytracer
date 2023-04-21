@@ -71,6 +71,8 @@ pub struct Camera {
     transform : Transform,
     lens : Lens,
     fov : i16,
+    smooth_shadow: bool,
+    smooth_shadow_step: i16,
     diffuse: f64,
     ambient: f64,
     specular: f64,
@@ -82,16 +84,18 @@ impl Camera {
             transform: Transform::new(0.0, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, 0.0, 0.0),
             fov: 80,
             diffuse: 0.7,
-            ambient: 0.3,
+            ambient: 0.1,
             specular: 0.6,
+            smooth_shadow_step: 1,
+            smooth_shadow: true,
             lens: Lens {
                 width: 1920,
                 height: 1080,
                 distance: 0.0,
                 vector_to_first_pixel: Vector {
-                        x: 0.0,
-                        y: 0.0,
-                        z: 0.0,
+                    x: 0.0,
+                    y: 0.0,
+                    z: 0.0,
                 },
             },
         };
@@ -135,7 +139,7 @@ impl Renderer {
                 Sphere {
                     origin: Vector {x:0.0, y:3.0, z:0.0},
                     radius: 1.0,
-                        ambient: 0.3,
+                    ambient: 0.3,
                     diffuse: 0.5,
                     specular: 0.4,
                     shininess: 4.0,
@@ -145,8 +149,8 @@ impl Renderer {
                         z: 1.0,
                     },
                 }, Sphere {
-                    origin: Vector {x:25.0, y:40.0, z:-25.0},
-                    radius: 2.0,
+                    origin: Vector {x:2.0, y:6.0, z:-2.0},
+                    radius: 1.0,
                     ambient: 0.3,
                     diffuse: 0.5,
                     specular: 0.4,
@@ -171,36 +175,51 @@ impl Renderer {
                 }
             ],
             lights: vec![ Light {
-                origin: Vector {x:-4.0, y:-5.0, z:0.0},
-                intensity: 100.0,
+                origin: Vector {x:-4.0, y:-5.0, z:3.0},
+                intensity: 80.0,
                 color: Vector {
                     x: 1.0,
                     y: 1.0,
                     z: 1.0,
-                }
-            }
-            ]
+                },
+                radius: 0.1,
+            }]
         }
     }
 
     fn calculate_light(&self, light: &Light, intersect: Intersection, camera_to_pixel: Vector, object: Sphere) -> Vector {
-        let light_vector = (light.origin - intersect.intersection_point).normalize();
         let normal_vector = intersect.normal.normalize();
+        let mut light_reached: i16 = 0;
+        let mut light_vector = (light.origin - intersect.intersection_point).normalize();
+        let mut light_intensity = 1.0;
 
-        for object_current in self.objects.iter() {
-            if *object_current == object { continue; }
-            let intersect = object_current.intersection(light_vector, intersect.intersection_point);
-
-            if intersect != None { return Vector {x: 0.0, y: 0.0, z: 0.0} };
-        };
+        if self.camera.smooth_shadow == false {
+            for object_current in self.objects.iter() {
+                if *object_current == object { continue; }
+                let intersect = object_current.intersection(light_vector, intersect.intersection_point);
+                if intersect != None { return Vector {x: 0.0, y: 0.0, z:0.0} }
+            };
+        } else {
+            for _ in 0..self.camera.smooth_shadow_step {
+                let light_vector = (light.origin + Vector::get_random_point_in_sphere(light.radius) - intersect.intersection_point).normalize();
+                let mut intersected = true;
+                for object_current in self.objects.iter() {
+                    if *object_current == object { continue; }
+                    let intersect = object_current.intersection(light_vector, intersect.intersection_point);
+                    if intersect != None { intersected = false };
+                };
+                if intersected == true { light_reached += 1; }
+            }
+            light_vector = (light.origin - intersect.intersection_point).normalize();
+            light_intensity = light_reached as f64 / self.camera.smooth_shadow_step as f64;
+        }
         let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * object.diffuse;
-
         let reflected = light_vector.reflect(normal_vector).normalize();
         let view = (camera_to_pixel * -1.0).normalize();
         let specular = self.camera.specular * object.specular * reflected.dot_product(view).max(0.0).powf(object.shininess);
         let distance = intersect.intersection_point.distance(light.origin);
         let light_falloff = (light.intensity / distance.powi(2)).max(0.0);
-        object.color * light.color * diffuse * light_falloff + light.color * specular * light_falloff
+        object.color * light.color * diffuse * light_falloff * light_intensity + light.color * specular * light_falloff * light_intensity
     }
 
     fn found_nearest_intersection(&self, camera_to_pixel: Vector) -> Option<Intersection> {
