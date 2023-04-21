@@ -32,39 +32,7 @@ impl Renderer {
 
     pub fn new() -> Renderer {
         let renderer = Renderer {
-            camera: Camera {
-                transform: Transform {
-                    pos: Vector {
-                        x: 0.0,
-                        y: 0.0,
-                        z: 0.0
-                    },
-                    rotation: Vector {
-                        x: 0.0,
-                        y: 0.0,
-                        z: 0.0
-                    },
-                    scale: Vector {
-                        x: 0.0,
-                        y: 0.0,
-                        z: 0.0
-                    }
-                },
-                lens: Lens {
-                    height: 0,
-                    width: 0,
-                    distance: 0.0,
-                    vector_to_first_pixel: Vector {
-                        x: 0.0,
-                        y: 0.0,
-                        z: 0.0,
-                    },
-                },
-                fov: 80,
-                diffuse: 10.0,
-                ambient: 10.0,
-                specular: 10.0,
-            },
+            camera: Camera::default(),
             primitives: Vec::new(),
             lights: Lights {
                 lights: Vec::new(),
@@ -108,13 +76,16 @@ impl Renderer {
         pixels
     }
 
-    pub fn get_renderer_from_file(&mut self, file: String) {
+    pub fn get_renderer_from_file(file: String) -> Renderer {
         let data = fs::read_to_string(file).expect("Unable to read file");
         let json: Value = serde_json::from_str(&data.to_string()).unwrap();
         let parser = Parser{};
-        self.camera = parser.get_camera_from_json(&json["camera"]);
-        self.primitives = parser.get_objects_from_json(&json["primitives"]);
-        self.lights = parser.get_lights_from_json(&json["lights"]);
+        let renderer = Renderer {
+            camera: parser.get_camera_from_json(&json["camera"]),
+            primitives: parser.get_objects_from_json(&json["primitives"]),
+            lights: parser.get_lights_from_json(&json["lights"]),
+        };
+        renderer
     }
 
 }
