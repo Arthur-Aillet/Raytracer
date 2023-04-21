@@ -216,27 +216,22 @@ impl Parser {
     }
 
     pub fn get_plane_from_json(&self, json: &Value) -> Box::<Plane> {
-        let istrans = json["transform"].is_object();
         let istex = json["texture"].is_object();
-        let isorg = json["origin"].is_object();
-        let isvec = json["vector"].is_object();
-        let transval : Transform;
+        let isnorm = json["normal"].is_object();
+        let optiond = json["vector"].as_f64();
         let texval : Texture;
-        let orgval : Vector;
-        let vecval : Vector;
-        if istrans {transval = self.get_transform_from_json(&json["transform"]);}
-        else {transval = Transform::default();}
+        let normval : Vector;
+        let dval : f64;
         if istex {texval = self.get_texture_from_json(&json["texture"]);}
         else {texval = Texture::default();}
-        if isorg {orgval = self.get_vector_from_json(&json["transform"]);}
-        else {orgval = Vector {x: 0.0, y: 0.0, z: 0.0};}
-        if isvec {vecval = self.get_vector_from_json(&json["transform"]);}
-        else {vecval = Vector {x: 0.0, y: 1.0, z: 0.0};}
+        if isnorm {normval = self.get_vector_from_json(&json["normal"]);}
+        else {normval = Vector {x: 0.0, y: 0.0, z: 0.0};}
+        if optiond != None {dval = optiond.unwrap();}
+        else {dval = 1.0;}
         let plane = Plane {
-            transform: transval,
             texture: texval,
-            origin: orgval,
-            vector: vecval,
+            normal: normval,
+            distance: dval,
         };
         let planebox = Box::new(plane);
         planebox
