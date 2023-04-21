@@ -9,7 +9,7 @@ pub mod primitives;
 use crate::vectors;
 use vectors::Vector;
 use vectors::Segment;
-use crate::renderer::primitives::{Object, Sphere, Light};
+use crate::renderer::primitives::{Object, Plan, Light};
 
 #[derive(Debug, Clone)]
 pub struct Transform {
@@ -53,7 +53,7 @@ impl Transform {
 #[derive(Debug)]
 pub struct Renderer {
     camera: Camera,
-    object: Sphere,
+    object: Plan,
     light: Light,
 }
 
@@ -130,9 +130,9 @@ impl Renderer {
     pub fn new() -> Renderer {
         Renderer {
             camera: Camera::new(),
-            object: Sphere {
-                origin: Vector {x:0.0, y:4.0, z:0.0},
-                radius: 1.5,
+            object: Plan {
+                normal: Vector {x:0.0, y:0.0, z:1.0},
+                distance: -1.0,
                 ambient: 0.1,
                 diffuse: 0.7,
                 specular: 0.4,
