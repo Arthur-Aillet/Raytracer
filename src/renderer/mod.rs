@@ -2,24 +2,20 @@
 // EPITECH PROJECT, 2023
 // Rustracer
 // File description:
-// mod
+// renderer common structures
 //
 
-pub mod camera;
-pub mod primitives;
-pub mod lights;
-pub mod parsing;
-pub mod renderer_common;
-
-use crate::vectors;
+mod camera;
+mod primitives;
+mod lights;
+mod parsing;
+mod renderer_common;
 
 use std::fs;
 use serde_json::Value;
-use vectors::Vector;
-use camera::{Camera, Lens};
+use camera::{Camera};
 use primitives::{Object};
 use lights::Lights;
-use renderer_common::Transform;
 use parsing::Parser;
 
 pub struct Renderer {
@@ -48,10 +44,8 @@ impl Renderer {
         for i in 0..self.camera.lens.height {
             for j in 0..self.camera.lens.width {
                 let camera_to_pixel = self.camera.get_pixel_vector(j, i);
-                // for object in self.primitives.iter_mut() {
                     let intersect = self.primitives[0].intersection(camera_to_pixel, self.camera.transform.pos);
                     if intersect != None {
-                        // let light_vector = (self.light.origin - intersect.unwrap().end).normalize(); <- je sais pas comment mettre ca dans une boucle pour toutes les lumieres
                         let light_vector = (self.lights.lights[0].get_transform().pos - intersect.unwrap().end).normalize();
                         let normal_vector = (intersect.unwrap().end - intersect.unwrap().origin).normalize();
 
@@ -72,7 +66,6 @@ impl Renderer {
                     }
                 }
             }
-        // }
         pixels
     }
 

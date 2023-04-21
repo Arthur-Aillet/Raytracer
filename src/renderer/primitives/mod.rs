@@ -97,10 +97,7 @@ impl Object for Sphere {
 
     fn get_height(&self) -> f64 {1.0}
     fn set_height(&mut self, _new: f64) {}
-    fn get_normal(&self) -> Vector {
-        let a = Vector{x: 0.0, y: 0.0, z: 0.0};
-        a
-    }
+    fn get_normal(&self) -> Vector {Vector {x: 0.0, y: 0.0, z: 0.0}}
     fn set_normal(&mut self, _new: Vector) {}
     fn get_distance(&self) -> f64 {1.0}
     fn set_distance(&mut self, new: f64) {}
@@ -119,11 +116,8 @@ impl Object for Plane {
     fn get_distance(&self) -> f64 {self.distance}
     fn set_distance(&mut self, new: f64) {self.distance = new}
 
-    fn get_transform(&self) -> Transform {
-        let transform = Transform::default();
-        transform
-    }
-    fn set_transform(&mut self, new: Transform) {}
+    fn get_transform(&self) -> Transform {Transform::default()}
+    fn set_transform(&mut self, _new: Transform) {}
     fn get_radius(&self) -> f64 {1.0}
     fn set_radius(&mut self, _new: f64) {}
     fn get_height(&self) -> f64 {1.0}
@@ -155,10 +149,7 @@ impl Object for Cylinder {
     fn base_surface(&self) -> f64 {std::f64::consts::PI * self.radius.powi(2)}
     fn volume(&self) -> f64 {std::f64::consts::PI * self.radius.powi(2) * self.height}
 
-    fn get_normal(&self) -> Vector {
-        let a = Vector{x: 0.0, y: 0.0, z: 0.0};
-        a
-    }
+    fn get_normal(&self) -> Vector {Vector {x: 0.0, y: 0.0, z: 0.0}}
     fn set_normal(&mut self, _new: Vector) {}
     fn get_distance(&self) -> f64 {1.0}
     fn set_distance(&mut self, new: f64) {}
@@ -184,10 +175,7 @@ impl Object for Cone {
     fn base_surface(&self) -> f64 {std::f64::consts::PI * self.radius.powi(2)}
     fn volume(&self) -> f64 {(std::f64::consts::PI * self.radius.powi(2) * self.height) / 3.0}
 
-    fn get_normal(&self) -> Vector {
-        let a = Vector{x: 0.0, y: 0.0, z: 0.0};
-        a
-    }
+    fn get_normal(&self) -> Vector {Vector {x: 0.0, y: 0.0, z: 0.0}}
     fn set_normal(&mut self, _new: Vector) {}
     fn get_distance(&self) -> f64 {1.0}
     fn set_distance(&mut self, new: f64) {}
