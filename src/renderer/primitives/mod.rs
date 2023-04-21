@@ -18,7 +18,7 @@ pub trait Object {
 pub struct Intersection {
     pub intersection_point: Vector,
     pub normal: Vector,
-    pub object: Option<Sphere>,
+    pub object: Sphere,
 }
 
 #[derive(Debug)]
@@ -82,7 +82,7 @@ impl Object for Sphere {
             Some ( Intersection {
                 normal: point - self.origin,
                 intersection_point: point,
-                object: None
+                object: *self
             })
         }
     }

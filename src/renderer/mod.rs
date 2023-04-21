@@ -163,7 +163,7 @@ impl Renderer {
                 intensity: 1000.0,
                 color: Vector {
                     x: 1.0,
-                    y: 0.7,
+                    y: 1.0,
                     z: 1.0,
                 }
             }
@@ -202,11 +202,7 @@ impl Renderer {
                 let distance_found = (intersect.unwrap().intersection_point - self.camera.transform.pos).len();
                 if distance_found < smallest_distance {
                     smallest_distance = distance_found;
-                    found_intersection = Some (Intersection{
-                        intersection_point: intersect.unwrap().intersection_point,
-                        normal: intersect.unwrap().normal,
-                        object: Some(*object)
-                    });
+                    found_intersection = intersect;
                 }
             }
         }
@@ -221,9 +217,9 @@ impl Renderer {
                 let camera_to_pixel = self.camera.get_pixel_vector(j, i);
                 let intersect = self.found_nearest_intersection(camera_to_pixel);
                 if intersect != None {
-                    let mut color = intersect.unwrap().object.unwrap().color * self.camera.ambient * intersect.unwrap().object.unwrap().ambient;
+                    let mut color = intersect.unwrap().object.color * self.camera.ambient * intersect.unwrap().object.ambient;
                     for light in self.lights.iter() {
-                        color = color + self.calculate_light(light, intersect.unwrap(), camera_to_pixel, intersect.unwrap().object.unwrap());
+                        color = color + self.calculate_light(light, intersect.unwrap(), camera_to_pixel, intersect.unwrap().object);
                     }
                     pixels.extend(&[
                         ((color.x).clamp(0.0, 1.0) * 255.0) as u8,
