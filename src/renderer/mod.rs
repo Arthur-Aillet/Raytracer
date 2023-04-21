@@ -7,7 +7,6 @@
 
 pub mod primitives;
 
-use std::f64::INFINITY;
 use crate::vectors;
 use vectors::Vector;
 use crate::renderer::primitives::{Object, Sphere, Light, Intersection};
@@ -191,7 +190,7 @@ impl Renderer {
         let normal_vector = intersect.normal.normalize();
         let mut light_reached: i16 = 0;
         let mut light_vector = (light.origin - intersect.intersection_point).normalize();
-        let mut light_intensity = 1.0;
+        let mut light_uncovered = 1.0;
 
         if self.camera.smooth_shadow == false {
             for object_current in self.objects.iter() {
@@ -211,7 +210,7 @@ impl Renderer {
                 if intersected == true { light_reached += 1; }
             }
             light_vector = (light.origin - intersect.intersection_point).normalize();
-            light_intensity = light_reached as f64 / self.camera.smooth_shadow_step as f64;
+            light_uncovered = light_reached as f64 / self.camera.smooth_shadow_step as f64;
         }
         let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * object.diffuse;
         let reflected = light_vector.reflect(normal_vector).normalize();
@@ -219,7 +218,7 @@ impl Renderer {
         let specular = self.camera.specular * object.specular * reflected.dot_product(view).max(0.0).powf(object.shininess);
         let distance = intersect.intersection_point.distance(light.origin);
         let light_falloff = (light.intensity / distance.powi(2)).max(0.0);
-        object.color * light.color * diffuse * light_falloff * light_intensity + light.color * specular * light_falloff * light_intensity
+        object.color * light.color * diffuse * light_falloff * light_uncovered + light.color * specular * light_falloff * light_uncovered
     }
 
     fn found_nearest_intersection(&self, camera_to_pixel: Vector) -> Option<Intersection> {
