@@ -117,7 +117,7 @@ impl Camera {
     }
 
     fn calculate_lens_distance(&mut self) {
-        self.lens.distance = (self.lens.height as f64 / 2.0) / (self.fov as f64 / 2.0).to_radians().tan();
+        self.lens.distance = (self.lens.width as f64 / 2.0) / (self.fov as f64 / 2.0).to_radians().tan();
     }
 
     pub fn calculate_tone_mapping(val: f64) -> f64{
