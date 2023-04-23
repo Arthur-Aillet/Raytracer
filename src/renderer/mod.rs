@@ -2,180 +2,82 @@
 // EPITECH PROJECT, 2023
 // Rustracer
 // File description:
-// renderer
+// renderer common structures
 //
 
-pub mod primitives;
-use crate::vectors;
-use vectors::Vector;
-use vectors::Segment;
-use crate::renderer::primitives::{Object, Sphere, Light};
+mod camera;
+mod primitives;
+mod lights;
+mod parsing;
+mod renderer_common;
 
-#[derive(Debug, Clone)]
-pub struct Transform {
-    pos: vectors::Vector,
-    rotation : vectors::Vector,
-    scale : vectors::Vector,
-}
+use std::fs;
+use serde_json::Value;
+use camera::{Camera};
+use primitives::{Object};
+use lights::Lights;
+use parsing::Parser;
 
-impl Transform {
-    pub fn new(
-        x_pos: f64,
-        y_pos: f64,
-        z_pos: f64,
-        x_rot: f64,
-        y_rot: f64,
-        z_rot: f64,
-        x_sca: f64,
-        y_sca: f64,
-        z_sca: f64,
-    ) -> Self {
-        Transform {
-            pos: Vector {
-                x: x_pos,
-                y: y_pos,
-                z: z_pos,
-            },
-            rotation: Vector {
-                x: x_rot,
-                y: y_rot,
-                z: z_rot,
-            },
-            scale: Vector {
-                x: z_sca,
-                y: z_sca,
-                z: z_sca,
-            },
-        }
-    }
-}
-
-#[derive(Debug)]
 pub struct Renderer {
-    camera: Camera,
-    object: Sphere,
-    light: Light,
-}
-
-#[derive(Debug)]
-struct Lens {
-    height: i64,
-    width: i64,
-    distance: f64,
-    vector_to_first_pixel: Vector,
-}
-
-#[derive(Debug)]
-pub struct Camera {
-    transform : Transform,
-    lens : Lens,
-    fov : i16,
-    diffuse: f64,
-    ambient: f64,
-    specular: f64,
-}
-
-impl Camera {
-    fn new() -> Self {
-        let mut result = Camera {
-            transform: Transform::new(0.0, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, 0.0, 0.0),
-            fov: 60,
-            diffuse: 0.7,
-            ambient: 0.1,
-            specular: 0.6,
-            lens: Lens {
-                width: 1920,
-                height: 1080,
-                distance: 0.0,
-                vector_to_first_pixel: Vector {
-                        x: 0.0,
-                        y: 0.0,
-                        z: 0.0,
-                },
-            },
-        };
-        result.calculate_lens_distance();
-        let vector_director = Vector {x:0.0, y:result.lens.distance, z:0.0};
-        result.lens.vector_to_first_pixel = Vector {x:result.transform.pos.x, y:result.transform.pos.y, z:result.transform.pos.z};
-        result.lens.vector_to_first_pixel = result.lens.vector_to_first_pixel + Vector {x:0.0, y:0.0, z:1.0} * (result.lens.height as f64 / 2.0);
-        result.lens.vector_to_first_pixel = result.lens.vector_to_first_pixel + vector_director;
-        result.lens.vector_to_first_pixel = result.lens.vector_to_first_pixel + Vector {x:-1.0, y:0.0, z:0.0} * (result.lens.width as f64 / 2.0);
-        result
-    }
-
-    fn get_pixel_vector(&self, x: i64, y: i64) -> Vector {
-        let mut pixel_vector = self.lens.vector_to_first_pixel.clone();
-
-        pixel_vector = pixel_vector + Vector {x:1.0, y:0.0, z:0.0} * x as f64;
-        pixel_vector = pixel_vector + Vector {x:0.0, y:0.0, z:-1.0} * y as f64;
-        pixel_vector.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
-        pixel_vector.normalize()
-    }
-// Point { x: -960.0, y: 441.91302184715596, z: 540.0 } }
-    fn calculate_lens_distance(&mut self) {
-        self.lens.distance = (self.lens.height as f64 / 2.0) / (self.fov as f64).to_radians().tan();
-    }
-
-    pub fn calculate_tone_mapping(val: f64) -> f64{
-        let a = 2.51;
-        let b = 0.03;
-        let c = 2.43;
-        let d = 0.59;
-        let e = 0.14;
-        ((val * (a * val + b))/(val * (c * val + d) + e)).clamp(0.0, 1.0)
-    }
+    pub camera: Camera,
+    pub primitives: Vec::<Box::<dyn Object>>,
+    pub lights: Lights,
 }
 
 impl Renderer {
+
     pub fn new() -> Renderer {
-        Renderer {
-            camera: Camera::new(),
-            object: Sphere {
-                origin: Vector {x:0.0, y:4.0, z:0.0},
-                radius: 1.5,
-                ambient: 0.1,
-                diffuse: 0.7,
-                specular: 0.4,
-                shininess: 4.0,
-                r: 0,
-                g: 255,
-                b: 255,
+        let renderer = Renderer {
+            camera: Camera::default(),
+            primitives: Vec::new(),
+            lights: Lights {
+                lights: Vec::new(),
+                ambiant: Vec::new(),
             },
-            light: Light {
-                origin: Vector {x:3.0, y:-5.0, z:4.0},
-                intensity: 1000.0,
-            }
-        }
+        };
+        renderer
     }
 
-    pub fn render(&self) -> Vec<u8> {
+    pub fn render(&mut self) -> Vec<u8> {
         let mut pixels:Vec<u8> = Vec::new();
 
         for i in 0..self.camera.lens.height {
             for j in 0..self.camera.lens.width {
                 let camera_to_pixel = self.camera.get_pixel_vector(j, i);
-                let intersect = self.object.intersection(camera_to_pixel, self.camera.transform.pos);
-                if intersect != None {
-                    let light_vector = (self.light.origin - intersect.unwrap().end).normalize();
-                    let normal_vector = (intersect.unwrap().end - intersect.unwrap().origin).normalize();
+                    let intersect = self.primitives[0].intersection(camera_to_pixel, self.camera.transform.pos);
+                    if intersect != None {
+                        let light_vector = (self.lights.lights[0].get_transform().pos - intersect.unwrap().end).normalize();
+                        let normal_vector = (intersect.unwrap().end - intersect.unwrap().origin).normalize();
 
-                    let ambient = self.camera.ambient * self.object.ambient;
-                    let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * self.object.diffuse;
+                        let ambient = self.camera.ambient * self.primitives[0].get_texture().ambient;
+                        let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * self.primitives[0].get_texture().diffuse;
 
-                    let reflected = light_vector.reflect(normal_vector).normalize();
-                    let view = (camera_to_pixel * -1.0).normalize();
-                    let specular = self.camera.specular * self.object.specular * reflected.dot_product(view).max(0.0).powf(self.object.shininess);
+                        let reflected = light_vector.reflect(normal_vector).normalize();
+                        let view = (camera_to_pixel * -1.0).normalize();
+                        let specular = self.camera.specular * self.primitives[0].get_texture().specular * reflected.dot_product(view).max(0.0).powf(self.primitives[0].get_texture().shininess);
 
-                    pixels.extend(&[
-                        ((ambient + diffuse) * self.object.r as f64 + specular * 255.0).clamp(0.0, 255.0) as u8,
-                        ((ambient + diffuse) * self.object.g as f64 + specular * 255.0).clamp(0.0, 255.0) as u8,
-                        ((ambient + diffuse) * self.object.b as f64 + specular * 255.0).clamp(0.0, 255.0) as u8
-                    ]);
-                } else {
-                    pixels.extend(&[0x00, 0x00, 0x00]);
+                        pixels.extend(&[
+                            ((ambient + diffuse) * self.primitives[0].get_texture().color.r as f64 + specular * 255.0).clamp(0.0, 255.0) as u8,
+                            ((ambient + diffuse) * self.primitives[0].get_texture().color.g as f64 + specular * 255.0).clamp(0.0, 255.0) as u8,
+                            ((ambient + diffuse) * self.primitives[0].get_texture().color.b as f64 + specular * 255.0).clamp(0.0, 255.0) as u8
+                        ]);
+                    } else {
+                        pixels.extend(&[0x00, 0x00, 0x00]);
+                    }
                 }
             }
-        }
         pixels
     }
+
+    pub fn get_renderer_from_file(file: String) -> Renderer {
+        let data = fs::read_to_string(file).expect("Unable to read file");
+        let json: Value = serde_json::from_str(&data.to_string()).unwrap();
+        let parser = Parser{};
+        Renderer {
+            camera: if json["camera"].is_object() {parser.get_camera_from_json(&json["camera"])} else {Camera::default()},
+            primitives: if json["primitives"].is_object() {parser.get_objects_from_json(&json["primitives"])} else {Vec::new()},
+            lights: if json["lights"].is_object() {parser.get_lights_from_json(&json["lights"])} else {Lights::default()},
+        }
+    }
+
 }
