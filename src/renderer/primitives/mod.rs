@@ -40,7 +40,7 @@ pub struct Sphere {
     pub color: Vector,
 }
 
-pub struct Plan {
+pub struct Plain {
     origin: Vector,
     endPoint: Vector,
 }
@@ -54,7 +54,7 @@ impl Sphere {
     }
 }
 
-impl Plan {
+impl Plain {
     pub fn set_origin(&mut self, point: Vector) {
         self.origin = point;
     }
@@ -89,7 +89,7 @@ impl Object for Sphere {
     }
 }
 
-impl Object for Plan {
+impl Object for Plain {
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
         return None;
     }
