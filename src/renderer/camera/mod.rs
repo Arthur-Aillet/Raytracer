@@ -38,6 +38,8 @@ pub struct Camera {
     pub transform: Transform,
     pub lens: Lens,
     pub fov : i64,
+    pub smooth_shadow: bool,
+    pub smooth_shadow_step: i16,
     pub diffuse: f64,
     pub ambient: f64,
     pub specular: f64,
@@ -50,6 +52,8 @@ impl Camera {
             transform: Transform::default(),
             lens: Lens::default(),
             fov: 60,
+            smooth_shadow: false,
+            smooth_shadow_step: 0,
             diffuse: 0.7,
             ambient: 0.1,
             specular: 0.6,
@@ -71,9 +75,9 @@ impl Camera {
         pixel_vector.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
         pixel_vector.normalize()
     }
-// Point { x: -960.0, y: 441.91302184715596, z: 540.0 } }
-    pub fn calculate_lens_distance(&mut self) {
-        self.lens.distance = (self.lens.height as f64 / 2.0) / (self.fov as f64).to_radians().tan();
+
+    pub(crate) fn calculate_lens_distance(&mut self) {
+        self.lens.distance = (self.lens.width as f64 / 2.0) / (self.fov as f64 / 2.0).to_radians().tan();
     }
 
     pub fn calculate_tone_mapping(val: f64) -> f64{

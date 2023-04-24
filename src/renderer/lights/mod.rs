@@ -13,6 +13,7 @@ pub struct Directional {
     pub transform: Transform,
     pub color: Color,
     pub strength: f64,
+    pub radius: f64,
 }
 
 pub trait Light {
@@ -23,6 +24,8 @@ pub trait Light {
     fn set_color(&mut self, new: Color);
     fn get_strength(&self) -> f64;
     fn set_strength(&mut self, new: f64);
+    fn get_radius(&self) -> f64;
+    fn set_radius(&mut self, new: f64);
 }
 
 impl Light for Directional {
@@ -33,16 +36,18 @@ impl Light for Directional {
     fn set_color(&mut self, new: Color) {self.color = new}
     fn get_strength(&self) -> f64 {self.strength}
     fn set_strength(&mut self, new: f64) {self.strength = new}
+    fn get_radius(&self) -> f64 {self.radius}
+    fn set_radius(&mut self, new: f64) {self.radius = new}
 }
 
-pub struct Ambiant {
+pub struct Ambient {
     pub color: Color,
     pub strength: f64,
 }
 
-impl Ambiant {
-    pub fn default() -> Ambiant {
-        Ambiant {
+impl Ambient {
+    pub fn default() -> Ambient {
+        Ambient {
             color: Color::default(),
             strength: 1000.0,
         }
@@ -51,16 +56,16 @@ impl Ambiant {
 
 pub struct Lights {
     pub lights: Vec::<Box::<dyn Light>>,
-    pub ambiant: Vec<Ambiant>,
+    pub ambient: Vec<Ambient>,
 }
 
 impl Lights {
     pub fn default() -> Lights {
         let mut lights = Lights {
             lights: Vec::new(),
-            ambiant: Vec::new(),
+            ambient: Vec::new(),
         };
-        lights.ambiant.push(Ambiant::default());
+        lights.ambient.push(Ambient::default());
         lights
     }
 }
