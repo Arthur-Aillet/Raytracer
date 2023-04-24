@@ -59,10 +59,10 @@
                         "g": 255,
                         "b": 255
                     },
-                "diffuse": 0.7,
-                "ambient": 0.5,
-                "specular": 0.4,
-                "shininess": 4.0
+                    "diffuse": 0.7,
+                    "ambient": 0.5,
+                    "specular": 0.4,
+                    "shininess": 4.0
                 },
                 "radius": 1.5
             }
