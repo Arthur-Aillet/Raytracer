@@ -48,7 +48,7 @@ impl Ambient {
     pub fn default() -> Ambient {
         Ambient {
             color: Color::default(),
-            strength: 1000.0,
+            strength: 80.0,
         }
     }
 }

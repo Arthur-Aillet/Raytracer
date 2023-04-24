@@ -158,7 +158,7 @@ impl Parser {
             Directional {
                 transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
                 color: if json["color"].is_object() {self.get_color_from_json(&json["transform"])} else {Color::default()},
-                strength: json["strength"].as_f64().unwrap_or(1000.0),
+                strength: json["strength"].as_f64().unwrap_or(80.0),
                 radius: 1.0,
             }
         )
@@ -182,7 +182,7 @@ impl Parser {
         else {color_val = Color::default();}
         Ambient {
             color: color_val,
-            strength: json["strength"].as_f64().unwrap_or(1000.0),
+            strength: json["strength"].as_f64().unwrap_or(80.0),
         }
     }
 
