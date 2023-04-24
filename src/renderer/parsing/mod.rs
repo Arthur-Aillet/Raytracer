@@ -160,6 +160,7 @@ impl Parser {
                 color: if json["color"].is_object() {self.get_color_from_json(&json["transform"])} else {Color::default()},
                 strength: json["strength"].as_f64().unwrap_or(80.0),
                 radius: 1.0,
+                falloff: json["falloff"].as_i64().unwrap_or(2) as i32,
             }
         )
     }

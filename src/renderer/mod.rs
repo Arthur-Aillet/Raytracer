@@ -71,7 +71,7 @@ impl Renderer {
         let view = (camera_to_pixel * -1.0).normalize();
         let specular = self.camera.specular * intersect.object.get_texture().specular * reflected.dot_product(view).max(0.0).powf(intersect.object.get_texture().shininess);
         let distance = intersect.intersection_point.distance(light.get_transform().pos);
-        let light_falloff = (light.get_strength() / distance.powi(2)).max(0.0);
+        let light_falloff = (light.get_strength() / distance.powi(light.get_falloff())).max(0.0);
         intersect.object.get_texture().color.as_vector() * light.get_color().as_vector() * diffuse * light_falloff * light_uncovered + light.get_color().as_vector() * specular * light_falloff * light_uncovered
     }
 

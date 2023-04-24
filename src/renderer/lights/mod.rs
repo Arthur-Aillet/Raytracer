@@ -13,6 +13,7 @@ pub struct Directional {
     pub color: Color,
     pub strength: f64,
     pub radius: f64,
+    pub falloff: i32,
 }
 
 pub trait Light {
@@ -25,6 +26,8 @@ pub trait Light {
     fn set_strength(&mut self, new: f64);
     fn get_radius(&self) -> f64;
     fn set_radius(&mut self, new: f64);
+    fn get_falloff(&self) -> i32;
+    fn set_falloff(&mut self, new: i32);
 }
 
 impl Light for Directional {
@@ -37,6 +40,8 @@ impl Light for Directional {
     fn set_strength(&mut self, new: f64) {self.strength = new}
     fn get_radius(&self) -> f64 {self.radius}
     fn set_radius(&mut self, new: f64) {self.radius = new}
+    fn get_falloff(&self) -> i32 {self.falloff}
+    fn set_falloff(&mut self, new: i32) {self.falloff = new}
 }
 
 pub struct Ambient {
