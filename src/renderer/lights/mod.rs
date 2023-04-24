@@ -7,7 +7,6 @@
 
 use super::renderer_common::{Transform, Color};
 
-
 #[derive(Debug, Clone, Copy)]
 pub struct Directional {
     pub transform: Transform,

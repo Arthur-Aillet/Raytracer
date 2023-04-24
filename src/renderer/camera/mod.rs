@@ -46,7 +46,6 @@ pub struct Camera {
 }
 
 impl Camera {
-
     pub fn default() -> Camera {
         let mut camera = Camera {
             transform: Transform::default(),
@@ -55,8 +54,8 @@ impl Camera {
             smooth_shadow: false,
             smooth_shadow_step: 0,
             diffuse: 0.7,
-            ambient: 0.1,
-            specular: 0.6,
+            ambient: 0.3,
+            specular: 0.3,
         };
         camera.calculate_lens_distance();
         let vector_director = Vector {x: 0.0, y: camera.lens.distance, z: 0.0};

@@ -11,20 +11,11 @@ use vectors::Vector;
 use vectors::resolve_quadratic_equation;
 use super::renderer_common::{Transform, Texture};
 
-pub struct Intersection {
+pub struct Intersection<'a> {
     pub intersection_point: Vector,
     pub normal: Vector,
     pub id: i64,
-    pub object: Box<dyn Object>,
-}
-
-impl PartialEq for Intersection {
-    fn eq(&self, other: &Self) -> bool {
-        self.intersection_point == other.intersection_point
-            && self.normal == other.normal
-            && self.id == other.id
-            && std::ptr::eq(self.object.as_ref(), other.object.as_ref())
-    }
+    pub object: &'a dyn Object,
 }
 
 #[derive(Clone)]
@@ -72,8 +63,8 @@ pub trait Object {
 }
 
 impl Object for Sphere {
-    fn intersection(&self, ray: Vector, camera: Vector) -> Option<Intersection> {
-        let diff = camera - self.transform.pos;
+    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
+        let diff = origin - self.transform.pos;
         let result = resolve_quadratic_equation(ray.dot_product(ray), // could be 1 if normalized
                                                 2.0 * (ray.dot_product(diff)),
                                                 (diff.dot_product(diff)) - self.radius.powi(2));
@@ -84,16 +75,16 @@ impl Object for Sphere {
             None
         } else {
             let point = Vector {
-                x: self.transform.pos.x + ray.x * smallest_result.unwrap(),
-                y: self.transform.pos.y + ray.y * smallest_result.unwrap(),
-                z: self.transform.pos.z + ray.z * smallest_result.unwrap(),
+                x: origin.x + ray.x * smallest_result.unwrap(),
+                y: origin.y + ray.y * smallest_result.unwrap(),
+                z: origin.z + ray.z * smallest_result.unwrap(),
             };
 
             Some ( Intersection {
                 normal: point - self.transform.pos,
                 intersection_point: point,
                 id: self.id,
-                object: Box::new((*self).clone()),
+                object: self,
             })
         }
     }
@@ -110,7 +101,7 @@ impl Object for Sphere {
 }
 
 impl Object for Plane {
-    fn intersection(&self, ray: Vector, camera: Vector) -> Option<Intersection> {return None;}
+    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {return None;}
     fn set_transform(&mut self, _new: Transform) {}
     fn get_texture(&self) -> Texture {self.texture}
     fn get_id(&self) -> i64 {self.id}
@@ -124,7 +115,7 @@ impl Object for Plane {
 }
 
 impl Object for Cylinder {
-    fn intersection(&self, ray: Vector, camera: Vector) -> Option<Intersection> {return None;}
+    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {return None;}
     fn set_transform(&mut self, new: Transform) {self.transform = new}
     fn get_texture(&self) -> Texture {self.texture}
     fn get_id(&self) -> i64 {self.id}
@@ -138,7 +129,7 @@ impl Object for Cylinder {
 }
 
 impl Object for Cone {
-    fn intersection(&self, ray: Vector, camera: Vector) -> Option<Intersection> {return None;}
+    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {return None;}
     fn set_transform(&mut self, new: Transform) {self.transform = new}
     fn get_texture(&self) -> Texture {self.texture}
     fn get_id(&self) -> i64 {self.id}

@@ -1,0 +1,113 @@
+{
+    "camera": {
+        "transform": {
+            "pos": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        },
+        "lens" : {
+            "height": 1080,
+            "width": 1920,
+            "distance": 0,
+            "vector_to_first_pixel": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            }
+        },
+        "fov": 90,
+        "diffuse": 0.7,
+        "ambient": 0.5,
+        "specular": 0.3
+    },
+    "primitives": {
+        "spheres": [
+            {
+                "transform": {
+                    "pos": {
+                        "x": 0,
+                        "y": 8,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    }
+                },
+                "texture": {
+                    "texture_type": 1,
+                    "color": {
+                        "r": 255,
+                        "g": 255,
+                        "b": 255
+                    },
+                "diffuse": 0.7,
+                "ambient": 0.5,
+                "specular": 0.4,
+                "shininess": 4.0
+                },
+                "radius": 1.5
+            }
+        ]
+    },
+    "lights": {
+        "objects": {
+            "directional": [
+                {
+                    "transform": {
+                        "pos": {
+                            "x": 3,
+                            "y": 0,
+                            "z": 4
+                        },
+                        "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                        },
+                        "scale": {
+                            "x": 1,
+                            "y": 1,
+                            "z": 1
+                        }
+                    },
+                    "color": {
+                        "r": 255,
+                        "g": 100,
+                        "b": 100
+                    },
+                    "strength": 80.0
+                }
+            ]
+        },
+        "ambient": [
+            {
+                "color": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                },
+                "strength": 1000.0
+            }
+        ]
+    }
+
+}

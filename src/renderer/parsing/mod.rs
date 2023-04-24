@@ -50,7 +50,7 @@ impl Parser {
             smooth_shadow: false,
             smooth_shadow_step: 0,
             diffuse: json["diffuse"].as_f64().unwrap_or(0.7),
-            ambient: json["ambient"].as_f64().unwrap_or(0.1),
+            ambient: json["ambient"].as_f64().unwrap_or(0.3),
             specular: json["specular"].as_f64().unwrap_or(0.6),
         };
         camera.calculate_lens_distance();

@@ -12,6 +12,7 @@ mod parsing;
 mod renderer_common;
 
 use std::fs;
+use std::process::exit;
 use serde_json::Value;
 use camera::{Camera};
 use primitives::{Object};
@@ -40,7 +41,7 @@ impl Renderer {
         }
     }
 
-    fn calculate_light(&self, light: &Box<dyn Light>, intersect: Intersection, camera_to_pixel: Vector) -> Vector {
+    fn calculate_light(&self, light: &Box<dyn Light>, intersect: &Intersection, camera_to_pixel: Vector) -> Vector {
         let normal_vector = intersect.normal.normalize();
         let mut light_reached: i16 = 0;
         let mut light_vector = (light.get_transform().pos - intersect.intersection_point).normalize();
@@ -49,8 +50,7 @@ impl Renderer {
         if self.camera.smooth_shadow == false {
             for object_current in self.primitives.iter() {
                 if object_current.get_id() == intersect.id { continue; }
-                let intersect = object_current.intersection(light_vector, intersect.intersection_point);
-                if intersect != None { return Vector {x: 0.0, y: 0.0, z:0.0} }
+                if object_current.intersection(light_vector, intersect.intersection_point).is_some() { return Vector {x: 0.0, y: 0.0, z:0.0} }
             };
         } else {
             for _ in 0..self.camera.smooth_shadow_step {
@@ -58,8 +58,7 @@ impl Renderer {
                 let mut intersected = true;
                 for object_current in self.primitives.iter() {
                     if object_current.get_id() == intersect.id { continue; }
-                    let intersect = object_current.intersection(light_vector, intersect.intersection_point);
-                    if intersect != None { intersected = false };
+                    if object_current.intersection(light_vector, intersect.intersection_point).is_some() { intersected = false };
                 };
                 if intersected == true { light_reached += 1; }
             }
@@ -67,6 +66,7 @@ impl Renderer {
             light_uncovered = light_reached as f64 / self.camera.smooth_shadow_step as f64;
         }
         let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * intersect.object.get_texture().diffuse;
+
         let reflected = light_vector.reflect(normal_vector).normalize();
         let view = (camera_to_pixel * -1.0).normalize();
         let specular = self.camera.specular * intersect.object.get_texture().specular * reflected.dot_product(view).max(0.0).powf(intersect.object.get_texture().shininess);
@@ -82,12 +82,12 @@ impl Renderer {
          for object in self.primitives.iter() {
             let intersect = object.intersection(camera_to_pixel, self.camera.transform.pos);
 
-            if intersect != None {
-
-                let distance_found = (intersect.unwrap().intersection_point - self.camera.transform.pos).len();
+            if intersect.is_some() {
+                let inters = intersect.unwrap();
+                let distance_found = (inters.intersection_point - self.camera.transform.pos).len();
                 if distance_found < smallest_distance {
                     smallest_distance = distance_found;
-                    found_intersection = intersect;
+                    found_intersection = Some(inters);
                 }
             }
         }
@@ -100,11 +100,11 @@ impl Renderer {
         for i in 0..self.camera.lens.height {
             for j in 0..self.camera.lens.width {
                 let camera_to_pixel = self.camera.get_pixel_vector(j, i);
-                let intersect = self.found_nearest_intersection(camera_to_pixel);
-                if intersect != None {
-                    let mut color = intersect.unwrap().object.get_texture().color.as_vector() * self.camera.ambient * intersect.unwrap().object.get_texture().ambient;
+                let maybe_intersect = self.found_nearest_intersection(camera_to_pixel);
+                if let Some(intersect) = maybe_intersect {
+                    let mut color = intersect.object.get_texture().color.as_vector() * self.camera.ambient * intersect.object.get_texture().ambient;
                     for light in self.lights.lights.iter() {
-                        color = color + self.calculate_light(light, intersect.unwrap(), camera_to_pixel);
+                        color = color + self.calculate_light(light, &intersect, camera_to_pixel);
                     }
                     pixels.extend(&[
                         ((color.x).clamp(0.0, 1.0) * 255.0) as u8,
