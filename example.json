@@ -30,7 +30,9 @@
         "fov": 90,
         "diffuse": 0.7,
         "ambient": 0.5,
-        "specular": 0.3
+        "specular": 0.3,
+        "smooth_shadow": true,
+        "smooth_shadow_step": 35
     },
     "primitives": {
         "spheres": [
@@ -95,7 +97,8 @@
                         "b": 100
                     },
                     "strength": 80.0,
-                    "falloff": 1
+                    "falloff": 1,
+                    "radius": 2.0
                 }
             ]
         },

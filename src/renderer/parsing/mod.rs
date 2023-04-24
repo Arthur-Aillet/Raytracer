@@ -47,8 +47,8 @@ impl Parser {
             transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
             lens: if json["lens"].is_object() {self.get_lens_from_json(&json["lens"])} else {Lens::default()},
             fov: json["fov"].as_i64().unwrap_or(60),
-            smooth_shadow: false,
-            smooth_shadow_step: 0,
+            smooth_shadow: json["smooth_shadow"].as_bool().unwrap_or(true),
+            smooth_shadow_step: json["smooth_shadow_step"].as_i64().unwrap_or(50) as i16,
             diffuse: json["diffuse"].as_f64().unwrap_or(0.7),
             ambient: json["ambient"].as_f64().unwrap_or(0.3),
             specular: json["specular"].as_f64().unwrap_or(0.6),
@@ -159,7 +159,7 @@ impl Parser {
                 transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
                 color: if json["color"].is_object() {self.get_color_from_json(&json["transform"])} else {Color::default()},
                 strength: json["strength"].as_f64().unwrap_or(80.0),
-                radius: 1.0,
+                radius: json["radius"].as_f64().unwrap_or(1.0),
                 falloff: json["falloff"].as_i64().unwrap_or(2) as i32,
             }
         )
