@@ -63,7 +63,7 @@
                     },
                     "diffuse": 0.7,
                     "ambient": 0.5,
-                    "specular": 0.4,
+                    "specular": 0.2,
                     "shininess": 4.0
                 },
                 "radius": 1.5
@@ -72,12 +72,12 @@
     },
     "lights": {
         "objects": {
-            "directional": [
+            "point": [
                 {
                     "transform": {
                         "pos": {
                             "x": 0,
-                            "y": -100,
+                            "y": -1,
                             "z": 0
                         },
                         "rotation": {
@@ -97,7 +97,7 @@
                         "b": 100
                     },
                     "strength": 80.0,
-                    "falloff": 1,
+                    "falloff": 2,
                     "radius": 2.0
                 }
             ]

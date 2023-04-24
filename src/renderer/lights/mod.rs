@@ -8,7 +8,7 @@
 use super::renderer_common::{Transform, Color};
 
 #[derive(Debug, Clone, Copy)]
-pub struct Directional {
+pub struct Point {
     pub transform: Transform,
     pub color: Color,
     pub strength: f64,
@@ -30,8 +30,8 @@ pub trait Light {
     fn set_falloff(&mut self, new: i32);
 }
 
-impl Light for Directional {
-    fn light_type(&self) -> String {format!("directional")}
+impl Light for Point {
+    fn light_type(&self) -> String {format!("point")}
     fn get_transform(&self) -> Transform {self.transform}
     fn set_transform(&mut self, new: Transform) {self.transform = new}
     fn get_color(&self) -> Color {self.color}

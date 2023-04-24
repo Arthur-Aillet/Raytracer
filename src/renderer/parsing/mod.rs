@@ -10,7 +10,7 @@ use serde_json::Value;
 use vectors::Vector;
 use super::camera::{Lens, Camera};
 use super::primitives::{Sphere, Plane, Cylinder, Cone, Object};
-use super::lights::{Directional, Ambient, Light, Lights};
+use super::lights::{Point, Ambient, Light, Lights};
 use super::renderer_common::{Transform, Color, Texture};
 
 pub struct Parser {
@@ -153,9 +153,9 @@ impl Parser {
         objects
     }
 
-    pub fn get_directional_from_json(&self, json: &Value) -> Box::<Directional> {
+    pub fn get_point_from_json(&self, json: &Value) -> Box::<Point> {
         Box::new(
-            Directional {
+            Point {
                 transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
                 color: if json["color"].is_object() {self.get_color_from_json(&json["transform"])} else {Color::default()},
                 strength: json["strength"].as_f64().unwrap_or(80.0),
@@ -168,9 +168,9 @@ impl Parser {
     pub fn get_object_lights_from_json(&self, json: &Value) -> Vec::<Box::<dyn Light>> {
         let mut lights: Vec::<Box::<dyn Light>> = Vec::new();
 
-        if json["directional"].is_array(){
-            for directional in json["directional"].as_array().unwrap().iter() {
-                lights.push(self.get_directional_from_json(directional))
+        if json["point"].is_array(){
+            for point in json["point"].as_array().unwrap().iter() {
+                lights.push(self.get_point_from_json(point))
             }
         }
         lights
