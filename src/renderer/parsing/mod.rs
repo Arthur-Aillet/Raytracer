@@ -35,8 +35,8 @@ impl Parser {
 
     pub fn get_lens_from_json(&self, json: &Value) -> Lens {
         Lens {
-            height: json["height"].as_i64().unwrap_or(0),
-            width: json["width"].as_i64().unwrap_or(0),
+            height: json["height"].as_i64().unwrap_or(1080),
+            width: json["width"].as_i64().unwrap_or(1920),
             distance: json["distance"].as_f64().unwrap_or(0.0),
             vector_to_first_pixel: if json["vector_to_first_pixel"].is_object() {self.get_vector_from_json(&json["vector_to_first_pixel"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
         }
