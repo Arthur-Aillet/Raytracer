@@ -157,7 +157,7 @@ impl Parser {
         Box::new(
             Point {
                 transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
-                color: if json["color"].is_object() {self.get_color_from_json(&json["transform"])} else {Color::default()},
+                color: if json["color"].is_object() {self.get_color_from_json(&json["color"])} else {Color::default()},
                 strength: json["strength"].as_f64().unwrap_or(80.0),
                 radius: json["radius"].as_f64().unwrap_or(1.0),
                 falloff: json["falloff"].as_i64().unwrap_or(2) as i32,

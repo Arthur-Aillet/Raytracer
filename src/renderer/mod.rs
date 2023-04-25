@@ -46,19 +46,18 @@ impl Renderer {
         let mut light_reached: i16 = 0;
         let mut light_vector = (light.get_transform().pos - intersect.intersection_point).normalize();
         let mut light_uncovered = 1.0;
+        let shadow_bias = 1e-14;
 
         if self.camera.smooth_shadow == false {
             for object_current in self.primitives.iter() {
-                if object_current.get_id() == intersect.id { continue; }
-                if object_current.intersection(light_vector, intersect.intersection_point).is_some() { return Vector {x: 0.0, y: 0.0, z:0.0} }
+                if object_current.intersection(light_vector, intersect.intersection_point + (normal_vector * shadow_bias)).is_some() { return Vector {x: 0.0, y: 0.0, z:0.0} }
             };
         } else {
             for _ in 0..self.camera.smooth_shadow_step {
                 let light_vector = (light.get_transform().pos + Vector::get_random_point_in_sphere(light.get_radius()) - intersect.intersection_point).normalize();
                 let mut intersected = true;
                 for object_current in self.primitives.iter() {
-                    if object_current.get_id() == intersect.id { continue; }
-                    if object_current.intersection(light_vector, intersect.intersection_point).is_some() { intersected = false };
+                    if object_current.intersection(light_vector, intersect.intersection_point  + (normal_vector * shadow_bias)).is_some() { intersected = false };
                 };
                 if intersected == true { light_reached += 1; }
             }
