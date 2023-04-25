@@ -5,10 +5,11 @@
 // vector
 //
 
+use std::f64::consts::PI;
 use crate::matrix;
 use matrix::Matrix;
 use std::ops::{Add, Mul, Sub};
-use std::os::unix::raw::off_t;
+use rand::Rng;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Vector {
@@ -79,6 +80,19 @@ impl Vector {
         self.x = rotated_direction_matrix.data[0][0];
         self.y = rotated_direction_matrix.data[1][0];
         self.z = rotated_direction_matrix.data[2][0];
+    }
+
+    pub fn get_random_point_in_sphere (radius: f64) -> Vector {
+        let mut rng = rand::thread_rng();
+        let theta = rng.gen_range(0.0..PI * 2.0);
+        let v: f64 = rng.gen_range(0.0..1.0);
+        let phi = ((2.0 * v) - 1.0).acos();
+        let r = (rng.gen_range(0.0..1.0) as f64).powf(1.0/3.0);
+        Vector {
+            x: r * phi.sin() * theta.cos() * radius,
+            y: r * phi.sin() * theta.sin() * radius,
+            z: r * phi.cos() * radius,
+        }
     }
 
     pub fn dot_product(&self, other: Vector) -> f64 {
