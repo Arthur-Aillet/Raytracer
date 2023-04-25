@@ -96,10 +96,7 @@ impl Vector {
     }
 
     pub fn dot_product(&self, other: Vector) -> f64 {
-        let dx = self.x * other.x;
-        let dy = self.y * other.y;
-        let dz = self.z * other.z;
-        dx + dy + dz
+        self.x * other.x + self.y * other.y + self.z * other.z
     }
 
     pub fn reflect(&self, reference: Vector) -> Self {
@@ -112,10 +109,11 @@ impl Vector {
     }
 
     pub fn normalize(&self) -> Self {
+        let len = self.len();
         Vector {
-            x: self.x / self.len(),
-            y: self.y / self.len(),
-            z: self.z / self.len(),
+            x: self.x / len,
+            y: self.y / len,
+            z: self.z / len,
         }
     }
 
@@ -235,6 +233,24 @@ impl Segment {
         let origin_v = self.to_origin();
         (origin_v.end.x.powi(2) + origin_v.end.y.powi(2) + origin_v.end.z.powi(2)).sqrt()
     }
+
+    // pub fn normalize(&self) -> VectorF {
+    //     let my_len = self.len();
+    //     let mut origin_vect = self.to_origin();
+    //     if my_len == 0.0 {
+    //         return *self;
+    //     }
+    //     origin_vect.direction.x = origin_vect.direction.x / my_len;
+    //     origin_vect.direction.y = origin_vect.direction.y / my_len;
+    //     origin_vect.direction.z = origin_vect.direction.z / my_len;
+    //     origin_vect.direction.x = self.origin.x + origin_vect.direction.x;
+    //     origin_vect.direction.y = self.origin.y + origin_vect.direction.y;
+    //     origin_vect.direction.z = self.origin.z + origin_vect.direction.z;
+    //     origin_vect.origin.x = self.origin.x;
+    //     origin_vect.origin.y = self.origin.y;
+    //     origin_vect.origin.z = self.origin.z;
+    //     origin_vect
+    // }
 }
 
 pub fn number_of_solution(a: f64, b: f64, c: f64) -> i8 {

@@ -95,9 +95,9 @@ impl Parser {
     pub fn get_plane_from_json(&self, json: &Value) -> Box::<Plane> {
         Box::new(
             Plane {
+                transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
                 texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
-                normal: if json["normal"].is_object(){self.get_vector_from_json(&json["normal"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
-                distance: json["vector"].as_f64().unwrap_or(0.0),
+                normal: if json["normal"].is_object(){self.get_vector_from_json(&json["normal"])} else {Vector {x: 0.0, y: 0.0, z: 1.0}},
             }
         )
     }
