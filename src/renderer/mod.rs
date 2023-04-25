@@ -41,26 +41,41 @@ impl Renderer {
         }
     }
 
+    fn light_is_intersected(&self, light_vector: Vector, intersect: &Intersection, light: &Box<dyn Light>, normal_vector: Vector) -> bool {
+        for object_current in self.primitives.iter() {
+            match object_current.intersection(light_vector, intersect.intersection_point + (normal_vector * self.camera.shadow_bias)) {
+                None => { continue }
+                Some(shadow_intersect) => {
+                    if (shadow_intersect.intersection_point - intersect.intersection_point).len() < (light.get_transform().pos - intersect.intersection_point).len() {
+                        return true
+                    }
+                }
+            }
+        }
+        false
+    }
+
     fn calculate_light(&self, light: &Box<dyn Light>, intersect: &Intersection, camera_to_pixel: Vector) -> Vector {
         let normal_vector = intersect.normal.normalize();
-        let mut light_reached: i16 = 0;
-        let mut light_vector = (light.get_transform().pos - intersect.intersection_point).normalize();
+        let light_vector = (light.get_transform().pos - intersect.intersection_point).normalize();
         let mut light_uncovered = 1.0;
 
         if self.camera.smooth_shadow == false {
-            for object_current in self.primitives.iter() {
-                if object_current.intersection(light_vector, intersect.intersection_point + (normal_vector * self.camera.shadow_bias)).is_some() { return Vector {x: 0.0, y: 0.0, z:0.0} }
-            };
-        } else {
-            for _ in 0..self.camera.smooth_shadow_step {
-                let light_vector = (light.get_transform().pos + Vector::get_random_point_in_sphere(light.get_radius()) - intersect.intersection_point).normalize();
-                let mut intersected = true;
-                for object_current in self.primitives.iter() {
-                    if object_current.intersection(light_vector, intersect.intersection_point  + (normal_vector * self.camera.shadow_bias)).is_some() { intersected = false };
-                };
-                if intersected == true { light_reached += 1; }
+            if self.light_is_intersected(light_vector, intersect, light, normal_vector) {
+                return Vector {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 0.0,
+                }
             }
-            light_vector = (light.get_transform().pos - intersect.intersection_point).normalize();
+        } else {
+            let mut light_reached: i16 = 0;
+            for _ in 0..self.camera.smooth_shadow_step {
+                let inter_to_light = light.get_transform().pos + Vector::get_random_point_in_sphere(light.get_radius()) - intersect.intersection_point;
+                if self.light_is_intersected(inter_to_light.normalize(), intersect, light, normal_vector) == false {
+                    light_reached += 1;
+                }
+            }
             light_uncovered = light_reached as f64 / self.camera.smooth_shadow_step as f64;
         }
         let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * intersect.object.get_texture().diffuse;
