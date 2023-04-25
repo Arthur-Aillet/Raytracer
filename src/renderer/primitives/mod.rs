@@ -14,7 +14,6 @@ use super::renderer_common::{Transform, Texture};
 pub struct Intersection<'a> {
     pub intersection_point: Vector,
     pub normal: Vector,
-    pub id: i64,
     pub object: &'a dyn Object,
 }
 
@@ -23,14 +22,12 @@ pub struct Sphere {
     pub transform: Transform,
     pub texture: Texture,
     pub radius: f64,
-    pub id: i64,
 }
 
 pub struct Plane {
     pub texture: Texture,
     pub normal: Vector,
     pub distance: f64,
-    pub id: i64,
 }
 
 pub struct Cylinder {
@@ -38,7 +35,6 @@ pub struct Cylinder {
     pub texture: Texture,
     pub height: f64,
     pub radius: f64,
-    pub id: i64,
 }
 
 pub struct Cone {
@@ -46,20 +42,17 @@ pub struct Cone {
     pub texture: Texture,
     pub radius: f64,
     pub height: f64,
-    pub id: i64,
 }
 
 pub trait Object {
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection>;
     fn set_transform(&mut self, new: Transform);
     fn get_texture(&self) -> Texture;
-    fn get_id(&self) -> i64;
     fn set_texture(&mut self, new: Texture);
     fn set_radius(&mut self, new: f64);
     fn set_distance(&mut self, new: f64);
     fn set_height(&mut self, new: f64);
     fn set_normal(&mut self, new: Vector);
-    fn set_id(&mut self, new: i64);
 }
 
 impl Object for Sphere {
@@ -83,61 +76,52 @@ impl Object for Sphere {
             Some ( Intersection {
                 normal: point - self.transform.pos,
                 intersection_point: point,
-                id: self.id,
                 object: self,
             })
         }
     }
     fn set_transform(&mut self, new: Transform) {self.transform = new}
     fn get_texture(&self) -> Texture {self.texture}
-    fn get_id(&self) -> i64 {self.id}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
     fn set_radius(&mut self, new: f64) {self.radius = new}
 
     fn set_distance(&mut self, _new: f64) {}
     fn set_height(&mut self, _new: f64) {}
     fn set_normal(&mut self, _new: Vector) {}
-    fn set_id(&mut self, new: i64) {self.id = new}
 }
 
 impl Object for Plane {
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {return None;}
     fn set_transform(&mut self, _new: Transform) {}
     fn get_texture(&self) -> Texture {self.texture}
-    fn get_id(&self) -> i64 {self.id}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
     fn set_radius(&mut self, _new: f64) {}
 
     fn set_distance(&mut self, new: f64) {self.distance = new}
     fn set_height(&mut self, _new: f64) {}
     fn set_normal(&mut self, new: Vector) {self.normal = new}
-    fn set_id(&mut self, new: i64) {self.id = new}
 }
 
 impl Object for Cylinder {
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {return None;}
     fn set_transform(&mut self, new: Transform) {self.transform = new}
     fn get_texture(&self) -> Texture {self.texture}
-    fn get_id(&self) -> i64 {self.id}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
     fn set_radius(&mut self, new: f64) {self.radius = new}
     fn set_distance(&mut self, _new: f64) {}
 
     fn set_height(&mut self, new: f64) {self.height = new}
     fn set_normal(&mut self, _new: Vector) {}
-    fn set_id(&mut self, new: i64) {self.id = new}
 }
 
 impl Object for Cone {
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {return None;}
     fn set_transform(&mut self, new: Transform) {self.transform = new}
     fn get_texture(&self) -> Texture {self.texture}
-    fn get_id(&self) -> i64 {self.id}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
     fn set_radius(&mut self, new: f64) {self.radius = new}
     fn set_distance(&mut self, _new: f64) {}
 
     fn set_height(&mut self, new: f64) {self.height = new}
     fn set_normal(&mut self, _new: Vector) {}
-    fn set_id(&mut self, new: i64) {self.id = new}
 }
