@@ -243,7 +243,7 @@ impl Renderer {
     pub fn naive_thread_renderer(&self, pixels: &mut Vec<u8>) {
         for i in 0..self.camera.lens.height {
             for j in 0..self.camera.lens.width {
-                let pixel_id = (j + (i * self.camera.lens.width) * 3) as usize;
+                let pixel_id = ((j + (i * self.camera.lens.width)) * 3) as usize;
 
                 if pixels[pixel_id] != 0 {
                     continue;
@@ -258,7 +258,7 @@ impl Renderer {
                     }
                     pixels[pixel_id]     =((color.x).clamp(0.0, 1.0) * 255.0) as u8;
                     pixels[pixel_id + 1] =((color.x).clamp(0.0, 1.0) * 255.0) as u8;
-                    pixels[pixel_id + 1] =((color.x).clamp(0.0, 1.0) * 255.0) as u8;
+                    pixels[pixel_id + 2] =((color.x).clamp(0.0, 1.0) * 255.0) as u8;
                 } else {
                     let color_a = Vector {x: 0.0, y: 212.0, z: 255.0} * (1.0/255.0);
                     let color_b = Vector {x: 2.0, y: 0.0, z: 36.0} * (1.0/255.0);
@@ -266,19 +266,19 @@ impl Renderer {
                     let result = color_a + (color_b - color_a) * percent as f64;
                     pixels[pixel_id]     = (result.x * 255.0 as f64) as u8;
                     pixels[pixel_id + 1] = (result.y * 255.0 as f64) as u8;
-                    pixels[pixel_id + 1] = (result.z * 255.0 as f64) as u8;
+                    pixels[pixel_id + 2] = (result.z * 255.0 as f64) as u8;
                 }
             }
         }
     }
 
-    pub fn render_with_threads(&self) -> Vec<u8> {
+    pub fn render(&self) -> Vec<u8> {
         let mut pixels:Vec<u8> = vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize];
         self.naive_thread_renderer(&mut pixels);
         pixels
     }
 
-    pub fn render(&self) -> Vec<u8> {
+    pub fn rendera(&self) -> Vec<u8> {
         let mut pixels:Vec<u8> = Vec::new();
 
         for i in 0..self.camera.lens.height {
