@@ -52,6 +52,7 @@ impl Parser {
             diffuse: json["diffuse"].as_f64().unwrap_or(0.7),
             ambient: json["ambient"].as_f64().unwrap_or(0.3),
             specular: json["specular"].as_f64().unwrap_or(0.6),
+            shadow_bias: json["shadow_bias"].as_f64().unwrap_or(1e-14),
         };
         camera.calculate_lens_distance();
         let vector_director = Vector {x: 0.0, y: camera.lens.distance, z: 0.0};
