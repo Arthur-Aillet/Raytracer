@@ -5,10 +5,11 @@
 // vector
 //
 
+use std::f64::consts::PI;
 use crate::matrix;
 use matrix::Matrix;
 use std::ops::{Add, Mul, Sub};
-use std::os::unix::raw::off_t;
+use rand::Rng;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Vector {
@@ -56,6 +57,17 @@ impl Mul<f64> for Vector {
     }
 }
 
+impl Mul<Vector> for Vector {
+    type Output = Vector;
+    fn mul(self, other: Vector) -> Vector {
+        Vector {
+            x: self.x * other.x,
+            y: self.y * other.y,
+            z: self.z * other.z,
+        }
+    }
+}
+
 impl Vector {
     pub fn rotate(&mut self, x: f64, y: f64, z: f64) {
         let mut direction_matrix = Matrix::new(3, 1);
@@ -70,11 +82,21 @@ impl Vector {
         self.z = rotated_direction_matrix.data[2][0];
     }
 
+    pub fn get_random_point_in_sphere (radius: f64) -> Vector {
+        let mut rng = rand::thread_rng();
+        let theta = rng.gen_range(0.0..PI * 2.0);
+        let v: f64 = rng.gen_range(0.0..1.0);
+        let phi = ((2.0 * v) - 1.0).acos();
+        let r = (rng.gen_range(0.0..1.0) as f64).powf(1.0/3.0);
+        Vector {
+            x: r * phi.sin() * theta.cos() * radius,
+            y: r * phi.sin() * theta.sin() * radius,
+            z: r * phi.cos() * radius,
+        }
+    }
+
     pub fn dot_product(&self, other: Vector) -> f64 {
-        let dx = self.x * other.x;
-        let dy = self.y * other.y;
-        let dz = self.z * other.z;
-        dx + dy + dz
+        self.x * other.x + self.y * other.y + self.z * other.z
     }
 
     pub fn reflect(&self, reference: Vector) -> Self {
@@ -87,11 +109,16 @@ impl Vector {
     }
 
     pub fn normalize(&self) -> Self {
+        let len = self.len();
         Vector {
-            x: self.x / self.len(),
-            y: self.y / self.len(),
-            z: self.z / self.len(),
+            x: self.x / len,
+            y: self.y / len,
+            z: self.z / len,
         }
+    }
+
+    pub fn distance(&self, other: Vector) -> f64 {
+        ((self.x - other.x).powi(2) + (self.y - other.y).powi(2) + (self.z - other.z).powi(2)).sqrt()
     }
 
     pub fn len(self) -> f64 {
@@ -99,124 +126,15 @@ impl Vector {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct Segment {
-    pub origin : Vector,
-    pub end: Vector,
-}
-
-impl Add<Segment> for Segment {
-    type Output = Segment;
-    fn add(self, other: Segment) -> Segment {
-        Segment {
-            origin: Vector {
-                x: self.origin.x,
-                y: self.origin.y,
-                z: self.origin.z,
-            },
-            end: Vector {
-                x: self.end.x + other.end.x - other.origin.x,
-                y: self.end.y + other.end.y - other.origin.y,
-                z: self.end.z + other.end.z - other.origin.z,
-            },
-        }
-    }
-}
-
-impl Mul<f64> for Segment {
-    type Output = Segment;
-    fn mul(self, other: f64) -> Segment {
-        Segment {
-            origin: Vector {
-                x: self.origin.x,
-                y: self.origin.y,
-                z: self.origin.z,
-            },
-            end: Vector {
-                x: self.origin.x + (self.end.x - self.origin.x) * other,
-                y: self.origin.y + (self.end.y - self.origin.y) * other,
-                z: self.origin.z + (self.end.z - self.origin.z) * other,
-            },
-        }
-    }
-}
-
-impl PartialEq for Segment {
-    fn eq(&self, other: &Self) -> bool {
-        let vec1: Segment = self.to_origin();
-        let vec2: Segment = other.to_origin();
-        vec1.end == vec2.end
-    }
-}
-
-impl Segment {
-    pub fn new(x:f64, y:f64, z:f64) -> Segment {
-        Segment { origin: Vector {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-        }, end: Vector {
-            x,
-            y,
-            z,
-        }
-        }
-    }
-
-    pub fn rotate(&mut self, x: f64, y: f64, z: f64) {
-        let mut direction_matrix = Matrix::new(3, 1);
-        direction_matrix.data[0][0] = self.end.x;
-        direction_matrix.data[1][0] = self.end.y;
-        direction_matrix.data[2][0] = self.end.z;
-
-        let rotation_matrix = Matrix::euler_rotation(x, y, z);
-        let rotated_direction_matrix = rotation_matrix.multiply(&direction_matrix);
-        self.end.x = rotated_direction_matrix.data[0][0];
-        self.end.y = rotated_direction_matrix.data[1][0];
-        self.end.z = rotated_direction_matrix.data[2][0];
-    }
-
-    pub fn add(&mut self, other: Segment) {
-        self.origin = Vector {
-            x: self.origin.x,
-            y: self.origin.y,
-            z: self.origin.z,
-        };
-        self.end = Vector {
-            x: self.end.x + other.end.x - other.origin.x,
-            y: self.end.y + other.end.y - other.origin.y,
-            z: self.end.z + other.end.z - other.origin.z,
-        }
-    }
-
-    pub fn to_origin(&self) -> Segment {
-        Segment { origin: Vector {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-        }, end: Vector {
-            x: self.end.x - self.origin.x,
-            y: self.end.y - self.origin.y,
-            z: self.end.z - self.origin.z,
-        }
-        }
-    }
-
-    pub fn len(&self) -> f64 {
-        let origin_v = self.to_origin();
-        (origin_v.end.x.powi(2) + origin_v.end.y.powi(2) + origin_v.end.z.powi(2)).sqrt()
-    }
-}
-
 pub fn number_of_solution(a: f64, b: f64, c: f64) -> i8 {
     let delta: f64 = (b.powi(2)) - (4 as f64 * a * c);
 
-    if delta < 0 as f64 {
-        return 0;
+    return if delta < 0 as f64 {
+        0
     } else if delta == 0 as f64 {
-        return 1;
+        1
     } else {
-        return 2
+        2
     }
 }
 

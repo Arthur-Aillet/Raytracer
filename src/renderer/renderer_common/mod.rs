@@ -53,6 +53,14 @@ impl Color {
             b: 255.0,
         }
     }
+
+    pub fn as_vector(self) -> Vector {
+        Vector {
+            x: self.r / 255.0,
+            y: self.g / 255.0,
+            z: self.b / 255.0,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -66,7 +74,6 @@ pub struct Texture {
 }
 
 impl Texture {
-
     pub fn default() -> Texture {
         Texture {
             texture_type: 1,

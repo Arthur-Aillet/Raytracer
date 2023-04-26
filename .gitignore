@@ -19,4 +19,4 @@ raytracer
 .idea
 
 # ppm files
-*.ppm
+*.ppm*
