@@ -98,7 +98,7 @@ impl Object for Sphere {
 }
 
 impl Object for Plan {
-    fn intersection(&self, ray: Vector, camera: Vector) -> Option<Segment> {
+    fn intersection(&self, ray: Vector, camera: Vector) -> Option<Intersection> {
         //R0 = camera
         //Rd = ray_dest
         // Pn = plan_norm normal du plan (normalisée)
@@ -124,13 +124,14 @@ impl Object for Plan {
             y: camera.y + ray_dest.y * t,
             z: camera.z + ray_dest.z * t
         };
-        Some ( Segment {
-            origin: intersection_point,
-            end: Vector{
-                x: intersection_point.x + plan_norm.x,
-                y: intersection_point.y + plan_norm.y,
-                z: intersection_point.z + plan_norm.z,
-            }
-        })
+        // Some ( Segment {
+        //     origin: intersection_point,
+        //     end: Vector{
+        //         x: intersection_point.x + plan_norm.x,
+        //         y: intersection_point.y + plan_norm.y,
+        //         z: intersection_point.z + plan_norm.z,
+        //     }
+        // })
+        None
     }
 }

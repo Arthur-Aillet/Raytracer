@@ -7,6 +7,8 @@
 
 pub mod primitives;
 
+use std::thread;
+use std::sync::mpsc;
 use crate::vectors;
 use vectors::Vector;
 use crate::renderer::primitives::{Object, Sphere, Light, Intersection};
@@ -240,45 +242,69 @@ impl Renderer {
         found_intersection
     }
 
-    pub fn naive_thread_renderer(&self, pixels: &mut Vec<u8>) {
-        for i in 0..self.camera.lens.height {
-            for j in 0..self.camera.lens.width {
-                let pixel_id = ((j + (i * self.camera.lens.width)) * 3) as usize;
+    pub fn render_pixel(&self, x:i64, y:i64) -> [u8; 3] {
+        let mut pixel:[u8; 3] = [0; 3];
 
-                if pixels[pixel_id] != 0 {
-                    continue;
-                }
-                pixels[pixel_id] = 1;
-                let camera_to_pixel = self.camera.get_pixel_vector(j, i);
-                let intersect = self.found_nearest_intersection(camera_to_pixel);
-                if intersect != None {
-                    let mut color = intersect.unwrap().object.color * self.camera.ambient * intersect.unwrap().object.ambient;
-                    for light in self.lights.iter() {
-                        color = color + self.calculate_light(light, intersect.unwrap(), camera_to_pixel, intersect.unwrap().object);
-                    }
-                    pixels[pixel_id]     =((color.x).clamp(0.0, 1.0) * 255.0) as u8;
-                    pixels[pixel_id + 1] =((color.x).clamp(0.0, 1.0) * 255.0) as u8;
-                    pixels[pixel_id + 2] =((color.x).clamp(0.0, 1.0) * 255.0) as u8;
-                } else {
-                    let color_a = Vector {x: 0.0, y: 212.0, z: 255.0} * (1.0/255.0);
-                    let color_b = Vector {x: 2.0, y: 0.0, z: 36.0} * (1.0/255.0);
-                    let percent = i as f64 / self.camera.lens.height as f64;
-                    let result = color_a + (color_b - color_a) * percent as f64;
-                    pixels[pixel_id]     = (result.x * 255.0 as f64) as u8;
-                    pixels[pixel_id + 1] = (result.y * 255.0 as f64) as u8;
-                    pixels[pixel_id + 2] = (result.z * 255.0 as f64) as u8;
-                }
+        let camera_to_pixel = self.camera.get_pixel_vector(x, y);
+        let intersect = self.found_nearest_intersection(camera_to_pixel);
+        if intersect != None {
+            let mut color = intersect.unwrap().object.color * self.camera.ambient * intersect.unwrap().object.ambient;
+            for light in self.lights.iter() {
+                color = color + self.calculate_light(light, intersect.unwrap(), camera_to_pixel, intersect.unwrap().object);
             }
+            pixel[0] = ((color.x).clamp(0.0, 1.0) * 255.0) as u8;
+            pixel[1] = ((color.x).clamp(0.0, 1.0) * 255.0) as u8;
+            pixel[2] = ((color.x).clamp(0.0, 1.0) * 255.0) as u8;
+        } else {
+            let color_a = Vector {x: 0.0, y: 212.0, z: 255.0} * (1.0/255.0);
+            let color_b = Vector {x: 2.0, y: 0.0, z: 36.0} * (1.0/255.0);
+            let percent = y as f64 / self.camera.lens.height as f64;
+            let result = color_a + (color_b - color_a) * percent as f64;
+            pixel[0] = (result.x * 255.0 as f64) as u8;
+            pixel[1] = (result.y * 255.0 as f64) as u8;
+            pixel[2] = (result.z * 255.0 as f64) as u8;
         }
+        pixel
+    }
+
+    pub fn naive_thread_renderer(&self) -> Vec<u8> {
+        let mut pixels:Vec<u8> = vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize];
+    //     let threads_nb = 12;
+
+    //     for i in 0..self.camera.lens.height {
+    //         for j in 0..self.camera.lens.width {
+    //             let pixel_id = ((j + (i * self.camera.lens.width)) * 3) as usize;
+    //             let pixel = self.render_pixel(j, i);
+    //             pixels[pixel_id + 0] = pixel[0];
+    //             pixels[pixel_id + 1] = pixel[1];
+    //             pixels[pixel_id + 2] = pixel[2];
+    //         }
+    //     }
+        pixels
     }
 
     pub fn render(&self) -> Vec<u8> {
         let mut pixels:Vec<u8> = vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize];
-        self.naive_thread_renderer(&mut pixels);
+        let (tx, rx) = mpsc::channel();
+
+        thread::scope(|scope| {
+            for _ in 0..1 {
+                let temp_tx = tx.clone();
+                scope.spawn(move || {
+                    self.naive_thread_renderer();
+                    tx.send(1).unwrap();
+                    tx.send(2).unwrap();
+                });
+            }
+        });
+        for recevied in rx {
+            println!("Got: {}", recevied);
+        }
+        //self.naive_thread_renderer();
         pixels
     }
 
-    pub fn rendera(&self) -> Vec<u8> {
+    pub fn render_old(&self) -> Vec<u8> {
         let mut pixels:Vec<u8> = Vec::new();
 
         for i in 0..self.camera.lens.height {
