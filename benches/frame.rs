@@ -7,7 +7,8 @@ use criterion::{
 };
 
 pub fn frame_benchmark(c: &mut Criterion) {
-    c.bench_function("test", |b| b.iter(|| print!("")));
+    let renderer : renderer::Renderer = renderer::Renderer::get_renderer_from_file(String::from("benches/bench1.json"));
+    c.bench_function("bench 1 json", |b| b.iter(|| renderer.render()));
 }
 
 criterion_group!(frame, frame_benchmark);
