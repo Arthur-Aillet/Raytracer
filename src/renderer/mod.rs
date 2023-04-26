@@ -75,6 +75,8 @@ pub struct Camera {
     diffuse: f64,
     ambient: f64,
     specular: f64,
+    steps: u64,
+    super_sampling: u64,
 }
 
 impl Camera {
@@ -97,6 +99,8 @@ impl Camera {
                     z: 0.0,
                 },
             },
+            steps: 3,
+            super_sampling: 4,
         };
         result.calculate_lens_distance();
         let vector_director = Vector {x:0.0, y:result.lens.distance, z:0.0};
@@ -241,35 +245,47 @@ impl Renderer {
     }
 
     pub fn render(&self) -> Vec<u8> {
-        let mut pixels:Vec<u8> = Vec::new();
-
-        for i in 0..self.camera.lens.height {
-            for j in 0..self.camera.lens.width {
-                let camera_to_pixel = self.camera.get_pixel_vector(j, i);
-                let intersect = self.found_nearest_intersection(camera_to_pixel);
-                if intersect != None {
-                    let mut color = intersect.unwrap().object.color * self.camera.ambient * intersect.unwrap().object.ambient;
-                    for light in self.lights.iter() {
-                        color = color + self.calculate_light(light, intersect.unwrap(), camera_to_pixel, intersect.unwrap().object);
+        let mut result: Vec<u8> = Vec::new();
+        for n in 0..self.camera.steps {
+            let mut pixels:Vec<u8> = Vec::new();
+            for i in 0..self.camera.lens.height {
+                for j in 0..self.camera.lens.width {
+                    let camera_to_pixel = self.camera.get_pixel_vector(j, i);
+                    let intersect = self.found_nearest_intersection(camera_to_pixel);
+                    if intersect != None {
+                        let mut color = intersect.unwrap().object.color * self.camera.ambient * intersect.unwrap().object.ambient;
+                        for light in self.lights.iter() {
+                            color = color + self.calculate_light(light, intersect.unwrap(), camera_to_pixel, intersect.unwrap().object);
+                        }
+                        pixels.extend(&[
+                            ((color.x).clamp(0.0, 1.0) * 255.0) as u8,
+                            ((color.y).clamp(0.0, 1.0) * 255.0) as u8,
+                            ((color.z).clamp(0.0, 1.0) * 255.0) as u8
+                        ]);
+                    } else {
+                        let color_a = Vector {x: 0.0, y: 212.0, z: 255.0} * (1.0/255.0);
+                        let color_b = Vector {x: 2.0, y: 0.0, z: 36.0} * (1.0/255.0);
+                        let percent = i as f64 / self.camera.lens.height as f64;
+                        let result = color_a + (color_b - color_a) * percent as f64;
+                        pixels.extend(&[
+                            (result.x * 255.0 as f64) as u8,
+                            (result.y * 255.0 as f64) as u8,
+                            (result.z * 255.0 as f64) as u8
+                        ]);
                     }
-                    pixels.extend(&[
-                        ((color.x).clamp(0.0, 1.0) * 255.0) as u8,
-                        ((color.y).clamp(0.0, 1.0) * 255.0) as u8,
-                        ((color.z).clamp(0.0, 1.0) * 255.0) as u8
-                    ]);
-                } else {
-                    let color_a = Vector {x: 0.0, y: 212.0, z: 255.0} * (1.0/255.0);
-                    let color_b = Vector {x: 2.0, y: 0.0, z: 36.0} * (1.0/255.0);
-                    let percent = i as f64 / self.camera.lens.height as f64;
-                    let result = color_a + (color_b - color_a) * percent as f64;
-                    pixels.extend(&[
-                        (result.x * 255.0 as f64) as u8,
-                        (result.y * 255.0 as f64) as u8,
-                        (result.z * 255.0 as f64) as u8
-                    ]);
                 }
             }
+            if result.len() != pixels.len() {
+                for i in 0..pixels.len() {
+                    result.push(pixels[i]);
+                }
+            } else{
+                for i in 0..result.len() {
+                    result[i] = (((result[i] as u64 * (n - 1)) + pixels[i] as u64) / n) as u8;
+                }
+            }
+            print!("{}/{}\n", n + 1, self.camera.steps);
         }
-        pixels
+        result
     }
 }
