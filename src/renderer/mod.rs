@@ -77,7 +77,7 @@ impl Renderer {
             light_uncovered = light_reached as f64 / self.camera.smooth_shadow_step as f64;
         }
         let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * intersect.object.get_texture().diffuse;
-        // GI
+        // TODO: GI
         let reflected = light_vector.reflect(normal_vector).normalize();
         let view = (ray * -1.0).normalize();
         let specular = self.camera.specular * intersect.object.get_texture().specular * reflected.dot_product(view).max(0.0).powf(intersect.object.get_texture().shininess);
@@ -127,6 +127,10 @@ impl Renderer {
 
             self_color = self_color * (1.0 - intersect.object.get_texture().metalness);
             self_color = self_color + self.get_color_from_ray(surface_point, reflection_ray, recursivity - 1) * intersect.object.get_texture().metalness;
+            //TODO: should it loose intensity
+            //TODO: stop recursivity when color brought is too dimmed
+            //TODO: Gamma correction
+            //TODO: Make light shown
             self_color
         } else {
             Vector {
@@ -144,7 +148,7 @@ impl Renderer {
 
         for i in 0..self.camera.lens.height {
             for j in 0..self.camera.lens.width {
-                let color = self.get_color_from_ray(self.camera.transform.pos, self.camera.get_pixel_vector(j, i), 200);
+                let color = self.get_color_from_ray(self.camera.transform.pos, self.camera.get_pixel_vector(j, i), self.camera.recursivity);
 
                 pixels.extend(&[
                     ((color.x).clamp(0.0, 1.0) * 255.0) as u8,
