@@ -19,7 +19,7 @@ use crate::renderer::Renderer;
 fn main() -> std::io::Result<()> {
     let json_file_path = Path::new("../ex.json");
     let file = File::open(json_file_path);
-    
+
     let args: Vec<String> = env::args().collect();
     let mut ppm = ppm_interface::PPMInterface::new(String::from(args[1].clone()));
     let height = 1080;
