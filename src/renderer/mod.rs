@@ -8,7 +8,8 @@
 pub mod primitives;
 
 use std::thread;
-use std::sync::mpsc;
+use std::sync::{Arc, Mutex};
+use std::rc::Rc;
 use crate::vectors;
 use vectors::Vector;
 use crate::renderer::primitives::{Object, Sphere, Light, Intersection};
@@ -267,41 +268,51 @@ impl Renderer {
         pixel
     }
 
-    pub fn naive_thread_renderer(&self) -> Vec<u8> {
-        let mut pixels:Vec<u8> = vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize];
-    //     let threads_nb = 12;
+    pub fn naive_thread_renderer(&self, pixel_states:Arc<Mutex<Vec<bool>>>, pixels:Arc<Mutex<Vec<u8>>>, id:u8) {
+        //println!("thread {id:?} started");
+        let mut calculated_pixel: [u8; 3]; // variable où sera stockée un pixel tout juste calculé
+        let mut pixel_id: usize;
+        let mut pixel_state_id: usize;
 
-    //     for i in 0..self.camera.lens.height {
-    //         for j in 0..self.camera.lens.width {
-    //             let pixel_id = ((j + (i * self.camera.lens.width)) * 3) as usize;
-    //             let pixel = self.render_pixel(j, i);
-    //             pixels[pixel_id + 0] = pixel[0];
-    //             pixels[pixel_id + 1] = pixel[1];
-    //             pixels[pixel_id + 2] = pixel[2];
-    //         }
-    //     }
-        pixels
+        for i in 0..self.camera.lens.height {
+            for j in 0..self.camera.lens.width {
+                pixel_state_id = (j + (i * self.camera.lens.width)) as usize;
+                pixel_id = ((j + (i * self.camera.lens.width)) * 3) as usize;
+
+                let mut locked_pixel_states = pixel_states.lock().unwrap(); // lock
+                if locked_pixel_states[pixel_state_id] == true {
+                    drop (locked_pixel_states); // optionnel vu qu'on reset la scope du for ?
+                    continue;
+                }
+                //println!("thread {id:?} on pixel {pixel_state_id:?}");
+                locked_pixel_states[pixel_state_id] = true;
+                drop (locked_pixel_states); // nécéssaire pour laisser les autres threads bouger dès que possible
+                calculated_pixel = self.render_pixel(j, i);
+
+                let mut locked_pixels = pixels.lock().unwrap(); // lock
+                locked_pixels[pixel_id + 0] = calculated_pixel[0];
+                locked_pixels[pixel_id + 1] = calculated_pixel[1];
+                locked_pixels[pixel_id + 2] = calculated_pixel[2];
+                drop(locked_pixels); // optionnel vu qu'on reset la scope du for ?
+            }
+        }
     }
 
     pub fn render(&self) -> Vec<u8> {
-        let mut pixels:Vec<u8> = vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize];
-        let (tx, rx) = mpsc::channel();
+        let pixels:Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize]));
+        let pixels_state:Arc<Mutex<Vec<bool>>> = Arc::new(Mutex::new(vec![false; (self.camera.lens.height * self.camera.lens.width) as usize]));
 
         thread::scope(|scope| {
-            for _ in 0..1 {
-                let temp_tx = tx.clone();
+            for i in 0..8 {
+                let clone_pixels = Arc::clone(&pixels);
+                let clone_pixels_state = Arc::clone(&pixels_state);
                 scope.spawn(move || {
-                    self.naive_thread_renderer();
-                    tx.send(1).unwrap();
-                    tx.send(2).unwrap();
+                    self.naive_thread_renderer(clone_pixels_state, clone_pixels, i);
                 });
             }
         });
-        for recevied in rx {
-            println!("Got: {}", recevied);
-        }
-        //self.naive_thread_renderer();
-        pixels
+        let final_pixels = pixels.lock().unwrap().to_vec();
+        final_pixels
     }
 
     pub fn render_old(&self) -> Vec<u8> {
