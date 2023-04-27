@@ -2,241 +2,105 @@
 // EPITECH PROJECT, 2023
 // Rustracer
 // File description:
-// renderer
+// renderer common structures
 //
 
-pub mod primitives;
+mod camera;
+mod primitives;
+mod lights;
+mod parsing;
+mod renderer_common;
 
 use std::thread;
 use std::sync::{Arc, Mutex};
-use std::rc::Rc;
-use crate::vectors;
-use vectors::Vector;
-use crate::renderer::primitives::{Object, Sphere, Light, Intersection};
+use crate::renderer::primitives::{Object, Intersection};
+use std::fs;
+use serde_json::Value;
+use camera::{Camera};
+use lights::Lights;
+use parsing::Parser;
+use crate::renderer::lights::Light;
+use crate::vectors::Vector;
 
-#[derive(Debug, Clone)]
-pub struct Transform {
-    pos: vectors::Vector,
-    rotation : vectors::Vector,
-    scale : vectors::Vector,
-}
-
-impl Transform {
-    pub fn new(
-        x_pos: f64,
-        y_pos: f64,
-        z_pos: f64,
-        x_rot: f64,
-        y_rot: f64,
-        z_rot: f64,
-        x_sca: f64,
-        y_sca: f64,
-        z_sca: f64,
-    ) -> Self {
-        Transform {
-            pos: Vector {
-                x: x_pos,
-                y: y_pos,
-                z: z_pos,
-            },
-            rotation: Vector {
-                x: x_rot,
-                y: y_rot,
-                z: z_rot,
-            },
-            scale: Vector {
-                x: z_sca,
-                y: z_sca,
-                z: z_sca,
-            },
-        }
-    }
-}
-
-#[derive(Debug)]
 pub struct Renderer {
-    camera: Camera,
-    objects: Vec<Sphere>,
-    lights: Vec<Light>,
-}
-
-#[derive(Debug)]
-struct Lens {
-    height: i64,
-    width: i64,
-    distance: f64,
-    vector_to_first_pixel: Vector,
-}
-
-#[derive(Debug)]
-pub struct Camera {
-    transform : Transform,
-    lens : Lens,
-    fov : i16,
-    smooth_shadow: bool,
-    smooth_shadow_step: i16,
-    diffuse: f64,
-    ambient: f64,
-    specular: f64,
-}
-
-impl Camera {
-    fn new() -> Self {
-        let mut result = Camera {
-            transform: Transform::new(0.0, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, 0.0, 0.0),
-            fov: 80,
-            diffuse: 0.7,
-            ambient: 0.1,
-            specular: 0.6,
-            smooth_shadow_step: 1,
-            smooth_shadow: true,
-            lens: Lens {
-                width: 1920,
-                height: 1080,
-                distance: 0.0,
-                vector_to_first_pixel: Vector {
-                    x: 0.0,
-                    y: 0.0,
-                    z: 0.0,
-                },
-            },
-        };
-        result.calculate_lens_distance();
-        let vector_director = Vector {x:0.0, y:result.lens.distance, z:0.0};
-        result.lens.vector_to_first_pixel = Vector {x:result.transform.pos.x, y:result.transform.pos.y, z:result.transform.pos.z};
-        result.lens.vector_to_first_pixel = result.lens.vector_to_first_pixel + Vector {x:0.0, y:0.0, z:1.0} * (result.lens.height as f64 / 2.0);
-        result.lens.vector_to_first_pixel = result.lens.vector_to_first_pixel + vector_director;
-        result.lens.vector_to_first_pixel = result.lens.vector_to_first_pixel + Vector {x:-1.0, y:0.0, z:0.0} * (result.lens.width as f64 / 2.0);
-        result
-    }
-
-    fn get_pixel_vector(&self, x: i64, y: i64) -> Vector {
-        let mut pixel_vector = self.lens.vector_to_first_pixel.clone();
-
-        pixel_vector = pixel_vector + Vector {x:1.0, y:0.0, z:0.0} * x as f64;
-        pixel_vector = pixel_vector + Vector {x:0.0, y:0.0, z:-1.0} * y as f64;
-        pixel_vector.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
-        pixel_vector.normalize()
-    }
-
-    fn calculate_lens_distance(&mut self) {
-        self.lens.distance = (self.lens.width as f64 / 2.0) / (self.fov as f64 / 2.0).to_radians().tan();
-    }
-
-    pub fn calculate_tone_mapping(val: f64) -> f64{
-        let a = 2.51;
-        let b = 0.03;
-        let c = 2.43;
-        let d = 0.59;
-        let e = 0.14;
-        ((val * (a * val + b))/(val * (c * val + d) + e)).clamp(0.0, 1.0)
-    }
+    pub camera: Camera,
+    pub primitives: Vec<Box<dyn Object>>,
+    pub lights: Lights,
 }
 
 impl Renderer {
+
     pub fn new() -> Renderer {
         Renderer {
-            camera: Camera::new(),
-            objects: vec![
-                Sphere {
-                    origin: Vector {x:0.0, y:3.0, z:0.0},
-                    radius: 1.0,
-                    ambient: 0.3,
-                    diffuse: 0.5,
-                    specular: 0.4,
-                    shininess: 4.0,
-                    color: Vector {
-                        x: 1.0,
-                        y: 1.0,
-                        z: 1.0,
-                    },
-                }, Sphere {
-                    origin: Vector {x:2.0, y:6.0, z:-2.0},
-                    radius: 1.0,
-                    ambient: 0.3,
-                    diffuse: 0.5,
-                    specular: 0.4,
-                    shininess: 4.0,
-                    color: Vector {
-                        x: 1.0,
-                        y: 1.0,
-                        z: 1.0,
-                    },
-                }, Sphere {
-                    origin: Vector {x:7.0, y:20.0, z:-7.0},
-                    radius: 2.0,
-                    ambient: 0.3,
-                    diffuse: 0.5,
-                    specular: 0.4,
-                    shininess: 4.0,
-                    color: Vector {
-                        x: 1.0,
-                        y: 1.0,
-                        z: 1.0,
-                    },
-                }
-            ],
-            lights: vec![ Light {
-                origin: Vector {x:-4.0, y:-5.0, z:3.0},
-                intensity: 80.0,
-                color: Vector {
-                    x: 1.0,
-                    y: 1.0,
-                    z: 1.0,
-                },
-                radius: 0.1,
-            }]
+            camera: Camera::default(),
+            primitives: Vec::new(),
+            lights: Lights {
+                lights: Vec::new(),
+                ambient: Vec::new(),
+            },
         }
     }
 
-    fn calculate_light(&self, light: &Light, intersect: Intersection, camera_to_pixel: Vector, object: Sphere) -> Vector {
+    fn light_is_intersected(&self, light_vector: Vector, intersect: &Intersection, light: &Box<dyn Light>, normal_vector: Vector) -> bool {
+        for object_current in self.primitives.iter() {
+            match object_current.intersection(light_vector, intersect.intersection_point + (normal_vector * self.camera.shadow_bias)) {
+                None => { continue }
+                Some(shadow_intersect) => {
+                    if (shadow_intersect.intersection_point - intersect.intersection_point).len() < (light.get_transform().pos - intersect.intersection_point).len() {
+                        return true
+                    }
+                }
+            }
+        }
+        false
+    }
+
+    fn calculate_light(&self, light: &Box<dyn Light>, intersect: &Intersection, camera_to_pixel: Vector) -> Vector {
         let normal_vector = intersect.normal.normalize();
-        let mut light_reached: i16 = 0;
-        let mut light_vector = (light.origin - intersect.intersection_point).normalize();
+        let light_vector = (light.get_transform().pos - intersect.intersection_point).normalize();
         let mut light_uncovered = 1.0;
 
         if self.camera.smooth_shadow == false {
-            for object_current in self.objects.iter() {
-                if *object_current == object { continue; }
-                let intersect = object_current.intersection(light_vector, intersect.intersection_point);
-                if intersect != None { return Vector {x: 0.0, y: 0.0, z:0.0} }
-            };
-        } else {
-            for _ in 0..self.camera.smooth_shadow_step {
-                let light_vector = (light.origin + Vector::get_random_point_in_sphere(light.radius) - intersect.intersection_point).normalize();
-                let mut intersected = true;
-                for object_current in self.objects.iter() {
-                    if *object_current == object { continue; }
-                    let intersect = object_current.intersection(light_vector, intersect.intersection_point);
-                    if intersect != None { intersected = false };
-                };
-                if intersected == true { light_reached += 1; }
+            if self.light_is_intersected(light_vector, intersect, light, normal_vector) {
+                return Vector {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 0.0,
+                }
             }
-            light_vector = (light.origin - intersect.intersection_point).normalize();
+        } else {
+            let mut light_reached: i16 = 0;
+            for _ in 0..self.camera.smooth_shadow_step {
+                let inter_to_light = light.get_transform().pos + Vector::get_random_point_in_sphere(light.get_radius()) - intersect.intersection_point;
+                if self.light_is_intersected(inter_to_light.normalize(), intersect, light, normal_vector) == false {
+                    light_reached += 1;
+                }
+            }
             light_uncovered = light_reached as f64 / self.camera.smooth_shadow_step as f64;
         }
-        let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * object.diffuse;
+        let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * intersect.object.get_texture().diffuse;
+
         let reflected = light_vector.reflect(normal_vector).normalize();
         let view = (camera_to_pixel * -1.0).normalize();
-        let specular = self.camera.specular * object.specular * reflected.dot_product(view).max(0.0).powf(object.shininess);
-        let distance = intersect.intersection_point.distance(light.origin);
-        let light_falloff = (light.intensity / distance.powi(2)).max(0.0);
-        object.color * light.color * diffuse * light_falloff * light_uncovered + light.color * specular * light_falloff * light_uncovered
+        let specular = self.camera.specular * intersect.object.get_texture().specular * reflected.dot_product(view).max(0.0).powf(intersect.object.get_texture().shininess);
+        let distance = intersect.intersection_point.distance(light.get_transform().pos);
+        let light_falloff = (light.get_strength() / distance.powi(light.get_falloff())).max(0.0);
+        intersect.object.get_texture().color.as_vector() * light.get_color().as_vector() * diffuse * light_falloff * light_uncovered + light.get_color().as_vector() * specular * light_falloff * light_uncovered
     }
 
     fn found_nearest_intersection(&self, camera_to_pixel: Vector) -> Option<Intersection> {
         let mut found_intersection: Option<Intersection> = None;
         let mut smallest_distance: f64 = f64::INFINITY;
 
-        for object in self.objects.iter() {
+         for object in self.primitives.iter() {
             let intersect = object.intersection(camera_to_pixel, self.camera.transform.pos);
 
-            if intersect != None {
-
-                let distance_found = (intersect.unwrap().intersection_point - self.camera.transform.pos).len();
+            if intersect.is_some() {
+                let inters = intersect.unwrap();
+                let distance_found = (inters.intersection_point - self.camera.transform.pos).len();
                 if distance_found < smallest_distance {
                     smallest_distance = distance_found;
-                    found_intersection = intersect;
+                    found_intersection = Some(inters);
                 }
             }
         }
@@ -335,11 +199,11 @@ impl Renderer {
         for i in 0..self.camera.lens.height {
             for j in 0..self.camera.lens.width {
                 let camera_to_pixel = self.camera.get_pixel_vector(j, i);
-                let intersect = self.found_nearest_intersection(camera_to_pixel);
-                if intersect != None {
-                    let mut color = intersect.unwrap().object.color * self.camera.ambient * intersect.unwrap().object.ambient;
-                    for light in self.lights.iter() {
-                        color = color + self.calculate_light(light, intersect.unwrap(), camera_to_pixel, intersect.unwrap().object);
+                let maybe_intersect = self.found_nearest_intersection(camera_to_pixel);
+                if let Some(intersect) = maybe_intersect {
+                    let mut color = intersect.object.get_texture().color.as_vector() * self.camera.ambient * intersect.object.get_texture().ambient;
+                    for light in self.lights.lights.iter() {
+                        color = color + self.calculate_light(light, &intersect, camera_to_pixel);
                     }
                     pixels.extend(&[
                         ((color.x).clamp(0.0, 1.0) * 255.0) as u8,
@@ -361,4 +225,16 @@ impl Renderer {
         }
         pixels
     }
+
+    pub fn get_renderer_from_file(file: String) -> Renderer {
+        let data = fs::read_to_string(file).expect("Unable to read file");
+        let json: Value = serde_json::from_str(&data.to_string()).unwrap();
+        let parser = Parser{};
+        Renderer {
+            camera: if json["camera"].is_object() {parser.get_camera_from_json(&json["camera"])} else {Camera::default()},
+            primitives: if json["primitives"].is_object() {parser.get_objects_from_json(&json["primitives"])} else {Vec::new()},
+            lights: if json["lights"].is_object() {parser.get_lights_from_json(&json["lights"])} else {Lights::default()},
+        }
+    }
+
 }
