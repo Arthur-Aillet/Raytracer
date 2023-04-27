@@ -111,15 +111,15 @@ impl Renderer {
         let mut pixel:[u8; 3] = [0; 3];
 
         let camera_to_pixel = self.camera.get_pixel_vector(x, y);
-        let intersect = self.found_nearest_intersection(camera_to_pixel);
-        if intersect != None {
-            let mut color = intersect.unwrap().object.color * self.camera.ambient * intersect.unwrap().object.ambient;
-            for light in self.lights.iter() {
-                color = color + self.calculate_light(light, intersect.unwrap(), camera_to_pixel, intersect.unwrap().object);
+        let maybe_intersect = self.found_nearest_intersection(camera_to_pixel);
+        if let Some(intersect) = maybe_intersect {
+            let mut color = intersect.object.get_texture().color.as_vector() * self.camera.ambient * intersect.object.get_texture().ambient;
+            for light in self.lights.lights.iter() {
+                color = color + self.calculate_light(light, &intersect, camera_to_pixel);
             }
             pixel[0] = ((color.x).clamp(0.0, 1.0) * 255.0) as u8;
-            pixel[1] = ((color.x).clamp(0.0, 1.0) * 255.0) as u8;
-            pixel[2] = ((color.x).clamp(0.0, 1.0) * 255.0) as u8;
+            pixel[1] = ((color.y).clamp(0.0, 1.0) * 255.0) as u8;
+            pixel[2] = ((color.z).clamp(0.0, 1.0) * 255.0) as u8;
         } else {
             let color_a = Vector {x: 0.0, y: 212.0, z: 255.0} * (1.0/255.0);
             let color_b = Vector {x: 2.0, y: 0.0, z: 36.0} * (1.0/255.0);
@@ -174,7 +174,6 @@ impl Renderer {
 // o..o..o..o..
 // o..o..o..o..
 // o..o..o..o..
-
 
     pub fn render(&self) -> Vec<u8> {
         let pixels:Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize]));
