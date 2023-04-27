@@ -77,7 +77,7 @@ impl Renderer {
             light_uncovered = light_reached as f64 / self.camera.smooth_shadow_step as f64;
         }
         let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * intersect.object.get_texture().diffuse;
-
+        // GI
         let reflected = light_vector.reflect(normal_vector).normalize();
         let view = (ray * -1.0).normalize();
         let specular = self.camera.specular * intersect.object.get_texture().specular * reflected.dot_product(view).max(0.0).powf(intersect.object.get_texture().shininess);
@@ -106,15 +106,28 @@ impl Renderer {
     }
 
     fn get_color_from_ray(&self, origin: Vector, ray: Vector, recursivity: i64) -> Vector {
+        if recursivity == 0 {
+            return Vector {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            }
+        }
         let maybe_intersect = self.found_nearest_intersection(origin, ray);
 
         if let Some(intersect) = maybe_intersect {
-            let mut color = intersect.object.get_texture().color.as_vector() * self.camera.ambient * intersect.object.get_texture().ambient;
+            let mut self_color = intersect.object.get_texture().color.as_vector() * self.camera.ambient * intersect.object.get_texture().ambient;
 
             for light in self.lights.lights.iter() {
-                color = color + self.calculate_light(light, &intersect, ray);
+                self_color = self_color + self.calculate_light(light, &intersect, ray);
             }
-            color
+            let surface_point = intersect.intersection_point + intersect.normal * self.camera.shadow_bias;
+
+            let reflection_ray = ray.normalize() - intersect.normal.normalize() * 2.0 * intersect.normal.dot_product(ray.normalize());
+
+            self_color = self_color * (1.0 - intersect.object.get_texture().metalness);
+            self_color = self_color + self.get_color_from_ray(surface_point, reflection_ray, recursivity - 1) * intersect.object.get_texture().metalness;
+            self_color
         } else {
             Vector {
                 x: 0.0,
@@ -127,9 +140,11 @@ impl Renderer {
     pub fn render(&self) -> Vec<u8> {
         let mut pixels:Vec<u8> = Vec::new();
 
+        pixels.reserve((self.camera.lens.width * self.camera.lens.height) as usize);
+
         for i in 0..self.camera.lens.height {
             for j in 0..self.camera.lens.width {
-                let color = self.get_color_from_ray(self.camera.transform.pos, self.camera.get_pixel_vector(j, i), 0);
+                let color = self.get_color_from_ray(self.camera.transform.pos, self.camera.get_pixel_vector(j, i), 200);
 
                 pixels.extend(&[
                     ((color.x).clamp(0.0, 1.0) * 255.0) as u8,

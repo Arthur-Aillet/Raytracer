@@ -78,6 +78,7 @@ impl Parser {
             diffuse: json["diffuse"].as_f64().unwrap_or(0.7),
             ambient: json["ambient"].as_f64().unwrap_or(0.1),
             specular: json["specular"].as_f64().unwrap_or(0.4),
+            metalness: json["metalness"].as_f64().unwrap_or(0.1),
             shininess: json["shininess"].as_f64().unwrap_or(4.0),
         }
     }
