@@ -272,35 +272,49 @@ impl Renderer {
         //println!("thread {id:?} started");
         let mut calculated_pixel: [u8; 3]; // variable où sera stockée un pixel tout juste calculé
         let mut pixel_id: usize;
-        let mut pixel_state_id: usize;
+        let mut line_state_id: usize;
 
-        for i in 0..self.camera.lens.height {
+        for i in 0..(self.camera.lens.height) {
+            let test_size = self.camera.lens.height * self.camera.lens.width * 3;
+
+            line_state_id = i as usize;
+            let mut locked_pixel_states = pixel_states.lock().unwrap(); // lock
+
+            if locked_pixel_states[line_state_id] == true {
+                drop (locked_pixel_states); // optionnel vu qu'on reset la scope du for ?
+                continue;
+            }
+            //println!("thread {id:?} on pixel {line_state_id:?}");
+            locked_pixel_states[line_state_id] = true;
+            drop (locked_pixel_states); // nécéssaire pour laisser les autres threads bouger dès que possible
+
+            let mut local_pixel_line: Vec<u8> = vec![0; (self.camera.lens.width * 3) as usize];
             for j in 0..self.camera.lens.width {
-                pixel_state_id = (j + (i * self.camera.lens.width)) as usize;
-                pixel_id = ((j + (i * self.camera.lens.width)) * 3) as usize;
-
-                let mut locked_pixel_states = pixel_states.lock().unwrap(); // lock
-                if locked_pixel_states[pixel_state_id] == true {
-                    drop (locked_pixel_states); // optionnel vu qu'on reset la scope du for ?
-                    continue;
-                }
-                //println!("thread {id:?} on pixel {pixel_state_id:?}");
-                locked_pixel_states[pixel_state_id] = true;
-                drop (locked_pixel_states); // nécéssaire pour laisser les autres threads bouger dès que possible
+                pixel_id = (j * 3) as usize;
                 calculated_pixel = self.render_pixel(j, i);
 
-                let mut locked_pixels = pixels.lock().unwrap(); // lock
-                locked_pixels[pixel_id + 0] = calculated_pixel[0];
-                locked_pixels[pixel_id + 1] = calculated_pixel[1];
-                locked_pixels[pixel_id + 2] = calculated_pixel[2];
-                drop(locked_pixels); // optionnel vu qu'on reset la scope du for ?
+                local_pixel_line[pixel_id + 0] = calculated_pixel[0];
+                local_pixel_line[pixel_id + 1] = calculated_pixel[1];
+                local_pixel_line[pixel_id + 2] = calculated_pixel[2];
             }
+            let mut locked_pixels = pixels.lock().unwrap(); // lock
+            for k in 0..(self.camera.lens.width * 3) {
+                pixel_id = ((k + (i * self.camera.lens.width * 3))) as usize;
+                locked_pixels[pixel_id as usize] = local_pixel_line[k as usize];
+            }
+            drop(locked_pixels); // optionnel vu qu'on reset la scope du for ?
         }
     }
 
+// o..o..o..o..
+// o..o..o..o..
+// o..o..o..o..
+// o..o..o..o..
+
+
     pub fn render(&self) -> Vec<u8> {
         let pixels:Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize]));
-        let pixels_state:Arc<Mutex<Vec<bool>>> = Arc::new(Mutex::new(vec![false; (self.camera.lens.height * self.camera.lens.width) as usize]));
+        let pixels_state:Arc<Mutex<Vec<bool>>> = Arc::new(Mutex::new(vec![false; self.camera.lens.height as usize]));
 
         thread::scope(|scope| {
             for i in 0..8 {
