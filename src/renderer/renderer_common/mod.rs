@@ -7,6 +7,7 @@
 
 use crate::vectors;
 
+use std::ops::{Add, Mul, Sub};
 use vectors::Vector;
 
 #[derive(Debug, Clone, Copy)]
@@ -37,6 +38,47 @@ impl Transform {
         }
     }
 }
+
+
+impl PartialEq for Transform {
+    fn eq(&self, other: &Self) -> bool {
+        self.pos == other.pos && self.rotation == other.rotation && self.scale == other.scale
+    }
+}
+
+impl Add<Transform> for Transform {
+    type Output = Transform;
+    fn add(self, other: Transform) -> Transform {
+        Transform {
+            pos: self.pos + other.pos,
+            rotation: self.rotation + other.rotation,
+            scale: self.scale + other.scale,
+        }
+    }
+}
+
+impl Sub<Transform> for Transform {
+    type Output = Transform;
+    fn sub(self, other: Transform) -> Transform {
+        Transform {
+            pos: self.pos - other.pos,
+            rotation: self.rotation - other.rotation,
+            scale: self.scale - other.scale,
+        }
+    }
+}
+
+impl Mul<Transform> for Transform {
+    type Output = Transform;
+    fn mul(self, other: Transform) -> Transform {
+        Transform {
+            pos: self.pos * other.pos,
+            rotation: self.rotation * other.rotation,
+            scale: self.scale * other.scale,
+        }
+    }
+}
+
 
 #[derive(Debug, Clone, Copy)]
 pub struct Color {
