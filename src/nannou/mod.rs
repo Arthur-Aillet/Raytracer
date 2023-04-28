@@ -8,25 +8,28 @@
 use std::fs::File;
 use std::io::{BufWriter, Write};
 
-pub struct PPMInterface {
-    file: File,
+pub struct NannouInterface {
+    height: i64,
+    width: i64,
+    vec_pixels: Vec<u8>,
 }
 
-impl PPMInterface {
-    pub fn new(file_path: String) -> Self {
-        let file = File::create(file_path).unwrap();
-        PPMInterface { file }
+impl NannouInterface {
+    pub fn new(width: i64, height: i64) -> Self {
+        let vec_pixels = vec![0; (width * height * 3) as usize];
+        NannouInterface {
+            height,
+            width,
+            vec_pixels,
+        }
     }
 
-    fn create_header(&self, width: u32, height: u32) -> String {
-        format!("P6\n{} {}\n255\n", width, height)
+    pub fn write(&mut self, x: i64, y: i64, color: Vec<u8>) {
+        let index = ((y * self.width + x) * 3) as usize;
+        self.vec_pixels[index] = color[0];
     }
 
-    pub fn write(&mut self, width: u32, height: u32, content: Vec<u8>) {
-        let header = self.create_header(width, height);
-        let mut writer = BufWriter::new(&self.file);
-
-        writer.write_all(header.as_bytes()).unwrap();
-        writer.write_all(&content).unwrap();
+    pub fn get_pixels(&self) -> &Vec<u8> {
+        &self.vec_pixels
     }
 }

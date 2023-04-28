@@ -18,7 +18,6 @@ use std::env;
 fn main() -> std::io::Result<()> {
     let args: Vec<String> = env::args().collect();
     let config = config::Config::from_args(&args);
-    config.print();
     let mut renderer: Renderer = Renderer::get_renderer_from_file(config.config_file, config.height, config.width);
 
     if config.g_flag {
