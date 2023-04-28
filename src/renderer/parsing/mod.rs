@@ -54,6 +54,7 @@ impl Parser {
             specular: json["specular"].as_f64().unwrap_or(0.6),
             shadow_bias: json["shadow_bias"].as_f64().unwrap_or(1e-14),
             recursivity: json["recursivity"].as_i64().unwrap_or(5),
+            reflecion_samples: json["reflecion_samples"].as_i64().unwrap_or(5),
         };
         camera.calculate_lens_distance();
         let vector_director = Vector {x: 0.0, y: camera.lens.distance, z: 0.0};
@@ -81,6 +82,7 @@ impl Parser {
             specular: json["specular"].as_f64().unwrap_or(0.4),
             metalness: json["metalness"].as_f64().unwrap_or(0.1),
             shininess: json["shininess"].as_f64().unwrap_or(4.0),
+            roughness: json["roughness"].as_f64().unwrap_or(0.25),
         }
     }
 

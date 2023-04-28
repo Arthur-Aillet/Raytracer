@@ -72,6 +72,7 @@ pub struct Texture {
     pub specular: f64,
     pub metalness: f64,
     pub shininess: f64,
+    pub roughness: f64,
 }
 
 impl Texture {
@@ -84,6 +85,7 @@ impl Texture {
             specular: 0.4,
             metalness: 0.1,
             shininess: 4.0,
+            roughness: 0.25,
         }
     }
 

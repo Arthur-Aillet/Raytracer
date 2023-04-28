@@ -11,6 +11,7 @@ mod lights;
 mod parsing;
 mod renderer_common;
 
+use rand::Rng;
 use std::fs;
 use serde_json::Value;
 use camera::{Camera};
@@ -123,17 +124,21 @@ impl Renderer {
             }
             let surface_point = intersect.intersection_point + intersect.normal * self.camera.shadow_bias;
 
-            let reflection_ray = ray.normalize() - intersect.normal.normalize() * 2.0 * intersect.normal.dot_product(ray.normalize());
-
             self_color = self_color * (1.0 - intersect.object.get_texture().metalness);
-            self_color = self_color + self.get_color_from_ray(surface_point, reflection_ray, recursivity - 1) * intersect.object.get_texture().metalness;
+            let samples_nbr = self.camera.reflecion_samples;
+            for _ in 0.. samples_nbr as i32 {
+                let mut rng = rand::thread_rng();
+                let mut reflection_ray = (ray.normalize() - intersect.normal.normalize() * 2.0 * intersect.normal.dot_product(ray.normalize())).normalize();
+                reflection_ray.rotate(rng.gen_range(0.0..90.0 * intersect.object.get_texture().roughness), 0.0, rng.gen_range(0.0..360.0));
 
+                self_color = self_color + self.get_color_from_ray(surface_point, reflection_ray, recursivity - 1) * intersect.object.get_texture().metalness * (1.0/samples_nbr as f64);
+            }
             self_color
         } else {
             Vector {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
+                x: 127.5,
+                y: 127.5,
+                z: 127.5,
             }
         }
     }

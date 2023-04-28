@@ -34,7 +34,8 @@
         "smooth_shadow": false,
         "smooth_shadow_step": 200,
         "shadow_bias": 1e-13,
-        "recursivity": 15
+        "recursivity": 3,
+        "reflecion_samples": 20
     },
     "primitives": {
         "spheres": [
@@ -67,7 +68,8 @@
                     "ambient": 0.5,
                     "specular": 0.2,
                     "metalness": 0.8,
-                    "shininess": 4.0
+                    "shininess": 4.0,
+                    "roughness": 0.7
                 },
                 "radius": 1.5
             },
@@ -99,7 +101,9 @@
                     "diffuse": 0.7,
                     "ambient": 0.5,
                     "specular": 0.2,
-                    "shininess": 4.0
+                    "metalness": 0.8,
+                    "shininess": 4.0,
+                    "roughness": 0.3
                 },
                 "radius": 0.5
             }
@@ -138,7 +142,9 @@
                     "diffuse": 0.7,
                     "ambient": 0.5,
                     "specular": 0.2,
-                    "shininess": 4.0
+                    "metalness": 0.8,
+                    "shininess": 4.0,
+                    "roughness": 0.1
                 },
                 "vector": -1.5
             }
