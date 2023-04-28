@@ -32,7 +32,7 @@
         "ambient": 0.5,
         "specular": 0.4,
         "smooth_shadow": true,
-        "smooth_shadow_step": 2000,
+        "smooth_shadow_step": 1000,
         "shadow_bias": 1e-13
     },
     "primitives": {

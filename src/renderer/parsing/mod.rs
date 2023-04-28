@@ -124,8 +124,8 @@ impl Parser {
         )
     }
 
-    pub fn get_objects_from_json(&self, json: &Value) -> Vec::<Box::<dyn Object>> {
-        let mut objects: Vec::<Box::<dyn Object>> = Vec::new();
+    pub fn get_objects_from_json(&self, json: &Value) -> Vec::<Box::<dyn Object + Send + Sync>> {
+        let mut objects: Vec::<Box::<dyn Object + Send + Sync>> = Vec::new();
 
         if json["spheres"].is_array() {
             for sphere in json["spheres"].as_array().unwrap().iter() {
@@ -162,8 +162,8 @@ impl Parser {
         )
     }
 
-    pub fn get_object_lights_from_json(&self, json: &Value) -> Vec::<Box::<dyn Light>> {
-        let mut lights: Vec::<Box::<dyn Light>> = Vec::new();
+    pub fn get_object_lights_from_json(&self, json: &Value) -> Vec::<Box::<dyn Light + Send + Sync>> {
+        let mut lights: Vec::<Box::<dyn Light + Send + Sync>> = Vec::new();
 
         if json["point"].is_array(){
             for point in json["point"].as_array().unwrap().iter() {
@@ -196,7 +196,7 @@ impl Parser {
     }
 
     pub fn get_lights_from_json(&self, json: &Value) -> Lights {
-        let objects: Vec::<Box::<dyn Light>>;
+        let objects: Vec::<Box::<dyn Light + Send + Sync>>;
 
         if json["objects"].is_object() { objects = self.get_object_lights_from_json(&json["objects"]);}
         else { objects = Vec::new()}
