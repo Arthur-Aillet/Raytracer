@@ -35,7 +35,7 @@
         "smooth_shadow_step": 32,
         "shadow_bias": 1e-13,
         "threads": 8,
-        "progression": false
+        "progression": true
     },
     "primitives": {
         "spheres": [

@@ -144,11 +144,10 @@ impl Renderer {
             let mut locked_pixel_states = pixel_states.lock().unwrap(); // lock
 
             if locked_pixel_states[line_state_id] == true {
-                drop (locked_pixel_states); // optionnel vu qu'on reset la scope du for ?
                 continue;
             }
             locked_pixel_states[line_state_id] = true;
-            drop (locked_pixel_states); // nécéssaire pour laisser les autres threads bouger dès que possible
+            drop (locked_pixel_states); // nécessaire pour laisser les autres threads bouger dès que possible
 
             let mut local_pixel_line: Vec<u8> = vec![0; (self.camera.lens.width * 3) as usize];
             for j in 0..self.camera.lens.width {
@@ -164,12 +163,10 @@ impl Renderer {
                 pixel_id = ((k + (i * self.camera.lens.width * 3))) as usize;
                 locked_pixels[pixel_id as usize] = local_pixel_line[k as usize];
             }
-            drop(locked_pixels); // optionnel vu qu'on reset la scope du for ?
 
             if (self.camera.progression) {
                 let mut locked_progression = progression.lock().unwrap();
                 *locked_progression += 1;
-                drop(locked_progression);
             }
         }
     }
@@ -178,11 +175,10 @@ impl Renderer {
         let mut last_progression:u64 = 0;
 
         while last_progression as i64 != self.camera.lens.height {
+            thread::sleep(time::Duration::from_millis(1000));
             let locked_progression = progression.lock().unwrap();
             println!("rendered {:?}/{:?}", *locked_progression, self.camera.lens.height);
             last_progression = *locked_progression;
-            drop(locked_progression);
-            thread::sleep(time::Duration::from_millis(1000));
         }
     }
 
