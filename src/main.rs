@@ -20,7 +20,7 @@ fn main() -> std::io::Result<()> {
     let config = config::Config::from_args(&args);
     config.print();
 
-    let mut renderer: Renderer = Renderer::get_renderer_from_file(config.config_file);
+    let mut renderer: Renderer = Renderer::get_renderer_from_file(config.config_file, config.height, config.width);
     let mut ppm = ppm_interface::PPMInterface::new(config.save_file);
 
     ppm.write(config.width, config.height, renderer.render());

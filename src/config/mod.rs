@@ -6,8 +6,8 @@
 //
 
 pub struct Config {
-    pub width: u32,
-    pub height: u32,
+    pub width: i64,
+    pub height: i64,
     pub save_file: String,
     pub config_file: String,
     pub g_flag: bool,
