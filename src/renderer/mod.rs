@@ -24,7 +24,7 @@ use crate::vectors::Vector;
 
 pub struct Renderer {
     pub camera: Camera,
-    pub primitives: Vec<Box<dyn Object>>,
+    pub primitives: Vec<Box<dyn Object + Send + Sync>>,
     pub lights: Lights,
 }
 
@@ -41,7 +41,7 @@ impl Renderer {
         }
     }
 
-    fn light_is_intersected(&self, light_vector: Vector, intersect: &Intersection, light: &Box<dyn Light>, normal_vector: Vector) -> bool {
+    fn light_is_intersected(&self, light_vector: Vector, intersect: &Intersection, light: &Box<dyn Light  + Send + Sync>, normal_vector: Vector) -> bool {
         for object_current in self.primitives.iter() {
             match object_current.intersection(light_vector, intersect.intersection_point + (normal_vector * self.camera.shadow_bias)) {
                 None => { continue }
@@ -55,7 +55,7 @@ impl Renderer {
         false
     }
 
-    fn calculate_light(&self, light: &Box<dyn Light>, intersect: &Intersection, camera_to_pixel: Vector) -> Vector {
+    fn calculate_light(&self, light: &Box<dyn Light  + Send + Sync>, intersect: &Intersection, camera_to_pixel: Vector) -> Vector {
         let normal_vector = intersect.normal.normalize();
         let light_vector = (light.get_transform().pos - intersect.intersection_point).normalize();
         let mut light_uncovered = 1.0;
