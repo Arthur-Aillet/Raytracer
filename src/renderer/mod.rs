@@ -177,7 +177,14 @@ impl Renderer {
         while last_progression as i64 != self.camera.lens.height {
             thread::sleep(time::Duration::from_millis(1000));
             let locked_progression = progression.lock().unwrap();
-            println!("rendered {:?}/{:?}", *locked_progression, self.camera.lens.height);
+            print!("rendered [");
+            for i in 0..((*locked_progression * 100) / self.camera.lens.height as u64) {
+                print!("#");
+            }
+            for i in 0..(100 - ((*locked_progression * 100) / self.camera.lens.height as u64)) {
+                print!(" ");
+            }
+            println!("] {:?}/{:?}\r", *locked_progression, self.camera.lens.height);
             last_progression = *locked_progression;
         }
     }
