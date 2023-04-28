@@ -53,6 +53,7 @@ impl Parser {
             ambient: json["ambient"].as_f64().unwrap_or(0.3),
             specular: json["specular"].as_f64().unwrap_or(0.6),
             shadow_bias: json["shadow_bias"].as_f64().unwrap_or(1e-14),
+            threads: json["threads"].as_u64().unwrap_or(8)
         };
         camera.calculate_lens_distance();
         let vector_director = Vector {x: 0.0, y: camera.lens.distance, z: 0.0};
@@ -60,6 +61,11 @@ impl Parser {
         camera.lens.vector_to_first_pixel = camera.lens.vector_to_first_pixel + Vector {x:0.0, y:0.0, z:1.0} * (camera.lens.height as f64 / 2.0);
         camera.lens.vector_to_first_pixel = camera.lens.vector_to_first_pixel + vector_director;
         camera.lens.vector_to_first_pixel = camera.lens.vector_to_first_pixel + Vector {x: -1.0, y: 0.0, z: 0.0} * (camera.lens.width as f64 / 2.0);
+
+        if camera.threads < 1 {
+            camera.threads = 1;
+        }
+
         camera
     }
 
