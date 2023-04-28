@@ -32,9 +32,10 @@
         "ambient": 0.5,
         "specular": 0.3,
         "smooth_shadow": true,
-        "smooth_shadow_step": 1024,
+        "smooth_shadow_step": 32,
         "shadow_bias": 1e-13,
-        "threads": 8
+        "threads": 8,
+        "progression": false
     },
     "primitives": {
         "spheres": [
