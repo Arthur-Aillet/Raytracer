@@ -132,15 +132,13 @@ impl Renderer {
         pixel
     }
 
-    pub fn naive_thread_renderer(&self, pixel_states:Arc<Mutex<Vec<bool>>>, pixels:Arc<Mutex<Vec<u8>>>, id:u8) {
+    pub fn naive_thread_renderer(&self, pixel_states:Arc<Mutex<Vec<bool>>>, pixels:Arc<Mutex<Vec<u8>>>) {
         //println!("thread {id:?} started");
         let mut calculated_pixel: [u8; 3]; // variable où sera stockée un pixel tout juste calculé
         let mut pixel_id: usize;
         let mut line_state_id: usize;
 
         for i in 0..(self.camera.lens.height) {
-            let test_size = self.camera.lens.height * self.camera.lens.width * 3;
-
             line_state_id = i as usize;
             let mut locked_pixel_states = pixel_states.lock().unwrap(); // lock
 
@@ -148,7 +146,6 @@ impl Renderer {
                 drop (locked_pixel_states); // optionnel vu qu'on reset la scope du for ?
                 continue;
             }
-            //println!("thread {id:?} on pixel {line_state_id:?}");
             locked_pixel_states[line_state_id] = true;
             drop (locked_pixel_states); // nécéssaire pour laisser les autres threads bouger dès que possible
 
@@ -170,59 +167,21 @@ impl Renderer {
         }
     }
 
-// o..o..o..o..
-// o..o..o..o..
-// o..o..o..o..
-// o..o..o..o..
-
     pub fn render(&self) -> Vec<u8> {
         let pixels:Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize]));
         let pixels_state:Arc<Mutex<Vec<bool>>> = Arc::new(Mutex::new(vec![false; self.camera.lens.height as usize]));
 
         thread::scope(|scope| {
-            for i in 0..8 {
+            for _ in 0..self.camera.threads {
                 let clone_pixels = Arc::clone(&pixels);
                 let clone_pixels_state = Arc::clone(&pixels_state);
                 scope.spawn(move || {
-                    self.naive_thread_renderer(clone_pixels_state, clone_pixels, i);
+                    self.naive_thread_renderer(clone_pixels_state, clone_pixels);
                 });
             }
         });
         let final_pixels = pixels.lock().unwrap().to_vec();
         final_pixels
-    }
-
-    pub fn render_old(&self) -> Vec<u8> {
-        let mut pixels:Vec<u8> = Vec::new();
-
-        for i in 0..self.camera.lens.height {
-            for j in 0..self.camera.lens.width {
-                let camera_to_pixel = self.camera.get_pixel_vector(j, i);
-                let maybe_intersect = self.found_nearest_intersection(camera_to_pixel);
-                if let Some(intersect) = maybe_intersect {
-                    let mut color = intersect.object.get_texture().color.as_vector() * self.camera.ambient * intersect.object.get_texture().ambient;
-                    for light in self.lights.lights.iter() {
-                        color = color + self.calculate_light(light, &intersect, camera_to_pixel);
-                    }
-                    pixels.extend(&[
-                        ((color.x).clamp(0.0, 1.0) * 255.0) as u8,
-                        ((color.y).clamp(0.0, 1.0) * 255.0) as u8,
-                        ((color.z).clamp(0.0, 1.0) * 255.0) as u8
-                    ]);
-                } else {
-                    let color_a = Vector {x: 0.0, y: 212.0, z: 255.0} * (1.0/255.0);
-                    let color_b = Vector {x: 2.0, y: 0.0, z: 36.0} * (1.0/255.0);
-                    let percent = i as f64 / self.camera.lens.height as f64;
-                    let result = color_a + (color_b - color_a) * percent as f64;
-                    pixels.extend(&[
-                        (result.x * 255.0 as f64) as u8,
-                        (result.y * 255.0 as f64) as u8,
-                        (result.z * 255.0 as f64) as u8
-                    ]);
-                }
-            }
-        }
-        pixels
     }
 
     pub fn get_renderer_from_file(file: String, height: i64, width: i64) -> Renderer {
