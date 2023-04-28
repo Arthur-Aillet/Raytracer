@@ -12,6 +12,7 @@ mod parsing;
 mod renderer_common;
 
 use std::thread;
+use std::time;
 use std::sync::{Arc, Mutex};
 use crate::renderer::primitives::{Object, Intersection};
 use std::fs;
@@ -132,7 +133,7 @@ impl Renderer {
         pixel
     }
 
-    pub fn naive_thread_renderer(&self, pixel_states:Arc<Mutex<Vec<bool>>>, pixels:Arc<Mutex<Vec<u8>>>) {
+    pub fn naive_thread_renderer(&self, pixel_states:Arc<Mutex<Vec<bool>>>, pixels:Arc<Mutex<Vec<u8>>>, progression:Arc<Mutex<u64>>) {
         //println!("thread {id:?} started");
         let mut calculated_pixel: [u8; 3]; // variable où sera stockée un pixel tout juste calculé
         let mut pixel_id: usize;
@@ -143,11 +144,10 @@ impl Renderer {
             let mut locked_pixel_states = pixel_states.lock().unwrap(); // lock
 
             if locked_pixel_states[line_state_id] == true {
-                drop (locked_pixel_states); // optionnel vu qu'on reset la scope du for ?
                 continue;
             }
             locked_pixel_states[line_state_id] = true;
-            drop (locked_pixel_states); // nécéssaire pour laisser les autres threads bouger dès que possible
+            drop (locked_pixel_states); // nécessaire pour laisser les autres threads bouger dès que possible
 
             let mut local_pixel_line: Vec<u8> = vec![0; (self.camera.lens.width * 3) as usize];
             for j in 0..self.camera.lens.width {
@@ -163,22 +163,44 @@ impl Renderer {
                 pixel_id = ((k + (i * self.camera.lens.width * 3))) as usize;
                 locked_pixels[pixel_id as usize] = local_pixel_line[k as usize];
             }
-            drop(locked_pixels); // optionnel vu qu'on reset la scope du for ?
+
+            if (self.camera.progression) {
+                let mut locked_progression = progression.lock().unwrap();
+                *locked_progression += 1;
+            }
+        }
+    }
+
+    pub fn print_progresion(&self, progression:Arc<Mutex<u64>>) {
+        let mut last_progression:u64 = 0;
+
+        while last_progression as i64 != self.camera.lens.height {
+            thread::sleep(time::Duration::from_millis(1000));
+            let locked_progression = progression.lock().unwrap();
+            println!("rendered {:?}/{:?}", *locked_progression, self.camera.lens.height);
+            last_progression = *locked_progression;
         }
     }
 
     pub fn render(&self) -> Vec<u8> {
         let pixels:Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize]));
         let pixels_state:Arc<Mutex<Vec<bool>>> = Arc::new(Mutex::new(vec![false; self.camera.lens.height as usize]));
+        let progression:Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
 
         thread::scope(|scope| {
             for _ in 0..self.camera.threads {
                 let clone_pixels = Arc::clone(&pixels);
                 let clone_pixels_state = Arc::clone(&pixels_state);
+                let clone_progression = Arc::clone(&progression);
                 scope.spawn(move || {
-                    self.naive_thread_renderer(clone_pixels_state, clone_pixels);
+                    self.naive_thread_renderer(clone_pixels_state, clone_pixels, clone_progression);
                 });
             }
+
+            if self.camera.progression == true {
+                self.print_progresion(progression);
+            }
+
         });
         let final_pixels = pixels.lock().unwrap().to_vec();
         final_pixels
