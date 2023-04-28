@@ -86,12 +86,12 @@ impl Renderer {
         intersect.object.get_texture().color.as_vector() * light.get_color().as_vector() * diffuse * light_falloff * light_uncovered + light.get_color().as_vector() * specular * light_falloff * light_uncovered
     }
 
-    fn found_nearest_intersection(&self, origin: Vector, camera_to_pixel: Vector) -> Option<Intersection> {
+    fn found_nearest_intersection(&self, origin: Vector, ray: Vector) -> Option<Intersection> {
         let mut found_intersection: Option<Intersection> = None;
         let mut smallest_distance: f64 = f64::INFINITY;
 
          for object in self.primitives.iter() {
-            let intersect = object.intersection(camera_to_pixel, origin);
+            let intersect = object.intersection(ray, origin);
 
             if intersect.is_some() {
                 let inters = intersect.unwrap();
@@ -127,10 +127,7 @@ impl Renderer {
 
             self_color = self_color * (1.0 - intersect.object.get_texture().metalness);
             self_color = self_color + self.get_color_from_ray(surface_point, reflection_ray, recursivity - 1) * intersect.object.get_texture().metalness;
-            //TODO: should it loose intensity
-            //TODO: stop recursivity when color brought is too dimmed
-            //TODO: Gamma correction
-            //TODO: Make light shown
+
             self_color
         } else {
             Vector {
