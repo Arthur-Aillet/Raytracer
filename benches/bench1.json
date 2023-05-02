@@ -18,8 +18,8 @@
             }
         },
         "lens" : {
-            "height": 1080,
-            "width": 1920,
+            "height": 9,
+            "width": 16,
             "distance": 0,
             "vector_to_first_pixel": {
                 "x": 0,
@@ -32,10 +32,8 @@
         "ambient": 0.5,
         "specular": 0.3,
         "smooth_shadow": true,
-        "smooth_shadow_step": 32,
-        "shadow_bias": 1e-13,
-        "threads": 8,
-        "progression": true
+        "smooth_shadow_step": 2,
+        "shadow_bias": 1e-13
     },
     "primitives": {
         "spheres": [
