@@ -23,6 +23,7 @@ use parsing::Parser;
 use crate::renderer::lights::Light;
 use crate::vectors::Vector;
 
+
 pub struct Renderer {
     pub camera: Camera,
     pub primitives: Vec<Box<dyn Object + Send + Sync>>,
@@ -118,9 +119,9 @@ impl Renderer {
             for light in self.lights.lights.iter() {
                 color = color + self.calculate_light(light, &intersect, camera_to_pixel);
             }
-            pixel[0] = ((color.x).clamp(0.0, 1.0) * 255.0) as u8;
-            pixel[1] = ((color.y).clamp(0.0, 1.0) * 255.0) as u8;
-            pixel[2] = ((color.z).clamp(0.0, 1.0) * 255.0) as u8;
+            pixel[0] = (self.camera.aces_curve(color.x) * 255.0) as u8;
+            pixel[1] = (self.camera.aces_curve(color.y) * 255.0) as u8;
+            pixel[2] = (self.camera.aces_curve(color.z) * 255.0) as u8;
         } else {
             let color_a = Vector {x: 0.0, y: 212.0, z: 255.0} * (1.0/255.0);
             let color_b = Vector {x: 2.0, y: 0.0, z: 36.0} * (1.0/255.0);

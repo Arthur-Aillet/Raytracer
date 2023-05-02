@@ -85,7 +85,7 @@ impl Camera {
         self.lens.distance = (self.lens.width as f64 / 2.0) / (self.fov as f64 / 2.0).to_radians().tan();
     }
 
-    pub fn calculate_tone_mapping(val: f64) -> f64{
+    pub fn aces_curve(self, val: f64) -> f64{
         let a = 2.51;
         let b = 0.03;
         let c = 2.43;
