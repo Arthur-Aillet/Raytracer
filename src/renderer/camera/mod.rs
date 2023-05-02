@@ -46,6 +46,8 @@ pub struct Camera {
     pub shadow_bias: f64,
     pub recursivity: i64,
     pub reflecion_samples: i64,
+    pub threads: u64,
+    pub progression: bool
 }
 
 impl Camera {
@@ -62,6 +64,8 @@ impl Camera {
             shadow_bias: 1e-14,
             recursivity: 5,
             reflecion_samples: 5,
+            threads: 8,
+            progression: false
         };
         camera.calculate_lens_distance();
         let vector_director = Vector {x: 0.0, y: camera.lens.distance, z: 0.0};

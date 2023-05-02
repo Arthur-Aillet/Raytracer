@@ -59,7 +59,7 @@ impl Ambient {
 }
 
 pub struct Lights {
-    pub lights: Vec::<Box::<dyn Light>>,
+    pub lights: Vec::<Box::<dyn Light + Send + Sync>>,
     pub ambient: Vec<Ambient>,
 }
 
