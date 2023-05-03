@@ -18,8 +18,8 @@
             }
         },
         "lens" : {
-            "height": 540,
-            "width": 540,
+            "height": 1080,
+            "width": 1080,
             "distance": 0,
             "vector_to_first_pixel": {
                 "x": 0,
@@ -34,9 +34,8 @@
         "smooth_shadow": false,
         "smooth_shadow_step": 200,
         "shadow_bias": 1e-13,
-        "recursivity": 3,
-        "reflecion_samples": 4,
-        "diffuse_samples": 4,
+        "recursivity": 2,
+        "reflecion_samples": 20,
         "threads": 8,
         "progression": true
     },
@@ -71,8 +70,8 @@
                     "ambient": 0.4,
                     "specular": 0.2,
                     "shininess": 4.0,
-                    "metalness": 0,
-                    "roughness": 0.5
+                    "metalness": 0.9,
+                    "roughness": 0.1
                 },
                 "radius": 0.5
             },
@@ -105,8 +104,8 @@
                     "ambient": 0.5,
                     "specular": 0.2,
                     "shininess": 4.0,
-                    "metalness": 0,
-                    "roughness": 0.5
+                    "metalness": 0.5,
+                    "roughness": 0
                 },
                 "radius": 0.25
             }
@@ -146,8 +145,8 @@
                     "ambient": 0.5,
                     "specular": 0.2,
                     "shininess": 4.0,
-                    "metalness": 0,
-                    "roughness": 0.5
+                    "metalness": 0.5,
+                    "roughness": 0
                 }
             },
             {
@@ -184,8 +183,8 @@
                     "ambient": 0.5,
                     "specular": 0.2,
                     "shininess": 4.0,
-                    "metalness": 0,
-                    "roughness": 0.5
+                    "metalness": 0.5,
+                    "roughness": 0
                 }
             },
             {
@@ -222,7 +221,7 @@
                     "ambient": 0.5,
                     "specular": 0.2,
                     "shininess": 4.0,
-                    "metalness": 0,
+                    "metalness": 0.5,
                     "roughness": 0.5
                 }
             },
@@ -260,8 +259,8 @@
                     "ambient": 0.5,
                     "specular": 0.2,
                     "shininess": 4.0,
-                    "metalness": 0,
-                    "roughness": 0.5
+                    "metalness": 0.5,
+                    "roughness": 0
                 }
             }
         ]

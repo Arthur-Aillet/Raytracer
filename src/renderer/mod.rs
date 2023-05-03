@@ -56,7 +56,7 @@ impl Renderer {
         false
     }
 
-    fn calculate_light(&self, light: &Box<dyn Light  + Send + Sync>, intersect: &Intersection, ray: Vector, recursivity: i64) -> Vector {
+    fn calculate_light(&self, light: &Box<dyn Light  + Send + Sync>, intersect: &Intersection, ray: Vector) -> Vector {
         let normal_vector = intersect.normal.normalize();
         let light_vector = (light.get_transform().pos - intersect.intersection_point).normalize();
         let mut light_uncovered = 1.0;
@@ -81,23 +81,12 @@ impl Renderer {
         }
         let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * intersect.object.get_texture().diffuse;
 
-        let mut diffuse_color = intersect.object.get_texture().color.as_vector() * light.get_color().as_vector() * diffuse * 0.6;
-        let surface_point = intersect.intersection_point + intersect.normal * self.camera.shadow_bias;
-        //let samples_nbr = 1.0 + self.camera.reflecion_samples as f64 * intersect.object.get_texture().roughness;
-        for _ in 0..self.camera.diffuse_samples as i32 {
-            let mut rng = rand::thread_rng();
-            let mut probe_ray = normal_vector.clone();
-            probe_ray.rotate(rng.gen_range(0.0..90.0 * intersect.object.get_texture().diffuse_roughness), 0.0, rng.gen_range(0.0..360.0));
-
-            diffuse_color = diffuse_color + self.get_color_from_ray(surface_point, probe_ray, recursivity - 1) * 0.4 * (1.0/self.camera.diffuse_samples as f64);
-        }
-
         let reflected = light_vector.reflect(normal_vector).normalize();
         let view = (ray * -1.0).normalize();
         let specular = self.camera.specular * intersect.object.get_texture().specular * reflected.dot_product(view).max(0.0).powf(intersect.object.get_texture().shininess);
         let distance = intersect.intersection_point.distance(light.get_transform().pos);
         let light_falloff = (light.get_strength() / distance.powi(light.get_falloff())).max(0.0);
-        diffuse_color * light_falloff * light_uncovered + light.get_color().as_vector() * specular * light_falloff * light_uncovered
+        intersect.object.get_texture().color.as_vector() * light.get_color().as_vector() * diffuse * light_falloff * light_uncovered + light.get_color().as_vector() * specular * light_falloff * light_uncovered
     }
 
     fn found_nearest_intersection(&self, origin: Vector, ray: Vector) -> Option<Intersection> {
@@ -133,13 +122,13 @@ impl Renderer {
             let mut self_color = intersect.object.get_texture().color.as_vector() * self.camera.ambient * intersect.object.get_texture().ambient;
 
             for light in self.lights.lights.iter() {
-                self_color = self_color + self.calculate_light(light, &intersect, ray, recursivity);
+                self_color = self_color + self.calculate_light(light, &intersect, ray);
             }
             let surface_point = intersect.intersection_point + intersect.normal * self.camera.shadow_bias;
 
             self_color = self_color * (1.0 - intersect.object.get_texture().metalness);
             let samples_nbr = 1.0 + self.camera.reflecion_samples as f64 * intersect.object.get_texture().roughness;
-            for _ in 0..samples_nbr as i32 {
+            for _ in 0.. samples_nbr as i32 {
                 let mut rng = rand::thread_rng();
                 let mut reflection_ray = (ray.normalize() - intersect.normal.normalize() * 2.0 * intersect.normal.dot_product(ray.normalize())).normalize();
                 if intersect.object.get_texture().roughness != 0.0 {

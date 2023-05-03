@@ -55,7 +55,6 @@ impl Parser {
             shadow_bias: json["shadow_bias"].as_f64().unwrap_or(1e-14),
             recursivity: json["recursivity"].as_i64().unwrap_or(5),
             reflecion_samples: json["reflecion_samples"].as_i64().unwrap_or(5),
-            diffuse_samples: json["diffuse_samples"].as_i64().unwrap_or(5),
             threads: json["threads"].as_u64().unwrap_or(8),
             progression: json["progression"].as_bool().unwrap_or(false)
         };
@@ -91,7 +90,6 @@ impl Parser {
             metalness: json["metalness"].as_f64().unwrap_or(0.1),
             shininess: json["shininess"].as_f64().unwrap_or(4.0),
             roughness: json["roughness"].as_f64().unwrap_or(0.25),
-            diffuse_roughness: json["diffuse_roughness"].as_f64().unwrap_or(1.0),
         }
     }
 
