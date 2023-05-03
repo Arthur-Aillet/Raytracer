@@ -5,29 +5,21 @@
 // main
 //
 
+use renderer::Renderer;
+
 mod ppm_interface;
-mod renderer;
 mod vectors;
 mod matrix;
-
-use std::path::Path;
-use std::fs::File;
+mod renderer;
 
 use std::env;
-use crate::renderer::Renderer;
 
 fn main() -> std::io::Result<()> {
-    let json_file_path = Path::new("../ex.json");
-    let file = File::open(json_file_path);
-
     let args: Vec<String> = env::args().collect();
     let mut ppm = ppm_interface::PPMInterface::new(String::from(args[1].clone()));
     let height = 1080;
     let width = 1920;
-    let mut renderer = Renderer::new();
-
+    let mut renderer : Renderer = Renderer::get_renderer_from_file(String::from(args[2].clone()));
     ppm.write(width, height, renderer.render());
     Ok(())
 }
-
-
