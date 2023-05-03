@@ -121,6 +121,19 @@ impl Renderer {
         found_intersection
     }
 
+    fn get_ambient<'a>(&self, object :&'a dyn Object) -> Vector {
+        let mut self_color = Vector{
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        };
+
+        for ambient in self.lights.ambient.iter() {
+            self_color = self_color + object.get_texture().color.as_vector() * object.get_texture().ambient * ambient.color.as_vector() * ambient.strength * self.camera.ambient;
+        }
+        self_color
+    }
+
     fn get_color_from_ray(&self, origin: Vector, ray: Vector, recursivity: i64) -> Vector {
         if recursivity == 0 {
             return Vector {
@@ -135,7 +148,7 @@ impl Renderer {
             if let Some(light_touched) = intersect.light {
                 return light_touched.get_color().as_vector();
             }
-            let mut self_color = intersect.object.unwrap().get_texture().color.as_vector() * self.camera.ambient * intersect.object.unwrap().get_texture().ambient;
+            let mut self_color = self.get_ambient(intersect.object.unwrap());
 
             for light in self.lights.lights.iter() {
                 self_color = self_color + self.calculate_light(light, &intersect, ray);
