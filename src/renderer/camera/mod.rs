@@ -46,6 +46,7 @@ pub struct Camera {
     pub shadow_bias: f64,
     pub recursivity: i64,
     pub reflecion_samples: i64,
+    pub diffuse_samples: i64,
     pub threads: u64,
     pub progression: bool
 }
@@ -65,6 +66,7 @@ impl Camera {
             recursivity: 5,
             reflecion_samples: 5,
             threads: 8,
+            diffuse_samples: 4,
             progression: false
         };
         camera.calculate_lens_distance();
