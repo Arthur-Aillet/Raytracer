@@ -109,6 +109,7 @@ impl Renderer {
         found_intersection
     }
 
+
     pub fn render_pixel(&self, x:i64, y:i64) -> [u8; 3] {
         let mut pixel:[u8; 3] = [0; 3];
 
