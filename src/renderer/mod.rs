@@ -80,14 +80,14 @@ impl Renderer {
             }
             light_uncovered = light_reached as f64 / self.camera.smooth_shadow_step as f64;
         }
-        let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * intersect.object.get_texture().diffuse;
+        let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * intersect.object.unwrap().get_texture().diffuse;
 
         let reflected = light_vector.reflect(normal_vector).normalize();
         let view = (ray * -1.0).normalize();
-        let specular = self.camera.specular * intersect.object.get_texture().specular * reflected.dot_product(view).max(0.0).powf(intersect.object.get_texture().shininess);
+        let specular = self.camera.specular * intersect.object.unwrap().get_texture().specular * reflected.dot_product(view).max(0.0).powf(intersect.object.unwrap().get_texture().shininess);
         let distance = intersect.intersection_point.distance(light.get_transform().pos);
         let light_falloff = (light.get_strength() / distance.powi(light.get_falloff())).max(0.0);
-        intersect.object.get_texture().color.as_vector() * light.get_color().as_vector() * diffuse * light_falloff * light_uncovered + light.get_color().as_vector() * specular * light_falloff * light_uncovered
+        intersect.object.unwrap().get_texture().color.as_vector() * light.get_color().as_vector() * diffuse * light_falloff * light_uncovered + light.get_color().as_vector() * specular * light_falloff * light_uncovered
     }
 
     fn found_nearest_intersection(&self, origin: Vector, ray: Vector) -> Option<Intersection> {
@@ -96,6 +96,18 @@ impl Renderer {
 
          for object in self.primitives.iter() {
             let intersect = object.intersection(ray, origin);
+
+            if intersect.is_some() {
+                let inters = intersect.unwrap();
+                let distance_found = (inters.intersection_point - origin).len();
+                if distance_found < smallest_distance {
+                    smallest_distance = distance_found;
+                    found_intersection = Some(inters);
+                }
+            }
+        }
+        for light in self.lights.lights.iter() {
+            let intersect = light.intersection(ray, origin);
 
             if intersect.is_some() {
                 let inters = intersect.unwrap();
@@ -120,22 +132,25 @@ impl Renderer {
         let maybe_intersect = self.found_nearest_intersection(origin, ray);
 
         if let Some(intersect) = maybe_intersect {
-            let mut self_color = intersect.object.get_texture().color.as_vector() * self.camera.ambient * intersect.object.get_texture().ambient;
+            if let Some(light_touched) = intersect.light {
+                return light_touched.get_color().as_vector();
+            }
+            let mut self_color = intersect.object.unwrap().get_texture().color.as_vector() * self.camera.ambient * intersect.object.unwrap().get_texture().ambient;
 
             for light in self.lights.lights.iter() {
                 self_color = self_color + self.calculate_light(light, &intersect, ray);
             }
             let surface_point = intersect.intersection_point + intersect.normal * self.camera.shadow_bias;
 
-            self_color = self_color * (1.0 - intersect.object.get_texture().metalness);
-            let samples_nbr = 1.0 + self.camera.reflecion_samples as f64 * intersect.object.get_texture().roughness;
+            self_color = self_color * (1.0 - intersect.object.unwrap().get_texture().metalness);
+            let samples_nbr = 1.0 + self.camera.reflecion_samples as f64 * intersect.object.unwrap().get_texture().roughness;
             for _ in 0.. samples_nbr as i32 {
                 let mut rng = rand::thread_rng();
                 let mut reflection_ray = (ray.normalize() - intersect.normal.normalize() * 2.0 * intersect.normal.dot_product(ray.normalize())).normalize();
-                if intersect.object.get_texture().roughness != 0.0 {
-                    reflection_ray.rotate(rng.gen_range(0.0..90.0 * intersect.object.get_texture().roughness), 0.0, rng.gen_range(0.0..360.0));
+                if intersect.object.unwrap().get_texture().roughness != 0.0 {
+                    reflection_ray.rotate(rng.gen_range(0.0..90.0 * intersect.object.unwrap().get_texture().roughness), 0.0, rng.gen_range(0.0..360.0));
                 }
-                self_color = self_color + self.get_color_from_ray(surface_point, reflection_ray, recursivity - 1) * intersect.object.get_texture().metalness * (1.0/samples_nbr as f64);
+                self_color = self_color + self.get_color_from_ray(surface_point, reflection_ray, recursivity - 1) * intersect.object.unwrap().get_texture().metalness * (1.0/samples_nbr as f64);
             }
             self_color
         } else {
