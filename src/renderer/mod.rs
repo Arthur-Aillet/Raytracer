@@ -157,7 +157,7 @@ impl Renderer {
 
             self_color = self_color * (1.0 - intersect.object.unwrap().get_texture().metalness);
             let samples_nbr = 1.0 + self.camera.reflecion_samples as f64 * intersect.object.unwrap().get_texture().roughness;
-            for _ in 0.. samples_nbr as i32 {
+            for _ in 0..samples_nbr as i32 {
                 let mut rng = rand::thread_rng();
                 let mut reflection_ray = (ray.normalize() - intersect.normal.normalize() * 2.0 * intersect.normal.dot_product(ray.normalize())).normalize();
                 if intersect.object.unwrap().get_texture().roughness != 0.0 {
@@ -264,5 +264,4 @@ impl Renderer {
             lights: if json["lights"].is_object() {parser.get_lights_from_json(&json["lights"])} else {Lights::default()},
         }
     }
-
 }
