@@ -42,53 +42,6 @@ impl Renderer {
         }
     }
 
-    fn light_is_intersected(&self, light_vector: Vector, intersect: &Intersection, light: &Box<dyn Light  + Send + Sync>, normal_vector: Vector) -> bool {
-        for object_current in self.primitives.iter() {
-            match object_current.intersection(light_vector, intersect.intersection_point + (normal_vector * self.camera.shadow_bias)) {
-                None => { continue }
-                Some(shadow_intersect) => {
-                    if (shadow_intersect.intersection_point - intersect.intersection_point).len() < (light.get_transform().pos - intersect.intersection_point).len() {
-                        return true
-                    }
-                }
-            }
-        }
-        false
-    }
-
-    fn calculate_light(&self, light: &Box<dyn Light  + Send + Sync>, intersect: &Intersection, camera_to_pixel: Vector) -> Vector {
-        let normal_vector = intersect.normal.normalize();
-        let light_vector = (light.get_transform().pos - intersect.intersection_point).normalize();
-        let mut light_uncovered = 1.0;
-
-        if self.camera.smooth_shadow == false {
-            if self.light_is_intersected(light_vector, intersect, light, normal_vector) {
-                return Vector {
-                    x: 0.0,
-                    y: 0.0,
-                    z: 0.0,
-                }
-            }
-        } else {
-            let mut light_reached: i16 = 0;
-            for _ in 0..self.camera.smooth_shadow_step {
-                let inter_to_light = light.get_transform().pos + Vector::get_random_point_in_sphere(light.get_radius()) - intersect.intersection_point;
-                if self.light_is_intersected(inter_to_light.normalize(), intersect, light, normal_vector) == false {
-                    light_reached += 1;
-                }
-            }
-            light_uncovered = light_reached as f64 / self.camera.smooth_shadow_step as f64;
-        }
-        let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * intersect.object.get_texture().diffuse;
-
-        let reflected = light_vector.reflect(normal_vector).normalize();
-        let view = (camera_to_pixel * -1.0).normalize();
-        let specular = self.camera.specular * intersect.object.get_texture().specular * reflected.dot_product(view).max(0.0).powf(intersect.object.get_texture().shininess);
-        let distance = intersect.intersection_point.distance(light.get_transform().pos);
-        let light_falloff = (light.get_strength() / distance.powi(light.get_falloff())).max(0.0);
-        intersect.object.get_texture().color.as_vector() * light.get_color().as_vector() * diffuse * light_falloff * light_uncovered + light.get_color().as_vector() * specular * light_falloff * light_uncovered
-    }
-
     fn found_nearest_intersection(&self, camera_to_pixel: Vector) -> Option<Intersection> {
         let mut found_intersection: Option<Intersection> = None;
         let mut smallest_distance: f64 = f64::INFINITY;
@@ -116,7 +69,7 @@ impl Renderer {
         if let Some(intersect) = maybe_intersect {
             let mut color = intersect.object.get_texture().color.as_vector() * self.camera.ambient * intersect.object.get_texture().ambient;
             for light in self.lights.lights.iter() {
-                color = color + self.calculate_light(light, &intersect, camera_to_pixel);
+                color = color + light.calculate_light(&intersect, camera_to_pixel, self.camera, self.primitives);
             }
             pixel[0] = ((color.x).clamp(0.0, 1.0) * 255.0) as u8;
             pixel[1] = ((color.y).clamp(0.0, 1.0) * 255.0) as u8;
@@ -164,7 +117,7 @@ impl Renderer {
                 locked_pixels[pixel_id as usize] = local_pixel_line[k as usize];
             }
 
-            if (self.camera.progression) {
+            if self.camera.progression {
                 let mut locked_progression = progression.lock().unwrap();
                 *locked_progression += 1;
             }
