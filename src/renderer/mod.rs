@@ -133,17 +133,21 @@ impl Renderer {
                 for light in self.lights.lights.iter() {
                     color = color + self.calculate_light(light, &intersect, cam_to_pixel);
                 }
-                pixel[0] = ((color.x).clamp(0.0, 1.0) * 255.0) as u8;
-                pixel[1] = ((color.y).clamp(0.0, 1.0) * 255.0) as u8;
-                pixel[2] = ((color.z).clamp(0.0, 1.0) * 255.0) as u8;
+                pixel.extend(&[
+                    ((color.x).clamp(0.0, 1.0) * 255.0) as u8,
+                    ((color.y).clamp(0.0, 1.0) * 255.0) as u8,
+                    ((color.z).clamp(0.0, 1.0) * 255.0) as u8
+                ])
             } else {
                 let color_a = Vector {x: 0.0, y: 212.0, z: 255.0} * (1.0/255.0);
                 let color_b = Vector {x: 2.0, y: 0.0, z: 36.0} * (1.0/255.0);
                 let percent = y as f64 / self.camera.lens.height as f64;
                 let result = color_a + (color_b - color_a) * percent as f64;
-                pixel[0] = (result.x * 255.0 as f64) as u8;
-                pixel[1] = (result.y * 255.0 as f64) as u8;
-                pixel[2] = (result.z * 255.0 as f64) as u8;
+                pixel.extend(&[
+                    (result.x * 255.0 as f64) as u8,
+                    (result.y * 255.0 as f64) as u8,
+                    (result.z * 255.0 as f64) as u8
+                ])
             }
         }
         self.combine_pixel(pixel)
