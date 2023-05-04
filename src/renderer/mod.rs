@@ -166,7 +166,7 @@ impl Renderer {
                 locked_pixels[pixel_id as usize] = local_pixel_line[k as usize];
             }
 
-            if (self.camera.progression) {
+            if self.camera.progression {
                 let mut locked_progression = progression.lock().unwrap();
                 *locked_progression += 1;
             }
@@ -215,7 +215,7 @@ impl Renderer {
         final_pixels
     }
 
-    pub fn get_renderer_from_file(file: String, height: i64, width: i64) -> Renderer {
+    pub fn get_renderer_from_file(file: &String, height: i64, width: i64) -> Renderer {
         let data = fs::read_to_string(file).expect("Unable to read file");
         let json: Value = serde_json::from_str(&data.to_string()).unwrap();
         let parser = Parser{};
