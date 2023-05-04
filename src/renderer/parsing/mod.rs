@@ -187,7 +187,7 @@ impl Parser {
     pub fn get_ambient_from_json(&self, json: &Value) -> Ambient {
         let color_val: Color;
 
-        if json["color"].is_object() {color_val = self.get_color_from_json(&json["transform"]);}
+        if json["color"].is_object() {color_val = self.get_color_from_json(&json["color"]);}
         else {color_val = Color::default();}
         Ambient {
             color: color_val,
