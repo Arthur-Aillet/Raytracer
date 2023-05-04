@@ -106,6 +106,9 @@ impl Renderer {
             }
         }
         for light in self.lights.lights.iter() {
+            if light.get_visible() == false {
+                continue;
+            }
             let intersect = light.intersection(ray, origin);
 
             if intersect.is_some() {

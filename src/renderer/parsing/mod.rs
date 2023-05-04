@@ -164,6 +164,7 @@ impl Parser {
     pub fn get_point_from_json(&self, json: &Value) -> Box::<Point> {
         Box::new(
             Point {
+                visible: json["visible"].as_bool().unwrap_or(false),
                 transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
                 color: if json["color"].is_object() {self.get_color_from_json(&json["color"])} else {Color::default()},
                 strength: json["strength"].as_f64().unwrap_or(80.0),

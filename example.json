@@ -179,7 +179,8 @@
                     },
                     "strength": 40.0,
                     "falloff": 2,
-                    "radius": 1.0
+                    "radius": 1.0,
+                    "visible": true
                 },
                 {
                     "transform": {

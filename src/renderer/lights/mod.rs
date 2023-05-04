@@ -16,6 +16,7 @@ pub struct Point {
     pub strength: f64,
     pub radius: f64,
     pub falloff: i32,
+    pub visible: bool,
 }
 
 pub trait Light {
@@ -23,6 +24,7 @@ pub trait Light {
     fn get_transform(&self) -> Transform;
     fn set_transform(&mut self, new: Transform);
     fn get_color(&self) -> Color;
+    fn get_visible(&self) -> bool;
     fn set_color(&mut self, new: Color);
     fn get_strength(&self) -> f64;
     fn set_strength(&mut self, new: f64);
@@ -38,6 +40,7 @@ impl Light for Point {
     fn get_transform(&self) -> Transform {self.transform}
     fn set_transform(&mut self, new: Transform) {self.transform = new}
     fn get_color(&self) -> Color {self.color}
+    fn get_visible(&self) -> bool {self.visible}
     fn set_color(&mut self, new: Color) {self.color = new}
     fn get_strength(&self) -> f64 {self.strength}
     fn set_strength(&mut self, new: f64) {self.strength = new}
