@@ -144,14 +144,18 @@ impl Renderer {
         let maybe_intersect = self.found_nearest_intersection(origin, ray);
 
         if let Some(intersect) = maybe_intersect {
+            // case of direct intersection with light object
             if let Some(light_touched) = intersect.light {
                 return light_touched.get_color().as_vector();
             }
+
             let mut self_color = self.get_ambient(intersect.object.unwrap());
 
+            // calculation of lighting
             for light in self.lights.lights.iter() {
                 self_color = self_color + self.calculate_light(light, &intersect, ray);
             }
+
             let surface_point = intersect.intersection_point + intersect.normal * self.camera.shadow_bias;
 
             self_color = self_color * (1.0 - intersect.object.unwrap().get_texture().metalness);
@@ -160,7 +164,7 @@ impl Renderer {
                 let mut rng = rand::thread_rng();
                 let mut reflection_ray = (ray.normalize() - intersect.normal.normalize() * 2.0 * intersect.normal.dot_product(ray.normalize())).normalize();
                 if intersect.object.unwrap().get_texture().roughness != 0.0 {
-                    reflection_ray.rotate(rng.gen_range(0.0..90.0 * intersect.object.unwrap().get_texture().roughness), 0.0, rng.gen_range(0.0..360.0));
+                    reflection_ray.rotate(rng.gen_range(0.0..180.0 * intersect.object.unwrap().get_texture().roughness) - 90.0, 0.0, rng.gen_range(0.0..360.0));
                 }
                 self_color = self_color + self.get_color_from_ray(surface_point, reflection_ray, recursivity - 1) * intersect.object.unwrap().get_texture().metalness * (1.0/samples_nbr as f64);
             }
