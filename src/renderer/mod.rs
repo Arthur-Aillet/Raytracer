@@ -24,7 +24,6 @@ use parsing::Parser;
 use crate::renderer::lights::Light;
 use crate::vectors::Vector;
 
-
 pub struct Renderer {
     pub camera: Camera,
     pub primitives: Vec<Box<dyn Object + Send + Sync>>,
@@ -176,7 +175,6 @@ impl Renderer {
     }
 
     pub fn naive_thread_renderer(&self, pixel_states:Arc<Mutex<Vec<bool>>>, pixels:Arc<Mutex<Vec<u8>>>, progression:Arc<Mutex<u64>>) {
-        //println!("thread {id:?} started");
         let mut pixel_id: usize;
         let mut line_state_id: usize;
 
@@ -248,7 +246,6 @@ impl Renderer {
             if self.camera.progression == true {
                 self.print_progression(progression);
             }
-
         });
         let final_pixels = pixels.lock().unwrap().to_vec();
         final_pixels
