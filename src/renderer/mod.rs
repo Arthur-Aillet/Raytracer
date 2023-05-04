@@ -108,54 +108,56 @@ impl Renderer {
         found_intersection
     }
 
-    fn combine_pixel(&self, pixel: Vec::<u8>) -> [u8; 3] {
-        let mut result:[u8; 3] = [0; 3];
+    fn combine_pixel(&self, samples: &Vec::<Vector>) -> Vector {
+        let mut result: Vector = samples[0];
 
-        if pixel.len() > 3 {
-            result = [pixel[0], pixel[1], pixel[2]];
-        }
-        for i in 1..pixel.len() / 3 {
-            result[0] = (((result[0] as u64 * (i - 1) as u64) + (pixel[i * 3 + 0]) as u64) / i as u64)as u8;
-            result[1] = (((result[1] as u64 * (i - 1) as u64) + (pixel[i * 3 + 1]) as u64) / i as u64)as u8;
-            result[2] = (((result[2] as u64 * (i - 1) as u64) + (pixel[i * 3 + 2]) as u64) / i as u64)as u8;
+        for i in 1..samples.len() {
+            result = ((result * (i - 1) as f64) + (samples[i])) / i as f64;
         }
         result
     }
 
-    pub fn render_pixel(&self, x:i64, y:i64) -> [u8; 3] {
-        let mut pixel : Vec<u8> = Vec::new();
+    fn check_pixels_proximity(&self, samples: &Vec<Vector>) -> bool {
+        let px: Vector = self.combine_pixel(samples);
+        for i in 0..samples.len() {
+            if (((
+                    samples[i].x as i16 - px.x as i16) +
+                    (samples[i].y as i16 - px.y as i16) +
+                    (samples[i].z as i16 - px.y as i16)) as i64).abs() > self.camera.super_sampling_precision as i64 {
+                return false
+            }
+        }
+        true
+    }
 
-        let camera_to_pixel_vector = self.camera.get_pixel_vectors(x, y, self.camera.super_sampling);
-        for cam_to_pixel in camera_to_pixel_vector {
-            let maybe_intersect = self.found_nearest_intersection(cam_to_pixel);
+    pub fn render_pixel(&self, x:i64, y:i64) -> Vector {
+        let mut samples : Vec<Vector> = Vec::new();
+
+        let mut camera_to_pixel_vector = self.camera.get_pixel_vectors(x, y, self.camera.super_sampling);
+        for i in 0..camera_to_pixel_vector.len() {
+            let maybe_intersect = self.found_nearest_intersection(camera_to_pixel_vector[i as usize]);
             if let Some(intersect) = maybe_intersect {
                 let mut color = intersect.object.get_texture().color.as_vector() * self.camera.ambient * intersect.object.get_texture().ambient;
                 for light in self.lights.lights.iter() {
-                    color = color + self.calculate_light(light, &intersect, cam_to_pixel);
+                    color = color + self.calculate_light(light, &intersect, camera_to_pixel_vector[i as usize]);
                 }
-                pixel.extend(&[
-                    ((color.x).clamp(0.0, 1.0) * 255.0) as u8,
-                    ((color.y).clamp(0.0, 1.0) * 255.0) as u8,
-                    ((color.z).clamp(0.0, 1.0) * 255.0) as u8
-                ])
+                samples.push(color);
             } else {
                 let color_a = Vector {x: 0.0, y: 212.0, z: 255.0} * (1.0/255.0);
                 let color_b = Vector {x: 2.0, y: 0.0, z: 36.0} * (1.0/255.0);
                 let percent = y as f64 / self.camera.lens.height as f64;
-                let result = color_a + (color_b - color_a) * percent as f64;
-                pixel.extend(&[
-                    (result.x * 255.0 as f64) as u8,
-                    (result.y * 255.0 as f64) as u8,
-                    (result.z * 255.0 as f64) as u8
-                ])
+                samples.push(color_a + (color_b - color_a) * percent as f64);
+            }
+            if self.camera.super_sampling > 4 && i == 3 && self.check_pixels_proximity(&samples) {
+                for _ in 4..self.camera.super_sampling {camera_to_pixel_vector.push(self.camera.get_random_pixel_vector(x, y))}
             }
         }
-        self.combine_pixel(pixel)
+        self.combine_pixel(&samples)
     }
 
     pub fn naive_thread_renderer(&self, pixel_states:Arc<Mutex<Vec<bool>>>, pixels:Arc<Mutex<Vec<u8>>>, progression:Arc<Mutex<u64>>) {
         //println!("thread {id:?} started");
-        let mut calculated_pixel: [u8; 3]; // variable où sera stockée un pixel tout juste calculé
+        let mut calculated_pixel: Vector; // variable où sera stockée un pixel tout juste calculé
         let mut pixel_id: usize;
         let mut line_state_id: usize;
 
@@ -174,9 +176,9 @@ impl Renderer {
                 pixel_id = (j * 3) as usize;
                 calculated_pixel = self.render_pixel(j, i);
 
-                local_pixel_line[pixel_id + 0] = calculated_pixel[0];
-                local_pixel_line[pixel_id + 1] = calculated_pixel[1];
-                local_pixel_line[pixel_id + 2] = calculated_pixel[2];
+                local_pixel_line[pixel_id + 0] = (calculated_pixel.x.clamp(0.0, 1.0) * 255.0) as u8;
+                local_pixel_line[pixel_id + 1] = (calculated_pixel.y.clamp(0.0, 1.0) * 255.0) as u8;
+                local_pixel_line[pixel_id + 2] = (calculated_pixel.z.clamp(0.0, 1.0) * 255.0) as u8;
             }
             let mut locked_pixels = pixels.lock().unwrap(); // lock
             for k in 0..(self.camera.lens.width * 3) {

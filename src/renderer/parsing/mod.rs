@@ -56,6 +56,7 @@ impl Parser {
             threads: json["threads"].as_u64().unwrap_or(8),
             progression: json["progression"].as_bool().unwrap_or(false),
             super_sampling: json["super_sampling"].as_u64().unwrap_or(1),
+            super_sampling_precision: json["super_sampling_precision"].as_u64().unwrap_or(10),
         };
         camera.calculate_lens_distance();
         let vector_director = Vector {x: 0.0, y: camera.lens.distance, z: 0.0};
