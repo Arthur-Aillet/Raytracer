@@ -53,6 +53,7 @@ impl Parser {
             ambient: json["ambient"].as_f64().unwrap_or(0.3),
             specular: json["specular"].as_f64().unwrap_or(0.6),
             shadow_bias: json["shadow_bias"].as_f64().unwrap_or(1e-14),
+            aces_tone_mapping: json["aces_tone_mapping"].as_bool().unwrap_or(true),
             threads: json["threads"].as_u64().unwrap_or(8),
             progression: json["progression"].as_bool().unwrap_or(false)
         };

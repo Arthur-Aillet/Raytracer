@@ -32,6 +32,7 @@
         "smooth_shadow": true,
         "smooth_shadow_step": 1024,
         "shadow_bias": 1e-13,
+        "aces_tone_mapping": false,
         "threads": 8,
         "progression": true
     },
