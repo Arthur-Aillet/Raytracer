@@ -7,6 +7,7 @@
 
 use crate::vectors;
 
+use std::ops::{Add, Mul, Sub};
 use vectors::Vector;
 
 #[derive(Debug, Clone, Copy)]
@@ -38,6 +39,45 @@ impl Transform {
     }
 }
 
+impl PartialEq for Transform {
+    fn eq(&self, other: &Self) -> bool {
+        self.pos == other.pos && self.rotation == other.rotation && self.scale == other.scale
+    }
+}
+
+impl Add<Transform> for Transform {
+    type Output = Transform;
+    fn add(self, other: Transform) -> Transform {
+        Transform {
+            pos: self.pos + other.pos,
+            rotation: self.rotation + other.rotation,
+            scale: self.scale + other.scale,
+        }
+    }
+}
+
+impl Sub<Transform> for Transform {
+    type Output = Transform;
+    fn sub(self, other: Transform) -> Transform {
+        Transform {
+            pos: self.pos - other.pos,
+            rotation: self.rotation - other.rotation,
+            scale: self.scale - other.scale,
+        }
+    }
+}
+
+impl Mul<Transform> for Transform {
+    type Output = Transform;
+    fn mul(self, other: Transform) -> Transform {
+        Transform {
+            pos: self.pos * other.pos,
+            rotation: self.rotation * other.rotation,
+            scale: self.scale * other.scale,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct Color {
     pub r: f64,
@@ -53,6 +93,14 @@ impl Color {
             b: 255.0,
         }
     }
+
+    pub fn as_vector(self) -> Vector {
+        Vector {
+            x: self.r / 255.0,
+            y: self.g / 255.0,
+            z: self.b / 255.0,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -66,7 +114,6 @@ pub struct Texture {
 }
 
 impl Texture {
-
     pub fn default() -> Texture {
         Texture {
             texture_type: 1,

@@ -19,7 +19,7 @@ fn main() -> std::io::Result<()> {
     let mut ppm = ppm_interface::PPMInterface::new(String::from(args[1].clone()));
     let height = 1080;
     let width = 1920;
-    let mut renderer : Renderer = Renderer::get_renderer_from_file(String::from(args[2].clone()));
+    let renderer : Renderer = Renderer::get_renderer_from_file(String::from(args[2].clone())).unwrap_or(Renderer::new());
     ppm.write(width, height, renderer.render());
     Ok(())
 }

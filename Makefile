@@ -5,11 +5,8 @@
 
 NAME = raytracer
 
-all: $(NAME)
-
-$(NAME):
+all:
 	cargo build
-	cp target/debug/$(NAME) .
 
 run:
 	cargo run
