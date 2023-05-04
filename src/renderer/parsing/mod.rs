@@ -8,6 +8,7 @@
 use crate::vectors;
 use serde_json::Value;
 use vectors::Vector;
+use super::Renderer;
 use super::camera::{Lens, Camera};
 use super::primitives::{Sphere, Plane, Cylinder, Cone, Object};
 use super::lights::{Directional, Ambiant, Light, Lights};
@@ -18,7 +19,7 @@ pub struct Parser {
 
 impl Parser {
 
-    pub fn get_vector_from_json(&self, json: &Value) -> Vector {
+    fn get_vector_from_json(&self, json: &Value) -> Vector {
         let option_x = json["x"].as_f64();
         let option_y = json["y"].as_f64();
         let option_z = json["z"].as_f64();
@@ -31,7 +32,7 @@ impl Parser {
         vector
     }
 
-    pub fn get_transform_from_json(&self, json: &Value) -> Transform {
+    fn get_transform_from_json(&self, json: &Value) -> Transform {
         Transform {
             pos: if json["pos"].is_object() {self.get_vector_from_json(&json["pos"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
             rotation: if json["rotation"].is_object() {self.get_vector_from_json(&json["rotation"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
@@ -39,7 +40,7 @@ impl Parser {
         }
     }
 
-    pub fn get_lens_from_json(&self, json: &Value) -> Lens {
+    fn get_lens_from_json(&self, json: &Value) -> Lens {
         let option_h = json["height"].as_i64();
         let option_w = json["width"].as_i64();
         let option_d =json["distance"].as_f64();
@@ -52,7 +53,7 @@ impl Parser {
         }
     }
 
-    pub fn get_camera_from_json(&self, json: &Value) -> Camera {
+    fn get_camera_from_json(&self, json: &Value) -> Camera {
         let option_f = json["fov"].as_i64();
         let option_d = json["diffuse"].as_f64();
         let option_a = json["ambient"].as_f64();
@@ -75,7 +76,7 @@ impl Parser {
         camera
     }
 
-    pub fn get_color_from_json(&self, json: &Value) -> Color {
+    fn get_color_from_json(&self, json: &Value) -> Color {
         let option_r = json["r"].as_f64();
         let option_g = json["g"].as_f64();
         let option_b = json["b"].as_f64();
@@ -87,7 +88,7 @@ impl Parser {
         }
     }
 
-    pub fn get_texture_from_json(&self, json: &Value) -> Texture {
+    fn get_texture_from_json(&self, json: &Value) -> Texture {
         let option_t = json["texture_type"].as_u64();
         let option_d = json["diffuse"].as_f64();
         let option_a = json["ambient"].as_f64();
@@ -104,7 +105,7 @@ impl Parser {
         }
     }
 
-    pub fn get_sphere_from_json(&self, json: &Value) -> Box::<Sphere> {
+    fn get_sphere_from_json(&self, json: &Value) -> Box::<Sphere> {
         let option_r = json["radius"].as_f64();
 
         Box::new(
@@ -116,7 +117,7 @@ impl Parser {
         )
     }
 
-    pub fn get_plane_from_json(&self, json: &Value) -> Box::<Plane> {
+    fn get_plane_from_json(&self, json: &Value) -> Box::<Plane> {
         let option_d = json["vector"].as_f64();
 
         Box::new(
@@ -128,7 +129,7 @@ impl Parser {
         )
     }
 
-    pub fn get_cylinder_from_json(&self, json: &Value) -> Box::<Cylinder> {
+    fn get_cylinder_from_json(&self, json: &Value) -> Box::<Cylinder> {
         let option_h = json["height"].as_f64();
         let option_r = json["radius"].as_f64();
 
@@ -142,7 +143,7 @@ impl Parser {
         )
     }
 
-    pub fn get_cone_from_json(&self, json: &Value) -> Box::<Cone> {
+    fn get_cone_from_json(&self, json: &Value) -> Box::<Cone> {
         let option_h = json["height"].as_f64();
         let option_r = json["radius"].as_f64();
 
@@ -156,7 +157,7 @@ impl Parser {
         )
     }
 
-    pub fn get_objects_from_json(&self, json: &Value) -> Vec::<Box::<dyn Object>> {
+    fn get_objects_from_json(&self, json: &Value) -> Vec::<Box::<dyn Object>> {
         let mut objects: Vec::<Box::<dyn Object>> = Vec::new();
 
         if json["spheres"].is_array() {
@@ -182,7 +183,7 @@ impl Parser {
         objects
     }
 
-    pub fn get_directional_from_json(&self, json: &Value) -> Box::<Directional> {
+    fn get_directional_from_json(&self, json: &Value) -> Box::<Directional> {
         let option_s = json["strength"].as_f64();
 
         Box::new(
@@ -194,7 +195,7 @@ impl Parser {
         )
     }
 
-    pub fn get_object_lights_from_json(&self, json: &Value) -> Vec::<Box::<dyn Light>> {
+    fn get_object_lights_from_json(&self, json: &Value) -> Vec::<Box::<dyn Light>> {
         let mut lights: Vec::<Box::<dyn Light>> = Vec::new();
 
         if json["directional"].is_array(){
@@ -205,7 +206,7 @@ impl Parser {
         lights
     }
 
-    pub fn get_ambiant_from_json(&self, json: &Value) -> Ambiant {
+    fn get_ambiant_from_json(&self, json: &Value) -> Ambiant {
         let option_s = json["strength"].as_f64();
         let colval: Color;
 
@@ -217,7 +218,7 @@ impl Parser {
         }
     }
 
-    pub fn get_ambiants_from_json(&self, json: &Value) -> Vec::<Ambiant> {
+    fn get_ambiants_from_json(&self, json: &Value) -> Vec::<Ambiant> {
         let mut lights: Vec::<Ambiant> = Vec::new();
 
         if json["ambiant"].is_array() {
@@ -228,7 +229,7 @@ impl Parser {
         lights
     }
 
-    pub fn get_lights_from_json(&self, json: &Value) -> Lights {
+    fn get_lights_from_json(&self, json: &Value) -> Lights {
         let objval : Vec::<Box::<dyn Light>>;
 
         if json["objects"].is_object() {objval = self.get_object_lights_from_json(&json["objects"]);}
@@ -237,6 +238,21 @@ impl Parser {
             lights: objval,
             ambiant: self.get_ambiants_from_json(&json),
         }
+    }
+
+    fn get_scenes_from_json(&self, renderer: Renderer, json: &Value) -> Renderer {
+        renderer
+    }
+
+    pub fn get_renderer_from_json(&self, json: &Value) -> Renderer {
+        self.get_scenes_from_json(
+            Renderer {
+                camera: if json["camera"].is_object() {self.get_camera_from_json(&json["camera"])} else {Camera::default()},
+                primitives: if json["primitives"].is_object() {self.get_objects_from_json(&json["primitives"])} else {Vec::new()},
+                lights: if json["lights"].is_object() {self.get_lights_from_json(&json["lights"])} else {Lights::default()},
+            },
+            json
+        )
     }
 
 }
