@@ -182,7 +182,7 @@ impl Renderer {
             }
             let mut locked_pixels = pixels.lock().unwrap(); // lock
             for k in 0..(self.camera.lens.width * 3) {
-                pixel_id = ((k + (i * self.camera.lens.width * 3))) as usize;
+                pixel_id = (k + (i * self.camera.lens.width * 3)) as usize;
                 locked_pixels[pixel_id as usize] = local_pixel_line[k as usize];
             }
 
@@ -235,15 +235,14 @@ impl Renderer {
         final_pixels
     }
 
-    pub fn get_renderer_from_file(file: String) -> Renderer {
+    pub fn get_renderer_from_file(file: String, height: i64, width: i64) -> Renderer {
         let data = fs::read_to_string(file).expect("Unable to read file");
         let json: Value = serde_json::from_str(&data.to_string()).unwrap();
         let parser = Parser{};
         Renderer {
-            camera: if json["camera"].is_object() {parser.get_camera_from_json(&json["camera"])} else {Camera::default()},
+            camera: if json["camera"].is_object() {parser.get_camera_from_json(&json["camera"], height, width)} else {Camera::default()},
             primitives: if json["primitives"].is_object() {parser.get_objects_from_json(&json["primitives"])} else {Vec::new()},
             lights: if json["lights"].is_object() {parser.get_lights_from_json(&json["lights"])} else {Lights::default()},
         }
     }
-
 }

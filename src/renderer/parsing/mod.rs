@@ -33,19 +33,23 @@ impl Parser {
         }
     }
 
-    pub fn get_lens_from_json(&self, json: &Value) -> Lens {
+    pub fn get_lens_from_json(&self, json: &Value, height: i64, width: i64) -> Lens {
         Lens {
-            height: json["height"].as_i64().unwrap_or(1080),
-            width: json["width"].as_i64().unwrap_or(1920),
+            height: height,
+            width: width,
             distance: json["distance"].as_f64().unwrap_or(0.0),
-            vector_to_first_pixel: if json["vector_to_first_pixel"].is_object() {self.get_vector_from_json(&json["vector_to_first_pixel"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
+            vector_to_first_pixel: Vector {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
         }
     }
 
-    pub fn get_camera_from_json(&self, json: &Value) -> Camera {
+    pub fn get_camera_from_json(&self, json: &Value, height: i64, width: i64) -> Camera {
         let mut camera = Camera {
             transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
-            lens: if json["lens"].is_object() {self.get_lens_from_json(&json["lens"])} else {Lens::default()},
+            lens: if json["lens"].is_object() {self.get_lens_from_json(&json["lens"], height, width)} else {Lens::default()},
             fov: json["fov"].as_i64().unwrap_or(60),
             smooth_shadow: json["smooth_shadow"].as_bool().unwrap_or(true),
             smooth_shadow_step: json["smooth_shadow_step"].as_i64().unwrap_or(50) as i16,
@@ -53,6 +57,7 @@ impl Parser {
             ambient: json["ambient"].as_f64().unwrap_or(0.3),
             specular: json["specular"].as_f64().unwrap_or(0.6),
             shadow_bias: json["shadow_bias"].as_f64().unwrap_or(1e-14),
+            aces_tone_mapping: json["aces_tone_mapping"].as_bool().unwrap_or(true),
             threads: json["threads"].as_u64().unwrap_or(8),
             progression: json["progression"].as_bool().unwrap_or(false),
             super_sampling: json["super_sampling"].as_u64().unwrap_or(1),
@@ -214,5 +219,4 @@ impl Parser {
             ambient: self.get_ambients_from_json(&json),
         }
     }
-
 }
