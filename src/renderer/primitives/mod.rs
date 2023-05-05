@@ -9,12 +9,14 @@ use crate::vectors;
 
 use vectors::Vector;
 use vectors::resolve_quadratic_equation;
+use crate::renderer::lights::Light;
 use super::renderer_common::{Transform, Texture};
 
 pub struct Intersection<'a> {
     pub intersection_point: Vector,
     pub normal: Vector,
-    pub object: &'a dyn Object,
+    pub object: Option<&'a dyn Object>,
+    pub light: Option<&'a dyn Light>,
 }
 
 pub struct Sphere {
@@ -73,7 +75,8 @@ impl Object for Sphere {
             Some ( Intersection {
                 normal: point - self.transform.pos,
                 intersection_point: point,
-                object: self,
+                object: Some(self),
+                light: None
             })
         }
     }
@@ -104,7 +107,8 @@ impl Object for Plane {
                 z: origin.z + ray.z * progress
             },
             normal,
-            object: self,
+            object: Some(self),
+            light: None,
         })
     }
     fn set_transform(&mut self, new: Transform) {self.transform = new}

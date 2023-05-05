@@ -14,11 +14,12 @@ use std::env;
 struct Model {
     _window: window::Id,
     config: config::Config,
+    renderer: Renderer,
 }
 
 fn model(app: &App) -> Model {
     let args: Vec<String> = env::args().collect();
-    let config = config::Config::from_args(&args);
+    let mut config = config::Config::from_args(&args);
     let window = app
         .new_window()
         .title("Rustracer")
@@ -27,19 +28,19 @@ fn model(app: &App) -> Model {
         .build()
         .expect("Failed to build the window");
 
+    config.height = config.height / config.fast_mode;
+    config.width = config.width / config.fast_mode;
     Model {
         _window: window,
-        config,
+        config: config.clone(),
+        renderer: Renderer::get_renderer_from_file(&config),
     }
 }
 
 fn update(_app: &App, _model: &mut Model, _update: Update) {}
 
 fn view(app: &App, model: &Model, frame: Frame) {
-    let mut renderer: Renderer =
-        Renderer::get_renderer_from_file(&model.config);
-
-    let pixels = renderer.render();
+    let pixels = model.renderer.render(&model.config);
     let mut index = 0;
 
     let window = app.window_rect();
@@ -51,8 +52,8 @@ fn view(app: &App, model: &Model, frame: Frame) {
         for x in (-model.config.width / 2)..(model.config.width / 2) {
             let color = pixels[index..index + 3].to_vec();
             draw.rect()
-                .x_y(x as f32, -y as f32)
-                .w_h(1.0, 1.0)
+                .x_y((x as f32) * model.config.fast_mode as f32, (-y as f32) * model.config.fast_mode as f32)
+                .w_h(model.config.fast_mode as f32, model.config.fast_mode as f32)
                 .color(Rgb::new(
                     color[0] as f32 / 255.0,
                     color[1] as f32 / 255.0,

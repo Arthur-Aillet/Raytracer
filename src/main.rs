@@ -48,7 +48,7 @@ fn main() -> io::Result<()> {
         app.run();
     } else {
         let mut ppm = ppm_interface::PPMInterface::new(&config.save_file);
-        ppm.write(config.width, config.height, renderer.render());
+        ppm.write(config.width, config.height, renderer.render(&config));
     }
 
     Ok(())

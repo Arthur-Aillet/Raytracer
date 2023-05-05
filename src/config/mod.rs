@@ -5,13 +5,16 @@
 // config
 //
 
+
+
+#[derive(Debug, Clone)]
 pub struct Config {
     pub width: i64,
     pub height: i64,
     pub save_file: String,
     pub config_file: String,
     pub graphic: bool,
-    pub fast_mode: bool,
+    pub fast_mode: i64,
     pub help: bool,
 }
 
@@ -23,7 +26,7 @@ impl Config {
             save_file: String::from("scene_example.ppm"),
             config_file: String::from("example.json"),
             graphic: false,
-            fast_mode: false,
+            fast_mode: 0,
             help: false,
         }
     }
@@ -65,11 +68,11 @@ impl Config {
         if let Some(config_file) = Config::get_flag_content(args, "-j") {
             config.config_file = config_file;
         }
+        if let Some(fast) = Config::get_flag_content(args, "-f") {
+            config.fast_mode = fast.parse().unwrap_or(config.fast_mode);
+        }
         if Config::is_flag(args, "-g") {
             config.graphic = true;
-        }
-        if Config::is_flag(args, "-f") {
-            config.fast_mode = true;
         }
         if Config::is_flag(args, "--help") {
             config.help = true;
