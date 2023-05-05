@@ -48,6 +48,7 @@ pub struct Camera {
     pub aces_tone_mapping: bool,
     pub threads: u64,
     pub progression: bool,
+    pub image_buffer_size: u64,
     pub super_sampling: u64,
     pub super_sampling_precision: u64,
 }
@@ -67,6 +68,7 @@ impl Camera {
             aces_tone_mapping: true,
             threads: 8,
             progression: false,
+            image_buffer_size: 1,
             super_sampling: 5,
             super_sampling_precision: 10,
         };
@@ -78,7 +80,6 @@ impl Camera {
         camera.lens.vector_to_first_pixel = camera.lens.vector_to_first_pixel + Vector {x: -1.0, y: 0.0, z: 0.0} * (camera.lens.width as f64 / 2.0);
         camera
     }
-
 
     pub fn get_random_pixel_vector(&self, x: i64, y: i64) -> Vector {
         let mut rng = rand::thread_rng();

@@ -193,46 +193,58 @@ impl Renderer {
         }
     }
 
-    pub fn print_progresion(&self, progression:Arc<Mutex<u64>>) {
+    pub fn print_progression(&self, progression:Arc<Mutex<u64>>, buf_step: u64) {
         let mut last_progression:u64 = 0;
 
-        while last_progression as i64 != self.camera.lens.height {
+        while last_progression as u64 != self.camera.lens.height as u64 {
             thread::sleep(time::Duration::from_millis(1000));
             let locked_progression = progression.lock().unwrap();
             print!("rendered [");
-            for i in 0..((*locked_progression * 100) / self.camera.lens.height as u64) {
+            for _i in 0..(((*locked_progression + (self.camera.lens.height as u64 * buf_step)) * 100) / (self.camera.lens.height as u64 * self.camera.image_buffer_size)) {
                 print!("#");
             }
-            for i in 0..(100 - ((*locked_progression * 100) / self.camera.lens.height as u64)) {
+            for _i in 0..(100 - (((*locked_progression  + (self.camera.lens.height as u64 * buf_step)) * 100) / (self.camera.lens.height as u64 * self.camera.image_buffer_size))) {
                 print!(" ");
             }
-            println!("] {:?}/{:?}\r", *locked_progression, self.camera.lens.height);
+            println!("] {:?}/{:?}\r", (*locked_progression  + (self.camera.lens.height as u64 * buf_step)), (self.camera.lens.height as u64 * self.camera.image_buffer_size));
             last_progression = *locked_progression;
         }
     }
 
+
     pub fn render(&self) -> Vec<u8> {
-        let pixels:Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize]));
-        let pixels_state:Arc<Mutex<Vec<bool>>> = Arc::new(Mutex::new(vec![false; self.camera.lens.height as usize]));
-        let progression:Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
+        let mut result: Vec<u8> = Vec::new();
+        for n in 0..self.camera.image_buffer_size {
+            let pixels:Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize]));
+            let pixels_state:Arc<Mutex<Vec<bool>>> = Arc::new(Mutex::new(vec![false; self.camera.lens.height as usize]));
+            let progression:Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
+            thread::scope(|scope| {
+                for _ in 0..self.camera.threads {
+                    let clone_pixels = Arc::clone(&pixels);
+                    let clone_pixels_state = Arc::clone(&pixels_state);
+                    let clone_progression = Arc::clone(&progression);
+                    scope.spawn(move || {
+                        self.naive_thread_renderer(clone_pixels_state, clone_pixels, clone_progression);
+                    });
+                }
 
-        thread::scope(|scope| {
-            for _ in 0..self.camera.threads {
-                let clone_pixels = Arc::clone(&pixels);
-                let clone_pixels_state = Arc::clone(&pixels_state);
-                let clone_progression = Arc::clone(&progression);
-                scope.spawn(move || {
-                    self.naive_thread_renderer(clone_pixels_state, clone_pixels, clone_progression);
-                });
+                if self.camera.progression == true {
+                    self.print_progression(progression, n);
+                }
+
+            });
+            let final_pixels = pixels.lock().unwrap().to_vec();
+            if result.len() != final_pixels.len() {
+                for i in 0..final_pixels.len() {
+                    result.push(final_pixels[i]);
+                }
+            } else{
+                for i in 0..result.len() {
+                    result[i] = (((result[i] as u64 * (n - 1)) + final_pixels[i] as u64) / n) as u8;
+                }
             }
-
-            if self.camera.progression == true {
-                self.print_progresion(progression);
-            }
-
-        });
-        let final_pixels = pixels.lock().unwrap().to_vec();
-        final_pixels
+        }
+        result
     }
 
     pub fn get_renderer_from_file(file: String, height: i64, width: i64) -> Renderer {

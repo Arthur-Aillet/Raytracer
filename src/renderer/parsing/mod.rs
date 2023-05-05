@@ -49,6 +49,7 @@ impl Parser {
             progression: json["progression"].as_bool().unwrap_or(false),
             super_sampling: json["super_sampling"].as_u64().unwrap_or(1),
             super_sampling_precision: json["super_sampling_precision"].as_u64().unwrap_or(10),
+            image_buffer_size: json["image_buffer_size"].as_u64().unwrap_or(1),
         };
         camera.calculate_lens_distance();
         let vector_director = Vector {x: 0.0, y: camera.lens.distance, z: 0.0};
@@ -206,4 +207,5 @@ impl Parser {
             ambient: self.get_ambients_from_json(&json),
         }
     }
+
 }
