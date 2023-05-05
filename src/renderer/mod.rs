@@ -89,6 +89,25 @@ impl Renderer {
         intersect.object.unwrap().get_texture().color.as_vector() * light.get_color().as_vector() * diffuse * light_falloff * light_uncovered + light.get_color().as_vector() * specular * light_falloff * light_uncovered
     }
 
+    fn found_nearest_intersection_fast(&self, origin: Vector, ray: Vector) -> Option<Intersection> {
+        let mut found_intersection: Option<Intersection> = None;
+        let mut smallest_distance: f64 = f64::INFINITY;
+
+        for object in self.primitives.iter() {
+            let intersect = object.intersection(ray, origin);
+
+            if intersect.is_some() {
+                let inters = intersect.unwrap();
+                let distance_found = (inters.intersection_point - origin).len();
+                if distance_found < smallest_distance {
+                    smallest_distance = distance_found;
+                    found_intersection = Some(inters);
+                }
+            }
+        }
+        found_intersection
+    }
+
     fn found_nearest_intersection(&self, origin: Vector, ray: Vector) -> Option<Intersection> {
         let mut found_intersection: Option<Intersection> = None;
         let mut smallest_distance: f64 = f64::INFINITY;
@@ -136,6 +155,27 @@ impl Renderer {
         self_color
     }
 
+    fn get_color_from_ray_fast(&self, origin: Vector, ray: Vector) -> Vector {
+        let maybe_intersect = self.found_nearest_intersection_fast(origin, ray);
+
+        if let Some(intersect) = maybe_intersect {
+            let normal_vector = intersect.normal.normalize();
+            let light_vector = (self.camera.transform.pos - intersect.intersection_point).normalize();
+
+            let ambient = intersect.object.unwrap().get_texture().color.as_vector() * intersect.object.unwrap().get_texture().ambient * self.camera.ambient;
+
+            let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * intersect.object.unwrap().get_texture().diffuse;
+
+            ambient + intersect.object.unwrap().get_texture().color.as_vector() * diffuse
+        } else {
+            Vector {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            }
+        }
+    }
+
     fn get_color_from_ray(&self, origin: Vector, ray: Vector, recursivity: i64) -> Vector {
         if recursivity == 0 {
             return Vector {
@@ -181,7 +221,7 @@ impl Renderer {
         let mut pixel_id: usize;
         let mut line_state_id: usize;
 
-        for i in 0..(self.camera.lens.height) {
+        for i in 0..self.camera.lens.height {
             line_state_id = i as usize;
             let mut locked_pixel_states = pixel_states.lock().unwrap(); // lock
 
@@ -194,8 +234,13 @@ impl Renderer {
             let mut local_pixel_line: Vec<u8> = vec![0; (self.camera.lens.width * 3) as usize];
             for j in 0..self.camera.lens.width {
                 pixel_id = (j * 3) as usize;
-                let calculated_pixel = self.get_color_from_ray(self.camera.transform.pos, self.camera.get_pixel_vector(j, i), self.camera.recursivity);
+                let calculated_pixel: Vector;
 
+                if false == true {
+                    calculated_pixel = self.get_color_from_ray_fast(self.camera.transform.pos, self.camera.get_pixel_vector(j, i));
+                } else {
+                    calculated_pixel = self.get_color_from_ray(self.camera.transform.pos, self.camera.get_pixel_vector(j, i), self.camera.recursivity);
+                }
                 local_pixel_line[pixel_id + 0] = (self.camera.aces_curve(calculated_pixel.x).powf(1.0/2.2) * 255.0) as u8;
                 local_pixel_line[pixel_id + 1] = (self.camera.aces_curve(calculated_pixel.y).powf(1.0/2.2) * 255.0) as u8;
                 local_pixel_line[pixel_id + 2] = (self.camera.aces_curve(calculated_pixel.z).powf(1.0/2.2) * 255.0) as u8;
