@@ -29,12 +29,12 @@
         "diffuse": 0.8,
         "ambient": 0.5,
         "specular": 0.3,
-        "smooth_shadow": true,
-        "smooth_shadow_step": 50,
+        "smooth_shadow": false,
+        "smooth_shadow_step": 2,
         "shadow_bias": 1e-13,
-        "aces_tone_mapping": true,
+        "aces_tone_mapping": false,
         "threads": 8,
-        "progression": true
+        "progression": false
     },
     "primitives": {
         "spheres": [
@@ -172,44 +172,7 @@
                     "shininess": 4.0
                 },
                 "vector": -1.5
-            },
-          {
-            "transform": {
-              "pos": {
-                "x": 5,
-                "y": 0,
-                "z": 1.4
-              },
-              "rotation": {
-                "x": 0,
-                "y": 0,
-                "z": 0
-              },
-              "scale": {
-                "x": 1,
-                "y": 1,
-                "z": 1
-              }
-            },
-            "normal": {
-              "x": 0.0,
-              "y": 0.0,
-              "z": 1.0
-            },
-            "texture": {
-              "texture_type": 1,
-              "color": {
-                "r": 255,
-                "g": 250,
-                "b": 200
-              },
-              "diffuse": 0.7,
-              "ambient": 0.5,
-              "specular": 0.2,
-              "shininess": 4.0
-            },
-            "vector": -1.5
-          }
+            }
         ]
     },
     "lights": {

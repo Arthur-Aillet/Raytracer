@@ -10,7 +10,8 @@ pub struct Config {
     pub height: i64,
     pub save_file: String,
     pub config_file: String,
-    pub g_flag: bool,
+    pub graphic: bool,
+    pub fast_mode: bool,
 }
 
 impl Config {
@@ -20,7 +21,8 @@ impl Config {
             height: 540,
             save_file: String::from("scene_example.ppm"),
             config_file: String::from("example.json"),
-            g_flag: false
+            graphic: false,
+            fast_mode: false
         }
     }
 
@@ -53,16 +55,23 @@ impl Config {
             config.config_file = config_file;
         }
         if Config::get_flag(args, "-g").is_some() {
-            config.g_flag = true;
+            config.graphic = true;
+        }
+        if Config::get_flag(args, "-f").is_some() {
+            config.fast_mode = true;
         }
         return config;
     }
 
     pub fn print(&self) {
-        println!("width: {}", self.width);
-        println!("height: {}", self.height);
-        println!("save_file: {}", self.save_file);
-        println!("config_file: {}", self.config_file);
-        println!("g_flag: {}", self.g_flag);
+        println!("---------------------------------");
+        println!("Config:");
+        println!("\twidth:\t\t{}", self.width);
+        println!("\theight:\t\t{}\n", self.height);
+        println!("\tsave_file:\t{}", self.save_file);
+        println!("\tconfig_file:\t{}\n", self.config_file);
+        println!("\tgraphic:\t{}", self.graphic);
+        println!("\tfast_mode:\t{}", self.fast_mode);
+        println!("---------------------------------");
     }
 }

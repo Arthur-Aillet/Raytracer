@@ -37,7 +37,7 @@ fn update(_app: &App, _model: &mut Model, _update: Update) {}
 
 fn view(app: &App, model: &Model, frame: Frame) {
     let mut renderer: Renderer =
-        Renderer::get_renderer_from_file(&model.config.config_file, model.config.height, model.config.width);
+        Renderer::get_renderer_from_file(&model.config.config_file, &model.config);
 
     let pixels = renderer.render();
     let mut index = 0;
@@ -61,7 +61,6 @@ fn view(app: &App, model: &Model, frame: Frame) {
             index += 3;
         }
     }
-
     draw.to_frame(app, &frame).unwrap();
 }
 

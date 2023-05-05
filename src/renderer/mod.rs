@@ -20,9 +20,10 @@ use serde_json::Value;
 use camera::{Camera};
 use lights::Lights;
 use parsing::Parser;
+use crate::config::Config;
+
 use crate::renderer::lights::Light;
 use crate::vectors::Vector;
-
 
 pub struct Renderer {
     pub camera: Camera,
@@ -215,12 +216,12 @@ impl Renderer {
         final_pixels
     }
 
-    pub fn get_renderer_from_file(file: &String, height: i64, width: i64) -> Renderer {
+    pub fn get_renderer_from_file(file: &String, config: &Config) -> Renderer {
         let data = fs::read_to_string(file).expect("Unable to read file");
         let json: Value = serde_json::from_str(&data.to_string()).unwrap();
         let parser = Parser{};
         Renderer {
-            camera: if json["camera"].is_object() {parser.get_camera_from_json(&json["camera"], height, width)} else {Camera::default()},
+            camera: if json["camera"].is_object() {parser.get_camera_from_json(&json["camera"], config.height, config.width)} else {Camera::default()},
             primitives: if json["primitives"].is_object() {parser.get_objects_from_json(&json["primitives"])} else {Vec::new()},
             lights: if json["lights"].is_object() {parser.get_lights_from_json(&json["lights"])} else {Lights::default()},
         }
