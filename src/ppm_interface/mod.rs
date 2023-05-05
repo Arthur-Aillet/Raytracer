@@ -18,11 +18,11 @@ impl PPMInterface {
         PPMInterface { file }
     }
 
-    fn create_header(&self, width: u32, height: u32) -> String {
+    fn create_header(&self, width: i64, height: i64) -> String {
         format!("P6\n{} {}\n255\n", width, height)
     }
 
-    pub fn write(&mut self, width: u32, height: u32, content: Vec<u8>) {
+    pub fn write(&mut self, width: i64, height: i64, content: Vec<u8>) {
         let header = self.create_header(width, height);
         let mut writer = BufWriter::new(&self.file);
 

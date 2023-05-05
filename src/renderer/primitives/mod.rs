@@ -9,6 +9,7 @@ use crate::vectors;
 
 use vectors::Vector;
 use vectors::resolve_quadratic_equation;
+use crate::renderer::lights::Light;
 use super::renderer_common::{Transform, Texture};
 use serde::{Deserialize, Serialize};
 use erased_serde::serialize_trait_object;
@@ -16,7 +17,8 @@ use erased_serde::serialize_trait_object;
 pub struct Intersection<'a> {
     pub intersection_point: Vector,
     pub normal: Vector,
-    pub object: &'a dyn Object,
+    pub object: Option<&'a dyn Object>,
+    pub light: Option<&'a dyn Light>,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -80,7 +82,8 @@ impl Object for Sphere {
             Some ( Intersection {
                 normal: point - self.transform.pos,
                 intersection_point: point,
-                object: self,
+                object: Some(self),
+                light: None
             })
         }
     }
@@ -113,7 +116,8 @@ impl Object for Plane {
                 z: origin.z + ray.z * progress
             },
             normal,
-            object: self,
+            object: Some(self),
+            light: None,
         })
     }
     fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
