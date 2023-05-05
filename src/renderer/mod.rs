@@ -10,6 +10,7 @@ mod primitives;
 mod lights;
 mod parsing;
 mod renderer_common;
+use serde::{Serialize};
 
 use std::thread;
 use std::time;
@@ -21,6 +22,7 @@ use parsing::Parser;
 use crate::renderer::lights::Light;
 use crate::vectors::Vector;
 
+#[derive(Serialize)]
 pub struct Renderer {
     pub camera: Camera,
     pub primitives: Vec<Box<dyn Object + Send + Sync>>,
@@ -217,7 +219,7 @@ impl Renderer {
         if parser.get_json(&file).is_some() {
             result = Some(parser.get_renderer_from_json(&parser.get_json(&file).unwrap()));
         }
-        result
+        None
     }
 
 }

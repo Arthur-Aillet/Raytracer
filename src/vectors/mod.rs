@@ -10,8 +10,10 @@ use crate::matrix;
 use matrix::Matrix;
 use std::ops::{Add, Mul, Sub};
 use rand::Rng;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy)]
+#[derive(Deserialize, Serialize)]
 pub struct Vector {
     pub x: f64,
     pub y: f64,

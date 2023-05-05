@@ -10,6 +10,8 @@ use crate::vectors;
 use vectors::Vector;
 use vectors::resolve_quadratic_equation;
 use super::renderer_common::{Transform, Texture};
+use serde::{Deserialize, Serialize};
+use erased_serde::serialize_trait_object;
 
 pub struct Intersection<'a> {
     pub intersection_point: Vector,
@@ -17,18 +19,21 @@ pub struct Intersection<'a> {
     pub object: &'a dyn Object,
 }
 
+#[derive(Deserialize, Serialize)]
 pub struct Sphere {
     pub transform: Transform,
     pub texture: Texture,
     pub radius: f64,
 }
 
+#[derive(Deserialize, Serialize)]
 pub struct Plane {
     pub transform: Transform,
     pub texture: Texture,
     pub normal: Vector,
 }
 
+#[derive(Deserialize, Serialize)]
 pub struct Cylinder {
     pub transform: Transform,
     pub texture: Texture,
@@ -36,6 +41,7 @@ pub struct Cylinder {
     pub radius: f64,
 }
 
+#[derive(Deserialize, Serialize)]
 pub struct Cone {
     pub transform: Transform,
     pub texture: Texture,
@@ -43,7 +49,7 @@ pub struct Cone {
     pub height: f64,
 }
 
-pub trait Object {
+pub trait Object: erased_serde::Serialize {
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection>;
     fn move_obj(&mut self, offset: Transform);
     fn set_transform(&mut self, new: Transform);
@@ -142,3 +148,5 @@ impl Object for Cone {
     fn set_height(&mut self, new: f64) {self.height = new}
     fn set_normal(&mut self, _new: Vector) {}
 }
+
+serialize_trait_object!(Object);

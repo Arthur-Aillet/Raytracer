@@ -6,8 +6,11 @@
 //
 
 use super::renderer_common::{Transform, Color};
+use serde::{Deserialize, Serialize};
+use erased_serde::{serialize_trait_object};
 
 #[derive(Debug, Clone, Copy)]
+#[derive(Deserialize, Serialize)]
 pub struct Point {
     pub transform: Transform,
     pub color: Color,
@@ -16,7 +19,7 @@ pub struct Point {
     pub falloff: i32,
 }
 
-pub trait Light {
+pub trait Light: erased_serde::Serialize {
     fn move_obj(&mut self, offset: Transform);
     fn get_transform(&self) -> Transform;
     fn set_transform(&mut self, new: Transform);
@@ -44,6 +47,9 @@ impl Light for Point {
     fn set_falloff(&mut self, new: i32) {self.falloff = new}
 }
 
+serialize_trait_object!(Light);
+
+#[derive(Deserialize, Serialize)]
 pub struct Ambient {
     pub color: Color,
     pub strength: f64,
@@ -58,6 +64,7 @@ impl Ambient {
     }
 }
 
+#[derive(Serialize)]
 pub struct Lights {
     pub lights: Vec::<Box::<dyn Light + Send + Sync>>,
     pub ambient: Vec<Ambient>,

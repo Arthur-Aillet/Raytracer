@@ -9,8 +9,10 @@ use crate::vectors;
 
 use std::ops::{Add, Mul, Sub};
 use vectors::Vector;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy)]
+#[derive(Deserialize, Serialize)]
 pub struct Transform {
     pub pos: Vector,
     pub rotation: Vector,
@@ -78,6 +80,7 @@ impl Mul<Transform> for Transform {
     }
 }
 
+#[derive(Deserialize, Serialize)]
 #[derive(Debug, Clone, Copy)]
 pub struct Color {
     pub r: f64,
@@ -103,6 +106,7 @@ impl Color {
     }
 }
 
+#[derive(Deserialize, Serialize)]
 #[derive(Debug, Clone, Copy)]
 pub struct Texture {
     pub texture_type: u64,

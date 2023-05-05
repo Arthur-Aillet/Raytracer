@@ -15,7 +15,6 @@ use super::lights::{Point, Ambient, Light, Lights};
 use super::renderer_common::{Transform, Color, Texture};
 use std::fs;
 
-
 pub struct Parser {
 }
 
