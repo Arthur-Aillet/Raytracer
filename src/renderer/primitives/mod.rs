@@ -133,7 +133,6 @@ impl Object for Cylinder {
         axis == ĥ
         */
 
-
         let mut axis = Vector{
             x: 0.0,
             y: 0.0,
@@ -145,14 +144,13 @@ impl Object for Cylinder {
 
         //println!("{:?}", distance);
         let a = ray.dot_product(ray) - (ray.dot_product(axis)).powi(2);
-        let b = 2.0 * (ray.dot_product(distance) - ray.dot_product(axis) * ray.dot_product(distance));
-        let c = distance.dot_product(distance) - ray.dot_product(distance).powi(2) - self.radius.powi(2);
-
+        let b = 2.0 * (ray.dot_product(distance) - ray.dot_product(axis) * distance.dot_product(axis));
+        let c = distance.dot_product(distance) - distance.dot_product(axis).powi(2) - self.radius.powi(2);
 
         if b.powi(2) - 4.0 * a * c > 0.0 {
             let result = resolve_quadratic_equation(a, b, c);
 
-            let smallest_result: Option<&f64> = result.iter().filter(|number| **number > 0.0).min_by(|a, b| a.partial_cmp(b).unwrap());
+            let smallest_result: Option<&f64> = result.iter().filter(|number| **number > 0.0).min_by(|fst, snd| fst.partial_cmp(snd).unwrap());
             if smallest_result == None {
                 return None;
             }
@@ -165,7 +163,7 @@ impl Object for Cylinder {
                 },
                 normal: Vector{
                     x: 0.0,
-                    y: 1.0,
+                    y: 0.0,
                     z: 0.0,
                 },
                 object: Some(self),
@@ -183,7 +181,7 @@ impl Object for Cylinder {
                 },
                 normal: Vector{
                     x: 0.0,
-                    y: 1.0,
+                    y: 0.0,
                     z: 0.0,
                 },
                 object: Some(self),
