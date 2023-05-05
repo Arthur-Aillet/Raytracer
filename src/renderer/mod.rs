@@ -241,7 +241,7 @@ impl Renderer {
     }
 
     pub fn render_pixel(&self, x:i64, y:i64) -> Vector {
-        if true == true {
+        if true == false {
             return self.get_color_from_ray_fast(self.camera.transform.pos, self.camera.get_pixel_vectors(x, y, 1)[0]);
         }
 
@@ -314,7 +314,7 @@ impl Renderer {
 
     pub fn render(&self) -> Vec<u8> {
         let mut result: Vec<u8> = Vec::new();
-        let buf_size = if true == false { self.camera.image_buffer_size } else { 1 };
+        let buf_size = if true == true { self.camera.image_buffer_size } else { 1 };
         for n in 0..buf_size {
             let pixels:Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize]));
             let pixels_state:Arc<Mutex<Vec<bool>>> = Arc::new(Mutex::new(vec![false; self.camera.lens.height as usize]));
