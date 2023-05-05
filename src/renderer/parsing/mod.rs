@@ -244,13 +244,16 @@ impl Parser {
     fn get_scenes_from_json(&self, renderer: &mut Renderer, json: &Value, path_taken: &mut Vec<String>) {
         if json["scenes"].is_array() {
             for scene in json["scenes"].as_array().unwrap().iter() {
-                if scene["file"].is_string() && self.get_json(&scene["file"].as_str().unwrap().to_string()).is_some() {
-                    let scene_json = self.get_json(&scene["file"].as_str().unwrap().to_string()).unwrap();
+                let filename = scene["file"].as_str().unwrap().to_string();
+                if scene["file"].is_string() && self.get_json(&filename).is_some() {
+                    let scene_json = self.get_json(&filename).unwrap();
                     self.get_scene_from_json(renderer, &scene_json, if scene["transform"].is_object() {self.get_transform_from_json(&scene["transform"])} else {Transform::default()});
-                    if path_taken.contains(&scene["file"].as_str().unwrap().to_string()) == false {
-                        path_taken.push(scene["file"].as_str().unwrap().to_string());
+                    if path_taken.contains(&filename) == false {
+                        path_taken.push(filename);
                         self.get_scenes_from_json(renderer, &scene_json, path_taken);
                         path_taken.pop();
+                    } else {
+                        print!("inclusion of scene {} impossible\nbecause of configuration, it contains itself and will create an infinite loop if included\n the problem detected in the {} config file\n", filename, path_taken.last().unwrap_or(&"root".to_string()))
                     }
                 }
             }
