@@ -20,10 +20,10 @@ pub struct Lens {
 }
 
 impl Lens  {
-    pub fn default() -> Lens {
+    pub fn default(height: i64, width: i64) -> Lens {
         Lens {
-            height: 1080,
-            width: 1920,
+            height,
+            width,
             distance : 0.0,
             vector_to_first_pixel: Vector {
                 x: 0.0,
@@ -53,10 +53,10 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn default() -> Camera {
+    pub fn default(height: i64, width: i64) -> Camera {
         let mut camera = Camera {
             transform: Transform::default(),
-            lens: Lens::default(),
+            lens: Lens::default(height, width),
             fov: 60,
             smooth_shadow: false,
             smooth_shadow_step: 0,

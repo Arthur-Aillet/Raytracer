@@ -31,9 +31,9 @@ pub struct Renderer {
 
 impl Renderer {
 
-    pub fn new() -> Renderer {
+    pub fn new(height: i64, width: i64) -> Renderer {
         Renderer {
-            camera: Camera::default(),
+            camera: Camera::default(height, width),
             primitives: Vec::new(),
             lights: Lights {
                 lights: Vec::new(),
@@ -240,7 +240,7 @@ impl Renderer {
         let json: Value = serde_json::from_str(&data.to_string()).unwrap();
         let parser = Parser{};
         Renderer {
-            camera: if json["camera"].is_object() {parser.get_camera_from_json(&json["camera"], height, width)} else {Camera::default()},
+            camera: if json["camera"].is_object() {parser.get_camera_from_json(&json["camera"], height, width)} else {Camera::default(height, width)},
             primitives: if json["primitives"].is_object() {parser.get_objects_from_json(&json["primitives"])} else {Vec::new()},
             lights: if json["lights"].is_object() {parser.get_lights_from_json(&json["lights"])} else {Lights::default()},
         }
