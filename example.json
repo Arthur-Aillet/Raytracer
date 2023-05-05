@@ -1,225 +1,253 @@
 {
-    "camera": {
+  "camera": {
+    "transform": {
+      "pos": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      }
+    },
+    "fov": 90,
+    "diffuse": 0.8,
+    "ambient": 0.5,
+    "specular": 0.3,
+    "smooth_shadow": true,
+    "smooth_shadow_step": 32,
+    "shadow_bias": 1e-13,
+    "threads": 8,
+    "progression": true,
+    "image_buffer_size": 4,
+    "super_sampling": 8,
+    "recursivity": 5,
+    "reflection_samples": 30,
+    "aces_tone_mapping": true
+  },
+  "primitives": {
+    "spheres": [
+      {
         "transform": {
+          "pos": {
+            "x": -1,
+            "y": 8,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "texture": {
+          "texture_type": 1,
+          "color": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          },
+          "diffuse": 0.7,
+          "ambient": 0.5,
+          "specular": 0.2,
+          "shininess": 4.0,
+          "metalness": 0.5,
+          "roughness": 0
+        },
+        "radius": 1.5
+      },
+      {
+        "transform": {
+          "pos": {
+            "x": 7,
+            "y": 12,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "scale": {
+            "x": 2,
+            "y": 2,
+            "z": 2
+          }
+        },
+        "texture": {
+          "texture_type": 1,
+          "color": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          },
+          "diffuse": 0.9,
+          "ambient": 0.3,
+          "specular": 0.5,
+          "shininess": 8,
+          "metalness": 0.5,
+          "roughness": 0
+        },
+        "radius": 4
+      },
+      {
+        "transform": {
+          "pos": {
+            "x": 0,
+            "y": 5,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "texture": {
+          "texture_type": 1,
+          "color": {
+            "r": 100,
+            "g": 255,
+            "b": 100
+          },
+          "diffuse": 0.7,
+          "ambient": 0.5,
+          "specular": 0.2,
+          "shininess": 4.0,
+          "metalness": 0.5,
+          "roughness": 0
+        },
+        "radius": 0.5
+      }
+    ],
+    "planes" : [
+      {
+        "transform": {
+          "pos": {
+            "x": 0,
+            "y": 0,
+            "z": -1.4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "normal": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 1.0
+        },
+        "texture": {
+          "texture_type": 1,
+          "color": {
+            "r": 255,
+            "g": 250,
+            "b": 200
+          },
+          "diffuse": 0.7,
+          "ambient": 0.5,
+          "specular": 0.2,
+          "shininess": 4.0,
+          "metalness": 0.5,
+          "roughness": 0
+        },
+        "vector": -1.5
+      }
+    ]
+  },
+  "lights": {
+    "objects": {
+      "point": [
+        {
+          "transform": {
             "pos": {
-                "x": 0,
-                "y": 0,
-                "z": 0
+              "x": 3.2,
+              "y": 2,
+              "z": 2
             },
             "rotation": {
-                "x": 0,
-                "y": 0,
-                "z": 0
+              "x": 0,
+              "y": 0,
+              "z": 0
             },
             "scale": {
-                "x": 1,
-                "y": 1,
-                "z": 1
+              "x": 1,
+              "y": 1,
+              "z": 1
             }
+          },
+          "color": {
+            "r": 255,
+            "g": 220,
+            "b": 210
+          },
+          "strength": 40.0,
+          "falloff": 2,
+          "radius": 3.0
         },
-        "lens" : {
-            "height": 1080,
-            "width": 1080,
-            "distance": 0,
-            "vector_to_first_pixel": {
-                "x": 0,
-                "y": 0,
-                "z": 0
-            }
-        },
-        "fov": 90,
-        "diffuse": 0.7,
-        "ambient": 0.5,
-        "specular": 0.3,
-        "smooth_shadow": false,
-        "smooth_shadow_step": 1000,
-        "shadow_bias": 1e-13,
-        "recursivity": 5,
-        "reflecion_samples": 30,
-        "threads": 8,
-        "progression": true
-    },
-    "primitives": {
-        "spheres": [
-            {
-                "transform": {
-                    "pos": {
-                        "x": 0,
-                        "y": 8,
-                        "z": 0
-                    },
-                    "rotation": {
-                        "x": 0,
-                        "y": 0,
-                        "z": 0
-                    },
-                    "scale": {
-                        "x": 1,
-                        "y": 1,
-                        "z": 1
-                    }
-                },
-                "texture": {
-                    "texture_type": 1,
-                    "color": {
-                        "r": 100,
-                        "g": 100,
-                        "b": 255
-                    },
-                    "diffuse": 0.7,
-                    "ambient": 0.5,
-                    "specular": 0.2,
-                    "shininess": 4.0,
-                    "metalness": 0.5,
-                    "roughness": 0
-                },
-                "radius": 1.5
+        {
+          "transform": {
+            "pos": {
+              "x": -5,
+              "y": 12,
+              "z": 1
             },
-            {
-                "transform": {
-                    "pos": {
-                        "x": 1,
-                        "y": 4,
-                        "z": 1
-                    },
-                    "rotation": {
-                        "x": 0,
-                        "y": 0,
-                        "z": 0
-                    },
-                    "scale": {
-                        "x": 1,
-                        "y": 1,
-                        "z": 1
-                    }
-                },
-                "texture": {
-                    "texture_type": 1,
-                    "color": {
-                        "r": 100,
-                        "g": 255,
-                        "b": 100
-                    },
-                    "diffuse": 0.7,
-                    "ambient": 0.5,
-                    "specular": 0.2,
-                    "shininess": 4.0,
-                    "metalness": 0.5,
-                    "roughness": 0
-                },
-                "radius": 0.5
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
             }
-        ],
-        "planes" : [
-            {
-                "transform": {
-                    "pos": {
-                        "x": 0,
-                        "y": 0,
-                        "z": -1.3
-                    },
-                    "rotation": {
-                        "x": 0,
-                        "y": 0,
-                        "z": 0
-                    },
-                    "scale": {
-                        "x": 1,
-                        "y": 1,
-                        "z": 1
-                    }
-                },
-                "normal": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 1.0
-                },
-                "texture": {
-                    "texture_type": 1,
-                    "color": {
-                        "r": 255,
-                        "g": 255,
-                        "b": 255
-                    },
-                    "diffuse": 0.7,
-                    "ambient": 0.5,
-                    "specular": 0.2,
-                    "shininess": 4.0,
-                    "metalness": 0.5,
-                    "roughness": 0
-                }
-            }
-        ]
+          },
+          "color": {
+            "r": 100,
+            "g": 100,
+            "b": 255
+          },
+          "strength": 80.0,
+          "falloff": 2,
+          "radius": 1.0,
+          "visible": true
+        }
+      ]
     },
-    "lights": {
-        "objects": {
-            "point": [
-                {
-                    "transform": {
-                        "pos": {
-                            "x": 2,
-                            "y": 2,
-                            "z": 2
-                        },
-                        "rotation": {
-                            "x": 0,
-                            "y": 0,
-                            "z": 0
-                        },
-                        "scale": {
-                            "x": 1,
-                            "y": 1,
-                            "z": 1
-                        }
-                    },
-                    "color": {
-                        "r": 255,
-                        "g": 255,
-                        "b": 255
-                    },
-                    "strength": 40.0,
-                    "falloff": 2,
-                    "radius": 1.0,
-                    "visible": true
-                },
-                {
-                    "transform": {
-                        "pos": {
-                            "x": -5,
-                            "y": 20,
-                            "z": 0
-                        },
-                        "rotation": {
-                            "x": 0,
-                            "y": 0,
-                            "z": 0
-                        },
-                        "scale": {
-                            "x": 1,
-                            "y": 1,
-                            "z": 1
-                        }
-                    },
-                    "color": {
-                        "r": 100,
-                        "g": 100,
-                        "b": 255
-                    },
-                    "strength": 80.0,
-                    "falloff": 2,
-                    "radius": 1.0
-                }
-            ]
+    "ambient": [
+      {
+        "color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
         },
-        "ambient": [
-            {
-                "color": {
-                    "r": 255,
-                    "g": 255,
-                    "b": 255
-                },
-                "strength": 1.0
-            }
-        ]
-    }
+        "strength": 1.0
+      }
+    ]
+  }
 }

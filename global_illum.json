@@ -35,7 +35,7 @@
         "smooth_shadow_step": 64,
         "shadow_bias": 1e-13,
         "recursivity": 2,
-        "reflecion_samples": 1,
+        "reflection_samples": 1,
         "diffuse_samples": 50,
         "threads": 12,
         "progression": true
