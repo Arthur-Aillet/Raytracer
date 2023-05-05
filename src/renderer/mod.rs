@@ -11,16 +11,16 @@ mod lights;
 mod parsing;
 mod renderer_common;
 
+use crate::renderer::primitives::{Object, Intersection};
+use crate::renderer::lights::Light;
 use std::thread;
 use std::time;
 use std::sync::{Arc, Mutex};
-use crate::renderer::primitives::{Object, Intersection};
 use std::fs;
 use serde_json::Value;
 use camera::{Camera};
 use lights::Lights;
 use parsing::Parser;
-use crate::renderer::lights::Light;
 use crate::vectors::Vector;
 
 pub struct Renderer {
@@ -31,9 +31,9 @@ pub struct Renderer {
 
 impl Renderer {
 
-    pub fn new() -> Renderer {
+    pub fn new(height: i64, width: i64) -> Renderer {
         Renderer {
-            camera: Camera::default(),
+            camera: Camera::default(height, width),
             primitives: Vec::new(),
             lights: Lights {
                 lights: Vec::new(),
@@ -108,34 +108,56 @@ impl Renderer {
         found_intersection
     }
 
-    pub fn render_pixel(&self, x:i64, y:i64) -> [u8; 3] {
-        let mut pixel:[u8; 3] = [0; 3];
+    fn combine_pixel(&self, samples: &Vec::<Vector>) -> Vector {
+        let mut result: Vector = samples[0];
 
-        let camera_to_pixel = self.camera.get_pixel_vector(x, y);
-        let maybe_intersect = self.found_nearest_intersection(camera_to_pixel);
-        if let Some(intersect) = maybe_intersect {
-            let mut color = intersect.object.get_texture().color.as_vector() * self.camera.ambient * intersect.object.get_texture().ambient;
-            for light in self.lights.lights.iter() {
-                color = color + self.calculate_light(light, &intersect, camera_to_pixel);
-            }
-            pixel[0] = ((color.x).clamp(0.0, 1.0) * 255.0) as u8;
-            pixel[1] = ((color.y).clamp(0.0, 1.0) * 255.0) as u8;
-            pixel[2] = ((color.z).clamp(0.0, 1.0) * 255.0) as u8;
-        } else {
-            let color_a = Vector {x: 0.0, y: 212.0, z: 255.0} * (1.0/255.0);
-            let color_b = Vector {x: 2.0, y: 0.0, z: 36.0} * (1.0/255.0);
-            let percent = y as f64 / self.camera.lens.height as f64;
-            let result = color_a + (color_b - color_a) * percent as f64;
-            pixel[0] = (result.x * 255.0 as f64) as u8;
-            pixel[1] = (result.y * 255.0 as f64) as u8;
-            pixel[2] = (result.z * 255.0 as f64) as u8;
+        for i in 1..samples.len() {
+            result = ((result * (i - 1) as f64) + (samples[i])) / i as f64;
         }
-        pixel
+        result
+    }
+
+    fn check_pixels_proximity(&self, samples: &Vec<Vector>) -> bool {
+        let px: Vector = self.combine_pixel(samples);
+        for i in 0..samples.len() {
+            if (((
+                    samples[i].x as i16 - px.x as i16) +
+                    (samples[i].y as i16 - px.y as i16) +
+                    (samples[i].z as i16 - px.y as i16)) as i64).abs() > self.camera.super_sampling_precision as i64 {
+                return false
+            }
+        }
+        true
+    }
+
+    pub fn render_pixel(&self, x:i64, y:i64) -> Vector {
+        let mut samples : Vec<Vector> = Vec::new();
+
+        let mut camera_to_pixel_vector = self.camera.get_pixel_vectors(x, y, self.camera.super_sampling);
+        for i in 0..camera_to_pixel_vector.len() {
+            let maybe_intersect = self.found_nearest_intersection(camera_to_pixel_vector[i as usize]);
+            if let Some(intersect) = maybe_intersect {
+                let mut color = intersect.object.get_texture().color.as_vector() * self.camera.ambient * intersect.object.get_texture().ambient;
+                for light in self.lights.lights.iter() {
+                    color = color + self.calculate_light(light, &intersect, camera_to_pixel_vector[i as usize]);
+                }
+                samples.push(color);
+            } else {
+                let color_a = Vector {x: 0.0, y: 212.0, z: 255.0} * (1.0/255.0);
+                let color_b = Vector {x: 2.0, y: 0.0, z: 36.0} * (1.0/255.0);
+                let percent = y as f64 / self.camera.lens.height as f64;
+                samples.push(color_a + (color_b - color_a) * percent as f64);
+            }
+            if self.camera.super_sampling > 4 && i == 3 && self.check_pixels_proximity(&samples) {
+                for _ in 4..self.camera.super_sampling {camera_to_pixel_vector.push(self.camera.get_random_pixel_vector(x, y))}
+            }
+        }
+        self.combine_pixel(&samples)
     }
 
     pub fn naive_thread_renderer(&self, pixel_states:Arc<Mutex<Vec<bool>>>, pixels:Arc<Mutex<Vec<u8>>>, progression:Arc<Mutex<u64>>) {
         //println!("thread {id:?} started");
-        let mut calculated_pixel: [u8; 3]; // variable où sera stockée un pixel tout juste calculé
+        let mut calculated_pixel: Vector; // variable où sera stockée un pixel tout juste calculé
         let mut pixel_id: usize;
         let mut line_state_id: usize;
 
@@ -154,13 +176,13 @@ impl Renderer {
                 pixel_id = (j * 3) as usize;
                 calculated_pixel = self.render_pixel(j, i);
 
-                local_pixel_line[pixel_id + 0] = calculated_pixel[0];
-                local_pixel_line[pixel_id + 1] = calculated_pixel[1];
-                local_pixel_line[pixel_id + 2] = calculated_pixel[2];
+                local_pixel_line[pixel_id + 0] = (calculated_pixel.x.clamp(0.0, 1.0) * 255.0) as u8;
+                local_pixel_line[pixel_id + 1] = (calculated_pixel.y.clamp(0.0, 1.0) * 255.0) as u8;
+                local_pixel_line[pixel_id + 2] = (calculated_pixel.z.clamp(0.0, 1.0) * 255.0) as u8;
             }
             let mut locked_pixels = pixels.lock().unwrap(); // lock
             for k in 0..(self.camera.lens.width * 3) {
-                pixel_id = ((k + (i * self.camera.lens.width * 3))) as usize;
+                pixel_id = (k + (i * self.camera.lens.width * 3)) as usize;
                 locked_pixels[pixel_id as usize] = local_pixel_line[k as usize];
             }
 
@@ -171,25 +193,26 @@ impl Renderer {
         }
     }
 
-    pub fn print_progresion(&self, progression:Arc<Mutex<u64>>, buf_step: u64) {
+    pub fn print_progression(&self, progression:Arc<Mutex<u64>>, buf_step: u64) {
         let mut last_progression:u64 = 0;
 
-            while last_progression as u64 != self.camera.lens.height as u64 {
-                thread::sleep(time::Duration::from_millis(1000));
-                let locked_progression = progression.lock().unwrap();
-                print!("rendered [");
-                for _i in 0..(((*locked_progression + (self.camera.lens.height as u64 * buf_step)) * 100) / (self.camera.lens.height as u64 * self.camera.image_buffer_size)) {
-                    print!("#");
-                }
-                for _i in 0..(100 - (((*locked_progression  + (self.camera.lens.height as u64 * buf_step)) * 100) / (self.camera.lens.height as u64 * self.camera.image_buffer_size))) {
-                    print!(" ");
-                }
-                println!("] {:?}/{:?}\r", (*locked_progression  + (self.camera.lens.height as u64 * buf_step)), (self.camera.lens.height as u64 * self.camera.image_buffer_size));
-                last_progression = *locked_progression;
+        while last_progression as u64 != self.camera.lens.height as u64 {
+            thread::sleep(time::Duration::from_millis(1000));
+            let locked_progression = progression.lock().unwrap();
+            print!("rendered [");
+            for _i in 0..(((*locked_progression + (self.camera.lens.height as u64 * buf_step)) * 100) / (self.camera.lens.height as u64 * self.camera.image_buffer_size)) {
+                print!("#");
             }
+            for _i in 0..(100 - (((*locked_progression  + (self.camera.lens.height as u64 * buf_step)) * 100) / (self.camera.lens.height as u64 * self.camera.image_buffer_size))) {
+                print!(" ");
+            }
+            println!("] {:?}/{:?}\r", (*locked_progression  + (self.camera.lens.height as u64 * buf_step)), (self.camera.lens.height as u64 * self.camera.image_buffer_size));
+            last_progression = *locked_progression;
         }
-        
-        pub fn render(&self) -> Vec<u8> {
+    }
+
+
+    pub fn render(&self) -> Vec<u8> {
         let mut result: Vec<u8> = Vec::new();
         for n in 0..self.camera.image_buffer_size {
             let pixels:Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize]));
@@ -206,7 +229,7 @@ impl Renderer {
                 }
 
                 if self.camera.progression == true {
-                    self.print_progresion(progression, n);
+                    self.print_progression(progression, n);
                 }
 
             });
@@ -224,15 +247,14 @@ impl Renderer {
         result
     }
 
-    pub fn get_renderer_from_file(file: String) -> Renderer {
+    pub fn get_renderer_from_file(file: String, height: i64, width: i64) -> Renderer {
         let data = fs::read_to_string(file).expect("Unable to read file");
         let json: Value = serde_json::from_str(&data.to_string()).unwrap();
         let parser = Parser{};
         Renderer {
-            camera: if json["camera"].is_object() {parser.get_camera_from_json(&json["camera"])} else {Camera::default()},
+            camera: if json["camera"].is_object() {parser.get_camera_from_json(&json["camera"], height, width)} else {Camera::default(height, width)},
             primitives: if json["primitives"].is_object() {parser.get_objects_from_json(&json["primitives"])} else {Vec::new()},
             lights: if json["lights"].is_object() {parser.get_lights_from_json(&json["lights"])} else {Lights::default()},
         }
     }
-
 }
