@@ -216,8 +216,8 @@
     },
     "scenes": [
         {
-            "file": "recursb.json",
-            "transform": {
+        "file": "recursa.json",
+        "transform": {
                 "pos": {
                     "x": 2,
                     "y": 0,
@@ -236,8 +236,8 @@
             }
         },
         {
-        "file": "recursb.json",
-        "transform": {
+            "file": "recursb.json",
+            "transform": {
                 "pos": {
                     "x": -2,
                     "y": 0,
