@@ -37,7 +37,7 @@ fn update(_app: &App, _model: &mut Model, _update: Update) {}
 
 fn view(app: &App, model: &Model, frame: Frame) {
     let mut renderer: Renderer =
-        Renderer::get_renderer_from_file(&model.config.config_file, &model.config);
+        Renderer::get_renderer_from_file(&model.config);
 
     let pixels = renderer.render();
     let mut index = 0;

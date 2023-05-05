@@ -35,7 +35,7 @@ fn print_help() {
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
     let config = config::Config::from_args(&args);
-    let mut renderer: Renderer = Renderer::get_renderer_from_file(&config.config_file, &config);
+    let mut renderer: Renderer = Renderer::get_renderer_from_file(&config);
 
     if config.help {
         print_help();
