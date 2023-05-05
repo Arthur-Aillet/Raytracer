@@ -225,5 +225,4 @@ impl Renderer {
             lights: if json["lights"].is_object() {parser.get_lights_from_json(&json["lights"])} else {Lights::default()},
         }
     }
-
 }

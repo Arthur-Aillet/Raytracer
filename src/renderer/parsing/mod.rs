@@ -213,5 +213,4 @@ impl Parser {
             ambient: self.get_ambients_from_json(&json),
         }
     }
-
 }
