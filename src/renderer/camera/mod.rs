@@ -44,6 +44,7 @@ pub struct Camera {
     pub ambient: f64,
     pub specular: f64,
     pub shadow_bias: f64,
+    pub aces_tone_mapping: bool,
     pub threads: u64,
     pub progression: bool
 }
@@ -60,6 +61,7 @@ impl Camera {
             ambient: 0.3,
             specular: 0.3,
             shadow_bias: 1e-14,
+            aces_tone_mapping: true,
             threads: 8,
             progression: false
         };
@@ -85,12 +87,17 @@ impl Camera {
         self.lens.distance = (self.lens.width as f64 / 2.0) / (self.fov as f64 / 2.0).to_radians().tan();
     }
 
-    pub fn calculate_tone_mapping(val: f64) -> f64{
-        let a = 2.51;
-        let b = 0.03;
-        let c = 2.43;
-        let d = 0.59;
-        let e = 0.14;
-        ((val * (a * val + b))/(val * (c * val + d) + e)).clamp(0.0, 1.0)
+    pub fn aces_curve(self, val: f64) -> f64 {
+        if self.aces_tone_mapping {
+            let a = 2.51;
+            let b = 0.03;
+            let c = 2.43;
+            let d = 0.59;
+            let e = 0.14;
+
+            ((val * (a * val + b))/(val * (c * val + d) + e)).clamp(0.0, 1.0)
+        } else {
+            val.clamp(0.0, 1.0)
+        }
     }
 }
