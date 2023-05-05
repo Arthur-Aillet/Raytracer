@@ -65,7 +65,7 @@ impl Object for Sphere {
         let diff = origin - self.transform.pos;
         let result = resolve_quadratic_equation(ray.dot_product(ray), // could be 1 if normalized
                                                 2.0 * (ray.dot_product(diff)),
-                                                (diff.dot_product(diff)) - self.radius.powi(2));
+                                                (diff.dot_product(diff)) - (self.radius * self.transform.scale.x).powi(2));
 
         let smallest_result: Option<&f64> = result.iter().filter(|number| **number > 0.0).min_by(|a, b| a.partial_cmp(b).unwrap());
 
@@ -96,7 +96,8 @@ impl Object for Sphere {
 
 impl Object for Plane {
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
-        let normal = self.normal.normalize();
+        let mut normal = self.normal.normalize();
+        normal.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
         let denom = ray.normalize().dot_product(normal);
         if denom == 0.0 {
             return None
