@@ -38,7 +38,11 @@ impl Parser {
             height: height,
             width: width,
             distance: json["distance"].as_f64().unwrap_or(0.0),
-            vector_to_first_pixel: if json["vector_to_first_pixel"].is_object() {self.get_vector_from_json(&json["vector_to_first_pixel"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
+            vector_to_first_pixel: Vector {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
         }
     }
 
