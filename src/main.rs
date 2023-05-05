@@ -20,7 +20,6 @@ fn main() -> std::io::Result<()> {
     let height = 1080;
     let width = 1920;
     let renderer : Renderer = Renderer::get_renderer_from_file(String::from(args[2].clone())).unwrap_or(Renderer::new());
-    // print!("{}\n", serde_json::to_string_pretty(&renderer).unwrap()); <---- put that in the json
     ppm.write(width, height, renderer.render());
     Ok(())
 }

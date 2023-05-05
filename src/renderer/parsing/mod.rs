@@ -13,7 +13,7 @@ use super::camera::{Lens, Camera};
 use super::primitives::{Sphere, Plane, Cylinder, Cone, Object};
 use super::lights::{Point, Ambient, Light, Lights};
 use super::renderer_common::{Transform, Color, Texture};
-use std::fs;
+use std::{fs, path};
 
 pub struct Parser {
 }
@@ -241,11 +241,17 @@ impl Parser {
         renderer.lights.ambient.extend(if json["lights"]["ambiant"].is_object() {self.get_ambients_from_json(&json["lights"]["ambiant"])} else {Vec::new()});
     }
 
-    fn get_scenes_from_json(&self, renderer: &mut Renderer, json: &Value) {
+    fn get_scenes_from_json(&self, renderer: &mut Renderer, json: &Value, path_taken: &mut Vec<String>) {
         if json["scenes"].is_array() {
             for scene in json["scenes"].as_array().unwrap().iter() {
                 if scene["file"].is_string() && self.get_json(&scene["file"].as_str().unwrap().to_string()).is_some() {
-                    self.get_scene_from_json(renderer, &self.get_json(&scene["file"].as_str().unwrap().to_string()).unwrap(), if scene["transform"].is_object() {self.get_transform_from_json(&scene["transform"])} else {Transform::default()});
+                    let scene_json = self.get_json(&scene["file"].as_str().unwrap().to_string()).unwrap();
+                    self.get_scene_from_json(renderer, &scene_json, if scene["transform"].is_object() {self.get_transform_from_json(&scene["transform"])} else {Transform::default()});
+                    if path_taken.contains(&scene["file"].as_str().unwrap().to_string()) == false {
+                        path_taken.push(scene["file"].as_str().unwrap().to_string());
+                        self.get_scenes_from_json(renderer, &scene_json, path_taken);
+                        path_taken.pop();
+                    }
                 }
             }
         }
@@ -257,7 +263,7 @@ impl Parser {
             primitives: if json["primitives"].is_object() {self.get_objects_from_json(&json["primitives"])} else {Vec::new()},
             lights: if json["lights"].is_object() {self.get_lights_from_json(&json["lights"])} else {Lights::default()},
         };
-        self.get_scenes_from_json(&mut renderer, json);
+        self.get_scenes_from_json(&mut renderer, json, &mut Vec::new());
         renderer
     }
 
