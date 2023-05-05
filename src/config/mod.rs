@@ -12,6 +12,7 @@ pub struct Config {
     pub config_file: String,
     pub graphic: bool,
     pub fast_mode: bool,
+    pub help: bool,
 }
 
 impl Config {
@@ -22,11 +23,12 @@ impl Config {
             save_file: String::from("scene_example.ppm"),
             config_file: String::from("example.json"),
             graphic: false,
-            fast_mode: false
+            fast_mode: false,
+            help: false,
         }
     }
 
-    fn get_flag(args: &[String], flag: &str) -> Option<String> {
+    fn get_flag_content(args: &[String], flag: &str) -> Option<String> {
         for (i, arg) in args.iter().enumerate() {
             if arg == flag {
                 if i + 1 < args.len() {
@@ -39,39 +41,51 @@ impl Config {
         None
     }
 
+    fn is_flag(args: &[String], flag: &str) -> bool {
+        for arg in args.iter() {
+            if arg == flag {
+                return true;
+            }
+        }
+        false
+    }
+
     pub fn from_args(args: &[String]) -> Config {
         let mut config = Config::new();
 
-        if let Some(width) = Config::get_flag(args, "-w") {
+        if let Some(width) = Config::get_flag_content(args, "-w") {
             config.width = width.parse().unwrap_or(config.width);
         }
-        if let Some(height) = Config::get_flag(args, "-h") {
+        if let Some(height) = Config::get_flag_content(args, "-h") {
             config.height = height.parse().unwrap_or(config.height);
         }
-        if let Some(save_file) = Config::get_flag(args, "-s") {
+        if let Some(save_file) = Config::get_flag_content(args, "-s") {
             config.save_file = save_file;
         }
-        if let Some(config_file) = Config::get_flag(args, "-j") {
+        if let Some(config_file) = Config::get_flag_content(args, "-j") {
             config.config_file = config_file;
         }
-        if Config::get_flag(args, "-g").is_some() {
+        if Config::is_flag(args, "-g") {
             config.graphic = true;
         }
-        if Config::get_flag(args, "-f").is_some() {
+        if Config::is_flag(args, "-f") {
             config.fast_mode = true;
+        }
+        if Config::is_flag(args, "--help") {
+            config.help = true;
         }
         return config;
     }
 
     pub fn print(&self) {
-        println!("---------------------------------");
-        println!("Config:");
-        println!("\twidth:\t\t{}", self.width);
-        println!("\theight:\t\t{}\n", self.height);
-        println!("\tsave_file:\t{}", self.save_file);
-        println!("\tconfig_file:\t{}\n", self.config_file);
-        println!("\tgraphic:\t{}", self.graphic);
-        println!("\tfast_mode:\t{}", self.fast_mode);
-        println!("---------------------------------");
+        println!("+--------------------------------]");
+        println!("| Config:");
+        println!("|\twidth:\t\t{}", self.width);
+        println!("|\theight:\t\t{}\n|", self.height);
+        println!("|\tsave_file:\t{}", self.save_file);
+        println!("|\tconfig_file:\t{}\n|", self.config_file);
+        println!("|\tgraphic:\t{}", self.graphic);
+        println!("|\tfast_mode:\t{}", self.fast_mode);
+        println!("+----------------------------------------------]");
     }
 }
