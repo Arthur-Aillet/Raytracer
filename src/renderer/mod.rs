@@ -11,6 +11,7 @@ mod lights;
 mod parsing;
 mod renderer_common;
 
+use rand::Rng;
 use crate::renderer::primitives::{Object, Intersection};
 use crate::renderer::lights::Light;
 use std::thread;
@@ -22,6 +23,7 @@ use camera::{Camera};
 use lights::Lights;
 use parsing::Parser;
 use crate::vectors::Vector;
+
 
 pub struct Renderer {
     pub camera: Camera,
@@ -56,7 +58,7 @@ impl Renderer {
         false
     }
 
-    fn calculate_light(&self, light: &Box<dyn Light  + Send + Sync>, intersect: &Intersection, camera_to_pixel: Vector) -> Vector {
+    fn calculate_light(&self, light: &Box<dyn Light  + Send + Sync>, intersect: &Intersection, ray: Vector) -> Vector {
         let normal_vector = intersect.normal.normalize();
         let light_vector = (light.get_transform().pos - intersect.intersection_point).normalize();
         let mut light_uncovered = 1.0;
@@ -79,26 +81,41 @@ impl Renderer {
             }
             light_uncovered = light_reached as f64 / self.camera.smooth_shadow_step as f64;
         }
-        let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * intersect.object.get_texture().diffuse;
+        let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * intersect.object.unwrap().get_texture().diffuse;
 
         let reflected = light_vector.reflect(normal_vector).normalize();
-        let view = (camera_to_pixel * -1.0).normalize();
-        let specular = self.camera.specular * intersect.object.get_texture().specular * reflected.dot_product(view).max(0.0).powf(intersect.object.get_texture().shininess);
+        let view = (ray * -1.0).normalize();
+        let specular = self.camera.specular * intersect.object.unwrap().get_texture().specular * reflected.dot_product(view).max(0.0).powf(intersect.object.unwrap().get_texture().shininess);
         let distance = intersect.intersection_point.distance(light.get_transform().pos);
         let light_falloff = (light.get_strength() / distance.powi(light.get_falloff())).max(0.0);
-        intersect.object.get_texture().color.as_vector() * light.get_color().as_vector() * diffuse * light_falloff * light_uncovered + light.get_color().as_vector() * specular * light_falloff * light_uncovered
+        intersect.object.unwrap().get_texture().color.as_vector() * light.get_color().as_vector() * diffuse * light_falloff * light_uncovered + light.get_color().as_vector() * specular * light_falloff * light_uncovered
     }
 
-    fn found_nearest_intersection(&self, camera_to_pixel: Vector) -> Option<Intersection> {
+    fn found_nearest_intersection(&self, origin: Vector, ray: Vector) -> Option<Intersection> {
         let mut found_intersection: Option<Intersection> = None;
         let mut smallest_distance: f64 = f64::INFINITY;
 
          for object in self.primitives.iter() {
-            let intersect = object.intersection(camera_to_pixel, self.camera.transform.pos);
+            let intersect = object.intersection(ray, origin);
 
             if intersect.is_some() {
                 let inters = intersect.unwrap();
-                let distance_found = (inters.intersection_point - self.camera.transform.pos).len();
+                let distance_found = (inters.intersection_point - origin).len();
+                if distance_found < smallest_distance {
+                    smallest_distance = distance_found;
+                    found_intersection = Some(inters);
+                }
+            }
+        }
+        for light in self.lights.lights.iter() {
+            if light.get_visible() == false {
+                continue;
+            }
+            let intersect = light.intersection(ray, origin);
+
+            if intersect.is_some() {
+                let inters = intersect.unwrap();
+                let distance_found = (inters.intersection_point - origin).len();
                 if distance_found < smallest_distance {
                     smallest_distance = distance_found;
                     found_intersection = Some(inters);
@@ -108,6 +125,19 @@ impl Renderer {
         found_intersection
     }
 
+    fn get_ambient<'a>(&self, object :&'a dyn Object) -> Vector {
+        let mut self_color = Vector{
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        };
+
+        for ambient in self.lights.ambient.iter() {
+            self_color = self_color + object.get_texture().color.as_vector() * object.get_texture().ambient * ambient.color.as_vector() * ambient.strength * self.camera.ambient;
+        }
+        self_color
+    }
+
     fn combine_pixel(&self, samples: &Vec::<Vector>) -> Vector {
         let mut result: Vector = samples[0];
 
@@ -115,6 +145,47 @@ impl Renderer {
             result = ((result * (i - 1) as f64) + (samples[i])) / i as f64;
         }
         result
+    }
+
+    fn get_color_from_ray(&self, origin: Vector, ray: Vector, recursivity: i64) -> Vector {
+        if recursivity == 0 {
+            return Vector {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            }
+        }
+        let maybe_intersect = self.found_nearest_intersection(origin, ray);
+
+        if let Some(intersect) = maybe_intersect {
+            if let Some(light_touched) = intersect.light {
+                return light_touched.get_color().as_vector();
+            }
+            let mut self_color = self.get_ambient(intersect.object.unwrap());
+
+            for light in self.lights.lights.iter() {
+                self_color = self_color + self.calculate_light(light, &intersect, ray);
+            }
+            let surface_point = intersect.intersection_point + intersect.normal * self.camera.shadow_bias;
+
+            self_color = self_color * (1.0 - intersect.object.unwrap().get_texture().metalness);
+            let samples_nbr = 1.0 + self.camera.reflection_samples as f64 * intersect.object.unwrap().get_texture().roughness;
+            for _ in 0..samples_nbr as i32 {
+                let mut rng = rand::thread_rng();
+                let mut reflection_ray = (ray.normalize() - intersect.normal.normalize() * 2.0 * intersect.normal.dot_product(ray.normalize())).normalize();
+                if intersect.object.unwrap().get_texture().roughness != 0.0 {
+                    reflection_ray.rotate(rng.gen_range(0.0..90.0 * intersect.object.unwrap().get_texture().roughness), 0.0, rng.gen_range(0.0..360.0));
+                }
+                self_color = self_color + self.get_color_from_ray(surface_point, reflection_ray, recursivity - 1) * intersect.object.unwrap().get_texture().metalness * (1.0 / samples_nbr as f64);
+            }
+            self_color
+        } else {
+            Vector {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            }
+        }
     }
 
     fn check_pixels_proximity(&self, samples: &Vec<Vector>) -> bool {
@@ -135,19 +206,8 @@ impl Renderer {
 
         let mut camera_to_pixel_vector = self.camera.get_pixel_vectors(x, y, self.camera.super_sampling);
         for i in 0..camera_to_pixel_vector.len() {
-            let maybe_intersect = self.found_nearest_intersection(camera_to_pixel_vector[i as usize]);
-            if let Some(intersect) = maybe_intersect {
-                let mut color = intersect.object.get_texture().color.as_vector() * self.camera.ambient * intersect.object.get_texture().ambient;
-                for light in self.lights.lights.iter() {
-                    color = color + self.calculate_light(light, &intersect, camera_to_pixel_vector[i as usize]);
-                }
-                samples.push(color);
-            } else {
-                let color_a = Vector {x: 0.0, y: 212.0, z: 255.0} * (1.0/255.0);
-                let color_b = Vector {x: 2.0, y: 0.0, z: 36.0} * (1.0/255.0);
-                let percent = y as f64 / self.camera.lens.height as f64;
-                samples.push(color_a + (color_b - color_a) * percent as f64);
-            }
+            samples.push(self.get_color_from_ray(self.camera.transform.pos, camera_to_pixel_vector[i], self.camera.recursivity));
+
             if self.camera.super_sampling > 4 && i == 3 && self.check_pixels_proximity(&samples) {
                 for _ in 4..self.camera.super_sampling {camera_to_pixel_vector.push(self.camera.get_random_pixel_vector(x, y))}
             }
@@ -176,9 +236,9 @@ impl Renderer {
                 pixel_id = (j * 3) as usize;
                 calculated_pixel = self.render_pixel(j, i);
 
-                local_pixel_line[pixel_id + 0] = (calculated_pixel.x.clamp(0.0, 1.0) * 255.0) as u8;
-                local_pixel_line[pixel_id + 1] = (calculated_pixel.y.clamp(0.0, 1.0) * 255.0) as u8;
-                local_pixel_line[pixel_id + 2] = (calculated_pixel.z.clamp(0.0, 1.0) * 255.0) as u8;
+                local_pixel_line[pixel_id + 0] = (self.camera.aces_curve(calculated_pixel.x).powf(1.0/2.2) * 255.0) as u8;
+                local_pixel_line[pixel_id + 1] = (self.camera.aces_curve(calculated_pixel.y).powf(1.0/2.2) * 255.0) as u8;
+                local_pixel_line[pixel_id + 2] = (self.camera.aces_curve(calculated_pixel.z).powf(1.0/2.2) * 255.0) as u8;
             }
             let mut locked_pixels = pixels.lock().unwrap(); // lock
             for k in 0..(self.camera.lens.width * 3) {
@@ -210,7 +270,6 @@ impl Renderer {
             last_progression = *locked_progression;
         }
     }
-
 
     pub fn render(&self) -> Vec<u8> {
         let mut result: Vec<u8> = Vec::new();

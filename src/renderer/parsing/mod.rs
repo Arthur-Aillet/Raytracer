@@ -45,6 +45,8 @@ impl Parser {
             specular: json["specular"].as_f64().unwrap_or(0.6),
             shadow_bias: json["shadow_bias"].as_f64().unwrap_or(1e-14),
             aces_tone_mapping: json["aces_tone_mapping"].as_bool().unwrap_or(true),
+            recursivity: json["recursivity"].as_i64().unwrap_or(5),
+            reflection_samples: json["reflection_samples"].as_i64().unwrap_or(5),
             threads: json["threads"].as_u64().unwrap_or(8),
             progression: json["progression"].as_bool().unwrap_or(false),
             super_sampling: json["super_sampling"].as_u64().unwrap_or(1),
@@ -80,7 +82,9 @@ impl Parser {
             diffuse: json["diffuse"].as_f64().unwrap_or(0.7),
             ambient: json["ambient"].as_f64().unwrap_or(0.1),
             specular: json["specular"].as_f64().unwrap_or(0.4),
+            metalness: json["metalness"].as_f64().unwrap_or(0.1),
             shininess: json["shininess"].as_f64().unwrap_or(4.0),
+            roughness: json["roughness"].as_f64().unwrap_or(0.25),
         }
     }
 
@@ -155,6 +159,7 @@ impl Parser {
     pub fn get_point_from_json(&self, json: &Value) -> Box::<Point> {
         Box::new(
             Point {
+                visible: json["visible"].as_bool().unwrap_or(false),
                 transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
                 color: if json["color"].is_object() {self.get_color_from_json(&json["color"])} else {Color::default()},
                 strength: json["strength"].as_f64().unwrap_or(80.0),
@@ -178,7 +183,7 @@ impl Parser {
     pub fn get_ambient_from_json(&self, json: &Value) -> Ambient {
         let color_val: Color;
 
-        if json["color"].is_object() {color_val = self.get_color_from_json(&json["transform"]);}
+        if json["color"].is_object() {color_val = self.get_color_from_json(&json["color"]);}
         else {color_val = Color::default();}
         Ambient {
             color: color_val,
@@ -207,5 +212,4 @@ impl Parser {
             ambient: self.get_ambients_from_json(&json),
         }
     }
-
 }
