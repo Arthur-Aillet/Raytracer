@@ -17,23 +17,16 @@
         "z": 1
       }
     },
-    "lens" : {
-      "distance": 0,
-      "vector_to_first_pixel": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      }
-    },
     "fov": 90,
     "diffuse": 0.8,
     "ambient": 0.5,
     "specular": 0.3,
     "smooth_shadow": true,
-    "smooth_shadow_step": 200,
+    "smooth_shadow_step": 32,
     "shadow_bias": 1e-13,
     "threads": 8,
-    "progression": true
+    "progression": true,
+    "super_sampling": 8
   },
   "primitives": {
     "spheres": [

@@ -8,7 +8,7 @@
 use std::f64::consts::PI;
 use crate::matrix;
 use matrix::Matrix;
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, Mul, Sub, Div};
 use rand::Rng;
 
 #[derive(Debug, Clone, Copy)]
@@ -64,6 +64,17 @@ impl Mul<Vector> for Vector {
             x: self.x * other.x,
             y: self.y * other.y,
             z: self.z * other.z,
+        }
+    }
+}
+
+impl Div<f64> for Vector {
+    type Output = Vector;
+    fn div(self, other: f64) -> Vector {
+        Vector {
+            x: self.x / other,
+            y: self.y / other,
+            z: self.z / other,
         }
     }
 }

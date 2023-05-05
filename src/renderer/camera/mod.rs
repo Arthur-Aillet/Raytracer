@@ -6,6 +6,7 @@
 //
 
 use crate::vectors;
+use rand::Rng;
 
 use super::renderer_common::Transform;
 use vectors::Vector;
@@ -19,10 +20,10 @@ pub struct Lens {
 }
 
 impl Lens  {
-    pub fn default() -> Lens {
+    pub fn default(height: i64, width: i64) -> Lens {
         Lens {
-            height: 1080,
-            width: 1920,
+            height,
+            width,
             distance : 0.0,
             vector_to_first_pixel: Vector {
                 x: 0.0,
@@ -46,14 +47,16 @@ pub struct Camera {
     pub shadow_bias: f64,
     pub aces_tone_mapping: bool,
     pub threads: u64,
-    pub progression: bool
+    pub progression: bool,
+    pub super_sampling: u64,
+    pub super_sampling_precision: u64,
 }
 
 impl Camera {
-    pub fn default() -> Camera {
+    pub fn default(height: i64, width: i64) -> Camera {
         let mut camera = Camera {
             transform: Transform::default(),
-            lens: Lens::default(),
+            lens: Lens::default(height, width),
             fov: 60,
             smooth_shadow: false,
             smooth_shadow_step: 0,
@@ -63,7 +66,9 @@ impl Camera {
             shadow_bias: 1e-14,
             aces_tone_mapping: true,
             threads: 8,
-            progression: false
+            progression: false,
+            super_sampling: 5,
+            super_sampling_precision: 10,
         };
         camera.calculate_lens_distance();
         let vector_director = Vector {x: 0.0, y: camera.lens.distance, z: 0.0};
@@ -74,13 +79,39 @@ impl Camera {
         camera
     }
 
-    pub fn get_pixel_vector(&self, x: i64, y: i64) -> Vector {
+
+    pub fn get_random_pixel_vector(&self, x: i64, y: i64) -> Vector {
+        let mut rng = rand::thread_rng();
         let mut pixel_vector = self.lens.vector_to_first_pixel.clone();
 
-        pixel_vector = pixel_vector + Vector {x:1.0, y:0.0, z:0.0} * x as f64;
-        pixel_vector = pixel_vector + Vector {x:0.0, y:0.0, z:-1.0} * y as f64;
+        pixel_vector = pixel_vector + Vector {x: 1.0, y:0.0, z:0.0} * (x as f64 + rng.gen_range(0.0..1.0) - 0.5);
+        pixel_vector = pixel_vector + Vector {x:0.0, y:0.0, z: -1.0} * (y as f64 + rng.gen_range(0.0..1.0) - 0.5);
         pixel_vector.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
         pixel_vector.normalize()
+    }
+
+    fn get_pixel_vector(&self, x: f64, y: f64) -> Vector {
+        let mut _rng = rand::thread_rng();
+        let mut pixel_vector = self.lens.vector_to_first_pixel.clone();
+
+        pixel_vector = pixel_vector + Vector {x: 1.0, y:0.0, z:0.0} * x;
+        pixel_vector = pixel_vector + Vector {x:0.0, y:0.0, z: -1.0} * y;
+        pixel_vector.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        pixel_vector.normalize()
+    }
+
+    pub fn get_pixel_vectors(&self, x: i64, y: i64, n: u64) -> Vec::<Vector> {
+        let mut result : Vec::<Vector> = Vec::new();
+
+        if n <= 1 {result.push(self.get_pixel_vector(x as f64, y as f64))}
+        if n >= 2 && n <= 4 {for _i in 0..n {result.push(self.get_random_pixel_vector(x, y));}}
+        if n > 4 {
+            result.push(self.get_pixel_vector(x as f64 - 0.5, y as f64 - 0.5,));
+            result.push(self.get_pixel_vector(x as f64 - 0.5, y as f64 + 0.5,));
+            result.push(self.get_pixel_vector(x as f64 + 0.5, y as f64 - 0.5,));
+            result.push(self.get_pixel_vector(x as f64 + 0.5, y as f64 + 0.5,));
+        }
+        result
     }
 
     pub(crate) fn calculate_lens_distance(&mut self) {

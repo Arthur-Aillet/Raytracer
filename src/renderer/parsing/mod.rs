@@ -33,23 +33,10 @@ impl Parser {
         }
     }
 
-    pub fn get_lens_from_json(&self, json: &Value, height: i64, width: i64) -> Lens {
-        Lens {
-            height: height,
-            width: width,
-            distance: json["distance"].as_f64().unwrap_or(0.0),
-            vector_to_first_pixel: Vector {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            },
-        }
-    }
-
     pub fn get_camera_from_json(&self, json: &Value, height: i64, width: i64) -> Camera {
         let mut camera = Camera {
             transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
-            lens: if json["lens"].is_object() {self.get_lens_from_json(&json["lens"], height, width)} else {Lens::default()},
+            lens: Lens::default(height, width),
             fov: json["fov"].as_i64().unwrap_or(60),
             smooth_shadow: json["smooth_shadow"].as_bool().unwrap_or(true),
             smooth_shadow_step: json["smooth_shadow_step"].as_i64().unwrap_or(50) as i16,
@@ -59,7 +46,9 @@ impl Parser {
             shadow_bias: json["shadow_bias"].as_f64().unwrap_or(1e-14),
             aces_tone_mapping: json["aces_tone_mapping"].as_bool().unwrap_or(true),
             threads: json["threads"].as_u64().unwrap_or(8),
-            progression: json["progression"].as_bool().unwrap_or(false)
+            progression: json["progression"].as_bool().unwrap_or(false),
+            super_sampling: json["super_sampling"].as_u64().unwrap_or(1),
+            super_sampling_precision: json["super_sampling_precision"].as_u64().unwrap_or(10),
         };
         camera.calculate_lens_distance();
         let vector_director = Vector {x: 0.0, y: camera.lens.distance, z: 0.0};
