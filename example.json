@@ -30,7 +30,7 @@
         "ambient": 0.5,
         "specular": 0.3,
         "smooth_shadow": true,
-        "smooth_shadow_step": 5,
+        "smooth_shadow_step": 50,
         "shadow_bias": 1e-13,
         "aces_tone_mapping": true,
         "threads": 8,
