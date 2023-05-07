@@ -120,6 +120,33 @@ impl Object for Plane {
     fn set_normal(&mut self, new: Vector) {self.normal = new}
 }
 
+impl Cylinder {
+    fn base_intersection(&self, ray: Vector, origin: Vector, normal: Vector, center: Vector) -> Option<Intersection> {
+        let denom = ray.normalize().dot_product(normal);
+        if denom == 0.0 {
+            return None
+        }
+        let progress = (center - origin).dot_product(normal) / denom;
+        if progress < 0.0 {
+            return None
+        }
+        Some ( Intersection {
+            intersection_point: Vector{
+                x: origin.x + ray.x * progress,
+                y: origin.y + ray.y * progress,
+                z: origin.z + ray.z * progress
+            },
+            normal,
+            object: Some(self),
+            light: None,
+        })
+    }
+
+    fn top_intersection(&self) -> Option<Intersection> {
+        None
+    }
+}
+
 impl Object for Cylinder {
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
         /*
@@ -139,51 +166,63 @@ impl Object for Cylinder {
             z: 1.0,
         };
         axis.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
-        axis = axis.normalize();
-        let distance = origin - (self.transform.pos - axis * (self.height / 2.0));
+        let base = self.transform.pos - axis * (self.height / 2.0);
+        let top = self.transform.pos + axis * (self.height / 2.0);
+        let h = top - base;
+        let distance = origin - base;
 
         //println!("{:?}", distance);
         let a = ray.dot_product(ray) - (ray.dot_product(axis)).powi(2);
         let b = 2.0 * (ray.dot_product(distance) - ray.dot_product(axis) * distance.dot_product(axis));
         let c = distance.dot_product(distance) - distance.dot_product(axis).powi(2) - self.radius.powi(2);
 
-        if b.powi(2) - 4.0 * a * c > 0.0 {
+        if b.powi(2) - 4.0 * a * c > 0.0 { // Vector pass threw the sides
             let result = resolve_quadratic_equation(a, b, c);
 
             let smallest_result: Option<&f64> = result.iter().filter(|number| **number > 0.0).min_by(|fst, snd| fst.partial_cmp(snd).unwrap());
+
             if smallest_result == None {
                 return None;
             }
 
+            let intersection_point = Vector{
+                x: origin.x + ray.x * smallest_result.unwrap(),
+                y: origin.y + ray.y * smallest_result.unwrap(),
+                z: origin.z + ray.z * smallest_result.unwrap()
+            };
+
+            if 0.0 > (intersection_point - base).dot_product(h) || (intersection_point - base).dot_product(h) > self.height { // too far from center
+                // Intersection with sides:
+                let base_inter = self.base_intersection(ray, origin, axis * -1.0, base);
+
+                return if base_inter.is_some() {
+                    base_inter
+                } else {
+                    self.base_intersection(ray, origin, axis, top)
+                }
+            }
+
+            let normal = base + axis * ((base - intersection_point).len().powi(2) - self.radius.powi(2)).sqrt();
             return Some ( Intersection {
-                intersection_point: Vector{
-                    x: origin.x + ray.x * smallest_result.unwrap(),
-                    y: origin.y + ray.y * smallest_result.unwrap(),
-                    z: origin.z + ray.z * smallest_result.unwrap()
-                },
-                normal: Vector{
-                    x: 0.0,
-                    y: 0.0,
-                    z: 0.0,
-                },
+                intersection_point,
+                normal: normal.normalize(),
                 object: Some(self),
                 light: None,
             })
         }
-        if b.powi(2) - 4.0 * a * c == 0.0 {
+        if b.powi(2) - 4.0 * a * c == 0.0 { // tangent, passes once
             let progress = - (b / 2.0 * a);
 
+            let intersection_point = Vector{
+                x: origin.x + ray.x * progress,
+                y: origin.y + ray.y * progress,
+                z: origin.z + ray.z * progress
+            };
+
+            let normal = base + axis * ((base - intersection_point).len().powi(2) - self.radius.powi(2)).sqrt();
             return Some ( Intersection {
-                intersection_point: Vector{
-                    x: origin.x + ray.x * progress,
-                    y: origin.y + ray.y * progress,
-                    z: origin.z + ray.z * progress
-                },
-                normal: Vector{
-                    x: 0.0,
-                    y: 0.0,
-                    z: 0.0,
-                },
+                intersection_point,
+                normal: normal.normalize(),
                 object: Some(self),
                 light: None,
             })
