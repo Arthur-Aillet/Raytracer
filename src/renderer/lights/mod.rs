@@ -24,6 +24,7 @@ pub struct Directional {
     pub transform: Transform,
     pub color: Color,
     pub strength: f64,
+
 }
 
 pub trait Light {
@@ -110,8 +111,49 @@ impl Light for Directional {
     fn set_radius(&mut self, _new: f64) {}
     fn get_falloff(&self) -> i32 {0}
     fn set_falloff(&mut self, _new: i32) {}
-    fn light_is_intersected(&self, light_vector: Vector, intersect: &Intersection, normal_vector: Vector, camera: Camera, primitives: Vec<Box<dyn Object + Send + Sync>>) -> bool {true}
-    fn calculate_light(&self, intersect: &Intersection, camera_to_pixel: Vector, camera: Camera, primitives: Vec<Box<dyn Object + Send + Sync>>) -> Vector { Vector { x: 0.0, y: 0.0, z: 0.0}}
+    fn light_is_intersected(&self, light_vector: Vector, intersect: &Intersection, normal_vector: Vector, camera: Camera, primitives: Vec<Box<dyn Object + Send + Sync>>) -> bool {
+        for object_current in primitives.iter() {
+            match object_current.intersection(light_vector, intersect.intersection_point + (normal_vector * camera.shadow_bias)) {
+                None => { continue }
+                Some(shadow_intersect) => {
+                    if (shadow_intersect.intersection_point - intersect.intersection_point).len() < (self.transform.pos - intersect.intersection_point).len() {
+                        return true
+                    }
+                }
+            }
+        }
+        false
+    }
+    fn calculate_light(&self, intersect: &Intersection, camera_to_pixel: Vector, camera: Camera, primitives: Vec<Box<dyn Object + Send + Sync>>) -> Vector {
+        let normal_vector = intersect.normal.normalize();
+        let light_vector = (self.transform.pos - intersect.intersection_point).normalize();
+        let mut light_uncovered = 1.0;
+
+        if camera.smooth_shadow == false {
+            if self.light_is_intersected(light_vector, intersect, normal_vector, camera, primitives) {
+                return Vector {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 0.0,
+                }
+            }
+        } else {
+            let mut light_reached: i16 = 0;
+            for _ in 0..camera.smooth_shadow_step {
+                let inter_to_light = self.transform.pos + Vector::get_random_point_in_sphere(0.0) - intersect.intersection_point;
+                if self.light_is_intersected(inter_to_light.normalize(), intersect, normal_vector, camera, primitives) == false {
+                    light_reached += 1;
+                }
+            }
+            light_uncovered = light_reached as f64 / camera.smooth_shadow_step as f64;
+        }
+        let diffuse = light_vector.dot_product(normal_vector).max(0.0) * camera.diffuse * intersect.object.get_texture().diffuse;
+
+        let reflected = light_vector.reflect(normal_vector).normalize();
+        let view = (camera_to_pixel * -1.0).normalize();
+        let specular = camera.specular * intersect.object.get_texture().specular * reflected.dot_product(view).max(0.0).powf(intersect.object.get_texture().shininess);
+        intersect.object.get_texture().color.as_vector() * self.color.as_vector() * diffuse * light_uncovered + self.color.as_vector() * specular * light_uncovered
+    }
 }
 
 
