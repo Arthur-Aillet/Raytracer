@@ -38,8 +38,8 @@
         "transform": {
           "pos": {
             "x": -1,
-            "y": 8,
-            "z": 0
+            "y": 16,
+            "z": 3
           },
           "rotation": {
             "x": 0,
@@ -74,12 +74,12 @@
         "transform": {
           "pos": {
             "x": 0,
-            "y": 5,
+            "y": 8,
             "z": 0
           },
           "rotation": {
             "x": 0,
-            "y": 90,
+            "y": 70,
             "z": 0
           },
           "scale": {
@@ -102,8 +102,8 @@
           "metalness": 0.5,
           "roughness": 0
         },
-        "radius": 0.5,
-        "height": 4
+        "radius": 2,
+        "height": 3
       }
     ]
   },
@@ -113,9 +113,9 @@
         {
           "transform": {
             "pos": {
-              "x": 3.2,
-              "y": 2,
-              "z": 2
+              "x": 0,
+              "y": 5,
+              "z": 3
             },
             "rotation": {
               "x": 0,
@@ -135,7 +135,8 @@
           },
           "strength": 40.0,
           "falloff": 2,
-          "radius": 3.0
+          "radius": 0.5,
+          "visible": true
         },
         {
           "transform": {

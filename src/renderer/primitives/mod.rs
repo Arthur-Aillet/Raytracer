@@ -5,6 +5,7 @@
 // implementations
 //
 
+use std::process::exit;
 use crate::vectors;
 
 use vectors::Vector;
@@ -130,103 +131,67 @@ impl Cylinder {
         if progress < 0.0 {
             return None
         }
+        let intersection_point = Vector{
+            x: origin.x + ray.x * progress,
+            y: origin.y + ray.y * progress,
+            z: origin.z + ray.z * progress
+        };
+        if (intersection_point - center).len() > self.radius {
+            return None;
+        }
         Some ( Intersection {
-            intersection_point: Vector{
-                x: origin.x + ray.x * progress,
-                y: origin.y + ray.y * progress,
-                z: origin.z + ray.z * progress
-            },
+            intersection_point,
             normal,
             object: Some(self),
             light: None,
         })
     }
-
-    fn top_intersection(&self) -> Option<Intersection> {
-        None
-    }
 }
 
 impl Object for Cylinder {
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
-        /*
-        base == C = Point at the center of the base of the cylinder
-        top == H = Point at the center of the top of the cylinder
-        radius == r = Cylinder radius
-        P = Point on the cylinder surface
-
-        origin == L0 = Point on the line
-        ray == v = Vector that defines the line direction
-        axis == ĥ
-        */
+        let radius: f64 = 0.5;
+        let height: f64 = 4.0;
 
         let mut axis = Vector{
             x: 0.0,
             y: 0.0,
             z: 1.0,
         };
-        axis.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
-        let base = self.transform.pos - axis * (self.height / 2.0);
-        let top = self.transform.pos + axis * (self.height / 2.0);
-        let h = top - base;
-        let distance = origin - base;
+        axis.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z); // Ĥ
+        let base = self.transform.pos - axis * (height / 2.0); // C
 
-        //println!("{:?}", distance);
-        let a = ray.dot_product(ray) - (ray.dot_product(axis)).powi(2);
+        let distance = origin - base; // W
+        // ray == V
+
+        //println!("{:?}", ray.dot_product(ray));
+        let a = 1.0 /*ray.dot_product(ray) car normalisé */ - (ray.dot_product(axis)).powi(2);
         let b = 2.0 * (ray.dot_product(distance) - ray.dot_product(axis) * distance.dot_product(axis));
-        let c = distance.dot_product(distance) - distance.dot_product(axis).powi(2) - self.radius.powi(2);
+        let c = distance.dot_product(distance) - distance.dot_product(axis).powi(2) - radius.powi(2);
 
-        if b.powi(2) - 4.0 * a * c > 0.0 { // Vector pass threw the sides
-            let result = resolve_quadratic_equation(a, b, c);
+        let result = resolve_quadratic_equation(a, b, c);
 
-            let smallest_result: Option<&f64> = result.iter().filter(|number| **number > 0.0).min_by(|fst, snd| fst.partial_cmp(snd).unwrap());
+        let smallest_result: Option<&f64> = result.iter().filter(|number| **number > 0.0).min_by(|fst, snd| fst.partial_cmp(snd).unwrap());
+        if smallest_result == None { return None; }
 
-            if smallest_result == None {
-                return None;
-            }
+        let intersection_point = origin + ray * *smallest_result.unwrap();
 
-            let intersection_point = Vector{
-                x: origin.x + ray.x * smallest_result.unwrap(),
-                y: origin.y + ray.y * smallest_result.unwrap(),
-                z: origin.z + ray.z * smallest_result.unwrap()
-            };
+        if -self.height / 2.0 <= (intersection_point - self.transform.pos).dot_product(axis) && (intersection_point - self.transform.pos).dot_product(axis) <= self.height / 2.0 { // too far from center
+            let normal = intersection_point - (base + axis * (intersection_point - base).dot_product(axis)); // Cos(teta) = A/H
 
-            if 0.0 > (intersection_point - base).dot_product(h) || (intersection_point - base).dot_product(h) > self.height { // too far from center
-                // Intersection with sides:
-                let base_inter = self.base_intersection(ray, origin, axis * -1.0, base);
-
-                return if base_inter.is_some() {
-                    base_inter
-                } else {
-                    self.base_intersection(ray, origin, axis, top)
-                }
-            }
-
-            let normal = base + axis * ((base - intersection_point).len().powi(2) - self.radius.powi(2)).sqrt();
             return Some ( Intersection {
                 intersection_point,
-                normal: normal.normalize(),
+                normal,
                 object: Some(self),
                 light: None,
             })
         }
-        if b.powi(2) - 4.0 * a * c == 0.0 { // tangent, passes once
-            let progress = - (b / 2.0 * a);
-
-            let intersection_point = Vector{
-                x: origin.x + ray.x * progress,
-                y: origin.y + ray.y * progress,
-                z: origin.z + ray.z * progress
-            };
-
-            let normal = base + axis * ((base - intersection_point).len().powi(2) - self.radius.powi(2)).sqrt();
-            return Some ( Intersection {
-                intersection_point,
-                normal: normal.normalize(),
-                object: Some(self),
-                light: None,
-            })
+/*        if (intersection_point - base).dot_product(h) < 0.0 {
+            return self.base_intersection(ray, origin, axis * -1.0, base);
         }
+        if (intersection_point - base).dot_product(h) > self.height {
+            return self.base_intersection(ray, origin, axis, top);
+        }*/
         None
     }
     fn set_transform(&mut self, new: Transform) {self.transform = new}
