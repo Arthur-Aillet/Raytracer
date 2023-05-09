@@ -159,7 +159,10 @@ impl Renderer {
             let surface_point = intersect.intersection_point + intersect.normal * self.camera.shadow_bias;
 
             self_color = self_color * (1.0 - intersect.object.unwrap().get_texture().metalness);
-            let samples_nbr = 1.0 + self.camera.reflecion_samples as f64 * intersect.object.unwrap().get_texture().roughness;
+            if recursivity == 1 {
+                return self_color;
+            }
+            let samples_nbr = (1.0 + self.camera.reflecion_samples as f64 * intersect.object.unwrap().get_texture().roughness).powf(intersect.object.unwrap().get_texture().supersampling);
             for _ in 0..samples_nbr as i32 {
                 let mut rng = rand::thread_rng();
                 // random vector used for the roughness
