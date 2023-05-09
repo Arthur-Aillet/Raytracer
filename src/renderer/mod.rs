@@ -135,11 +135,11 @@ impl Renderer {
 
     fn get_color_from_ray(&self, origin: Vector, ray: Vector, recursivity: i64) -> Vector {
         if recursivity == 0 {
-            return Vector {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            }
+           return Vector {
+               x: 0.0,
+               y: 0.0,
+               z: 0.0,
+           }
         }
         let maybe_intersect = self.found_nearest_intersection(origin, ray);
 
@@ -162,19 +162,39 @@ impl Renderer {
             let samples_nbr = 1.0 + self.camera.reflecion_samples as f64 * intersect.object.unwrap().get_texture().roughness;
             for _ in 0..samples_nbr as i32 {
                 let mut rng = rand::thread_rng();
+                // random vector used for the roughness
+                let random_a: f64 = rng.gen_range(0.0..6.28);
+                let random_b: f64 = rng.gen_range(0.0..6.28);
+                let random_vect = Vector {
+                    x: random_a.cos() * random_b.cos(),
+                    y: random_a.sin() * random_b.cos(),
+                    z: random_b.sin()
+                };
                 let mut reflection_ray = (ray.normalize() - intersect.normal.normalize() * 2.0 * intersect.normal.dot_product(ray.normalize())).normalize();
                 if intersect.object.unwrap().get_texture().roughness != 0.0 {
-                    reflection_ray.rotate(rng.gen_range(0.0..180.0 * intersect.object.unwrap().get_texture().roughness) - 90.0, 0.0, rng.gen_range(0.0..360.0));
+                    reflection_ray.lerp(&random_vect, intersect.object.unwrap().get_texture().roughness);
                 }
+                let metalness = intersect.object.unwrap().get_texture().metalness;
+                // if recursivity == 0 {
+                //     return self_color;
+                // }
+                //return self_color;
+
+                // a et b entre 0 et pi*2
+                // x cos a cos b
+                // y sin a cos b
+                // z sin b
                 let new_color = self.get_color_from_ray(surface_point, reflection_ray, recursivity - 1);
+
                 self_color =
-                    self_color
-                    + new_color
-                    * ((intersect.object.unwrap().get_texture().metalness)/samples_nbr as f64)
-                    * (intersect.object.unwrap().get_texture().color.as_vector() * intersect.object.unwrap().get_texture().metalness)
-                    + new_color
-                    * ((1.0 - intersect.object.unwrap().get_texture().metalness)/samples_nbr as f64)
-                    * (intersect.object.unwrap().get_texture().specular * (1.0 - intersect.object.unwrap().get_texture().metalness));
+                    self_color + (new_color * (1.0 - metalness) * intersect.object.unwrap().get_texture().specular / 30.0) // 30 valeur arbitraire
+                    //+ new_color
+                    //* ((1.0 - intersect.object.unwrap().get_texture().metalness)/samples_nbr as f64)
+                    //* (intersect.object.unwrap().get_texture().specular * (1.0 - intersect.object.unwrap().get_texture().metalness))
+                    + new_color // : metalness
+                    * ((metalness)/samples_nbr as f64)
+                    * (intersect.object.unwrap().get_texture().color.as_vector()
+                    * metalness);
             }
             self_color
         } else {
