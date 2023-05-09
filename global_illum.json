@@ -35,7 +35,7 @@
         "smooth_shadow_step": 4,
         "shadow_bias": 1e-13,
         "recursivity": 2,
-        "reflecion_samples": 32,
+        "reflecion_samples": 1024,
         "diffuse_samples": 50,
         "threads": 20,
         "progression": true
@@ -64,16 +64,15 @@
                     "texture_type": 1,
                     "color": {
                         "r": 255,
-                        "g": 255,
-                        "b": 255
+                        "g": 200,
+                        "b": 0
                     },
                     "diffuse": 1.0,
                     "ambient": 0.5,
                     "specular": 1.0,
                     "shininess": 64.0,
-                    "metalness": 1.0,
-                    "roughness": 1.0,
-                    "supersampling": 1.0
+                    "metalness": 0.0,
+                    "roughness": 0.1
                 },
                 "radius": 0.5
             }
