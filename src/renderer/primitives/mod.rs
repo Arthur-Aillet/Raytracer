@@ -47,6 +47,8 @@ pub struct Cone {
 
 pub trait Object {
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection>;
+    fn surface_position(&self, position: Vector) -> Vector;
+    fn get_transform(&self) -> Transform;
     fn set_transform(&mut self, new: Transform);
     fn get_texture(&self) -> Texture;
     fn set_texture(&mut self, new: Texture);
@@ -80,8 +82,20 @@ impl Object for Sphere {
             })
         }
     }
+
+    fn surface_position(&self, position: Vector) -> Vector {
+        let mut rotated_position = position;
+
+        rotated_position.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        Vector {
+            x: 2.0 * (1.0 - (rotated_position.x.atan2(rotated_position.y)/ (2.0 * std::f64::consts::PI) + 0.5)),
+            y: 1.0 - (rotated_position.z / (rotated_position.x.powi(2) + rotated_position.y.powi(2) + rotated_position.z.powi(2)).sqrt()).acos() / std::f64::consts::PI,
+            z: 0.0
+        }
+    }
+    fn get_transform(&self) -> Transform {self.transform}
     fn set_transform(&mut self, new: Transform) {self.transform = new}
-    fn get_texture(&self) -> Texture {self.texture}
+    fn get_texture(&self) -> Texture {self.texture.clone()}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
     fn set_radius(&mut self, new: f64) {self.radius = new}
 
@@ -111,8 +125,19 @@ impl Object for Plane {
             light: None,
         })
     }
+    fn surface_position(&self, position: Vector) -> Vector {
+        let mut rotated_position = position;
+
+        rotated_position.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        Vector {
+            x: if position.x < 0.0 {position.x % 1.0 + 1.0} else {position.x % 1.0},
+            y: if position.y < 0.0 {position.y % 1.0 + 1.0} else {position.y % 1.0},
+            z: 0.0
+        }
+    }
+    fn get_transform(&self) -> Transform {self.transform}
     fn set_transform(&mut self, new: Transform) {self.transform = new}
-    fn get_texture(&self) -> Texture {self.texture}
+    fn get_texture(&self) -> Texture {self.texture.clone()}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
     fn set_radius(&mut self, _new: f64) {}
 
@@ -122,8 +147,19 @@ impl Object for Plane {
 
 impl Object for Cylinder {
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {return None;}
+    fn surface_position(&self, position: Vector) -> Vector {
+        let mut rotated_position = position;
+
+        rotated_position.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        Vector {
+            x: 1.0 - (rotated_position.x.atan2(rotated_position.y) / (2.0 * std::f64::consts::PI) + 0.5),
+            y: rotated_position.z % 1.0,
+            z: 0.0
+        }
+    }
+    fn get_transform(&self) -> Transform {self.transform}
     fn set_transform(&mut self, new: Transform) {self.transform = new}
-    fn get_texture(&self) -> Texture {self.texture}
+    fn get_texture(&self) -> Texture {self.texture.clone()}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
     fn set_radius(&mut self, new: f64) {self.radius = new}
 
@@ -133,8 +169,10 @@ impl Object for Cylinder {
 
 impl Object for Cone {
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {return None;}
+    fn surface_position(&self, position: Vector) -> Vector {Vector { x: 0.5, y: 0.5, z: 0.0}}
+    fn get_transform(&self) -> Transform {self.transform}
     fn set_transform(&mut self, new: Transform) {self.transform = new}
-    fn get_texture(&self) -> Texture {self.texture}
+    fn get_texture(&self) -> Texture {self.texture.clone()}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
     fn set_radius(&mut self, new: f64) {self.radius = new}
 

@@ -60,11 +60,11 @@
                     }
                 },
                 "texture": {
-                    "texture_type": 1,
+                    "texture_type": 2,
                     "color": {
-                        "r": 255,
-                        "g": 255,
-                        "b": 255
+                        "r": 0,
+                        "g": 0,
+                        "b": 0
                     },
                     "diffuse": 0.7,
                     "ambient": 0.4,
