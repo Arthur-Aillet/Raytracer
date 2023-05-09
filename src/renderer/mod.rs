@@ -69,7 +69,7 @@ impl Renderer {
         if let Some(intersect) = maybe_intersect {
             let mut color = intersect.object.get_texture().color.as_vector() * self.camera.ambient * intersect.object.get_texture().ambient;
             for light in self.lights.lights.iter() {
-                color = color + light.calculate_light(&intersect, camera_to_pixel, self.camera, self.primitives);
+                color = color + light.calculate_light(&intersect, camera_to_pixel, self.camera, &self.primitives);
             }
             pixel[0] = ((color.x).clamp(0.0, 1.0) * 255.0) as u8;
             pixel[1] = ((color.y).clamp(0.0, 1.0) * 255.0) as u8;

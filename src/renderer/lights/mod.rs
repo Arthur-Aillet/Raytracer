@@ -38,8 +38,8 @@ pub trait Light {
     fn set_radius(&mut self, new: f64);
     fn get_falloff(&self) -> i32;
     fn set_falloff(&mut self, new: i32);
-    fn light_is_intersected(&self, light_vector: Vector, intersect: &Intersection, normal_vector: Vector, camera: Camera, primitives: Vec<Box<dyn Object + Send + Sync>>) -> bool;
-    fn calculate_light(&self, intersect: &Intersection, camera_to_pixel: Vector, camera: Camera, primitives: Vec<Box<dyn Object + Send + Sync>>) -> Vector;
+    fn light_is_intersected(&self, light_vector: Vector, intersect: &Intersection, normal_vector: Vector, camera: Camera, primitives: &Vec<Box<dyn Object + Send + Sync>>) -> bool;
+    fn calculate_light(&self, intersect: &Intersection, camera_to_pixel: Vector, camera: Camera, primitives: &Vec<Box<dyn Object + Send + Sync>>) -> Vector;
 }
 
 impl Light for Point {
@@ -53,7 +53,7 @@ impl Light for Point {
     fn set_radius(&mut self, new: f64) {self.radius = new}
     fn get_falloff(&self) -> i32 {self.falloff}
     fn set_falloff(&mut self, new: i32) {self.falloff = new}
-    fn light_is_intersected(&self, light_vector: Vector, intersect: &Intersection, normal_vector: Vector, camera: Camera, primitives: Vec<Box<dyn Object + Send + Sync>>) -> bool {
+    fn light_is_intersected(&self, light_vector: Vector, intersect: &Intersection, normal_vector: Vector, camera: Camera, primitives: &Vec<Box<dyn Object + Send + Sync>>) -> bool {
         for object_current in primitives.iter() {
             match object_current.intersection(light_vector, intersect.intersection_point + (normal_vector * camera.shadow_bias)) {
                 None => { continue }
@@ -66,7 +66,7 @@ impl Light for Point {
         }
         false
     }
-    fn calculate_light(&self, intersect: &Intersection, camera_to_pixel: Vector, camera: Camera, primitives: Vec<Box<dyn Object + Send + Sync>>) -> Vector {
+    fn calculate_light(&self, intersect: &Intersection, camera_to_pixel: Vector, camera: Camera, primitives: &Vec<Box<dyn Object + Send + Sync>>) -> Vector {
         let normal_vector = intersect.normal.normalize();
         let light_vector = (self.transform.pos - intersect.intersection_point).normalize();
         let mut light_uncovered = 1.0;
@@ -111,7 +111,7 @@ impl Light for Directional {
     fn set_radius(&mut self, _new: f64) {}
     fn get_falloff(&self) -> i32 {0}
     fn set_falloff(&mut self, _new: i32) {}
-    fn light_is_intersected(&self, light_vector: Vector, intersect: &Intersection, normal_vector: Vector, camera: Camera, primitives: Vec<Box<dyn Object + Send + Sync>>) -> bool {
+    fn light_is_intersected(&self, light_vector: Vector, intersect: &Intersection, normal_vector: Vector, camera: Camera, primitives: &Vec<Box<dyn Object + Send + Sync>>) -> bool {
         for object_current in primitives.iter() {
             match object_current.intersection(light_vector, intersect.intersection_point + (normal_vector * camera.shadow_bias)) {
                 None => { continue }
@@ -124,13 +124,12 @@ impl Light for Directional {
         }
         false
     }
-    fn calculate_light(&self, intersect: &Intersection, camera_to_pixel: Vector, camera: Camera, primitives: Vec<Box<dyn Object + Send + Sync>>) -> Vector {
+    fn calculate_light(&self, intersect: &Intersection, camera_to_pixel: Vector, camera: Camera, primitives: &Vec<Box<dyn Object + Send + Sync>>) -> Vector {
         let normal_vector = intersect.normal.normalize();
-        let light_vector = (self.transform.pos - intersect.intersection_point).normalize();
         let mut light_uncovered = 1.0;
 
         if camera.smooth_shadow == false {
-            if self.light_is_intersected(light_vector, intersect, normal_vector, camera, primitives) {
+            if self.light_is_intersected(self.transform.pos, intersect, normal_vector, camera, primitives) {
                 return Vector {
                     x: 0.0,
                     y: 0.0,
@@ -147,9 +146,9 @@ impl Light for Directional {
             }
             light_uncovered = light_reached as f64 / camera.smooth_shadow_step as f64;
         }
-        let diffuse = light_vector.dot_product(normal_vector).max(0.0) * camera.diffuse * intersect.object.get_texture().diffuse;
+        let diffuse = self.transform.pos.dot_product(normal_vector).max(0.0) * camera.diffuse * intersect.object.get_texture().diffuse;
 
-        let reflected = light_vector.reflect(normal_vector).normalize();
+        let reflected = self.transform.pos.reflect(normal_vector).normalize();
         let view = (camera_to_pixel * -1.0).normalize();
         let specular = camera.specular * intersect.object.get_texture().specular * reflected.dot_product(view).max(0.0).powf(intersect.object.get_texture().shininess);
         intersect.object.get_texture().color.as_vector() * self.color.as_vector() * diffuse * light_uncovered + self.color.as_vector() * specular * light_uncovered

@@ -10,7 +10,7 @@ use serde_json::Value;
 use vectors::Vector;
 use super::camera::{Lens, Camera};
 use super::primitives::{Sphere, Plane, Cylinder, Cone, Object};
-use super::lights::{Point, Ambient, Light, Lights};
+use super::lights::{Point, Ambient, Light, Lights, Directional};
 use super::renderer_common::{Transform, Color, Texture};
 
 pub struct Parser {
@@ -169,26 +169,19 @@ impl Parser {
         )
     }
 
-    pub fn get_directional_from_json(&self, json: &Value) -> Box::<Point> {
+    pub fn get_directional_from_json(&self, json: &Value) -> Box::<Directional> {
         let mut result = Box::new(
-            Point {
+            Directional {
                 color: if json["color"].is_object() {self.get_color_from_json(&json["color"])} else {Color::default()},
                 strength: json["strength"].as_f64().unwrap_or(80.0),
-                radius: json["radius"].as_f64().unwrap_or(1.0),
-                falloff: json["falloff"].as_i64().unwrap_or(2) as i32,
                 transform: Transform {
-                    rotation: if json["transform"]["rotation"].is_object() {self.get_vector_from_json(&json["rotation"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
-                    scale: if json["transform"]["scale"].is_object() {self.get_vector_from_json(&json["scale"])} else {Vector {x: 1.0, y: 1.0, z: 1.0}},
-                    pos: Vector {x: 0.0, y: 0.0, z: 0.0},
+                    rotation: if json["transform"]["rotation"].is_object() {self.get_vector_from_json(&json["transform"]["rotation"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
+                    scale: if json["transform"]["scale"].is_object() {self.get_vector_from_json(&json["transform"]["scale"])} else {Vector {x: 1.0, y: 1.0, z: 1.0}},
+                    pos: Vector {x: 0.0, y: 0.0, z: 1.0},
                 },
             }
         );
-        let fowards = Vector {
-            x: result.transform.rotation.y.to_radians().sin() * result.transform.rotation.x.to_radians().cos(),
-            y: result.transform.rotation.x.to_radians().sin(),
-            z: result.transform.rotation.x.to_radians().cos() * result.transform.rotation.y.to_radians().cos(),
-        };
-        result.transform.pos = fowards * -10000.0;
+        result.transform.pos.rotate(result.transform.rotation.x, result.transform.rotation.y, result.transform.rotation.z);
         result
     }
 
@@ -202,7 +195,7 @@ impl Parser {
         }
         if json["directional"].is_array(){
             for point in json["directional"].as_array().unwrap().iter() {
-                lights.push(self.get_point_from_json(point))
+                lights.push(self.get_directional_from_json(point))
             }
         }
         lights

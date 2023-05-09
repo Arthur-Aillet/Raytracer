@@ -146,6 +146,33 @@
     },
     "lights": {
         "objects": {
+            "directional" : [
+              {
+                  "transform": {
+                    "pos": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 180
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 180,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    }
+                },
+                "strength": 200,
+                "color": {
+                  "r": 255,
+                  "g": 0,
+                  "b": 0
+                }
+              }
+            ],
             "point": [
                 {
                     "transform": {
