@@ -123,6 +123,7 @@ impl Object for Plane {
 
 impl Cylinder {
     fn base_intersection(&self, ray: Vector, origin: Vector, normal: Vector, center: Vector) -> Option<Intersection> {
+        let normal = normal.normalize();
         let denom = ray.normalize().dot_product(normal);
         if denom == 0.0 {
             return None
@@ -136,6 +137,7 @@ impl Cylinder {
             y: origin.y + ray.y * progress,
             z: origin.z + ray.z * progress
         };
+
         if (intersection_point - center).len() > self.radius {
             return None;
         }
@@ -150,16 +152,14 @@ impl Cylinder {
 
 impl Object for Cylinder {
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
-        let radius: f64 = 0.5;
-        let height: f64 = 4.0;
-
         let mut axis = Vector{
             x: 0.0,
             y: 0.0,
             z: 1.0,
         };
         axis.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z); // Ĥ
-        let base = self.transform.pos - axis * (height / 2.0); // C
+        let base = self.transform.pos - axis * (self.height / 2.0);
+        let top = self.transform.pos + axis * (self.height / 2.0);// C
 
         let distance = origin - base; // W
         // ray == V
@@ -167,7 +167,7 @@ impl Object for Cylinder {
         //println!("{:?}", ray.dot_product(ray));
         let a = 1.0 /*ray.dot_product(ray) car normalisé */ - (ray.dot_product(axis)).powi(2);
         let b = 2.0 * (ray.dot_product(distance) - ray.dot_product(axis) * distance.dot_product(axis));
-        let c = distance.dot_product(distance) - distance.dot_product(axis).powi(2) - radius.powi(2);
+        let c = distance.dot_product(distance) - distance.dot_product(axis).powi(2) - self.radius.powi(2);
 
         let result = resolve_quadratic_equation(a, b, c);
 
@@ -186,12 +186,12 @@ impl Object for Cylinder {
                 light: None,
             })
         }
-/*        if (intersection_point - base).dot_product(h) < 0.0 {
+        if (intersection_point - base).dot_product(axis) < 0.0 {
             return self.base_intersection(ray, origin, axis * -1.0, base);
         }
-        if (intersection_point - base).dot_product(h) > self.height {
-            return self.base_intersection(ray, origin, axis, top);
-        }*/
+        if (intersection_point - base).dot_product(axis) > self.height {
+            return self.base_intersection(ray, origin,  axis, top);
+        }
         None
     }
     fn set_transform(&mut self, new: Transform) {self.transform = new}
