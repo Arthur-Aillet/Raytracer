@@ -32,12 +32,12 @@
         "ambient": 0.5,
         "specular": 0.3,
         "smooth_shadow": true,
-        "smooth_shadow_step": 16,
+        "smooth_shadow_step": 2,
         "shadow_bias": 1e-13,
         "recursivity": 2,
-        "reflecion_samples": 10,
+        "reflecion_samples": 24,
         "diffuse_samples": 50,
-        "threads": 12,
+        "threads": 16,
         "progression": true
     },
     "primitives": {
@@ -63,16 +63,16 @@
                 "texture": {
                     "texture_type": 1,
                     "color": {
-                        "r": 255,
-                        "g": 255,
+                        "r": 0,
+                        "g": 0,
                         "b": 255
                     },
-                    "diffuse": 0.7,
+                    "diffuse": 1.0,
                     "ambient": 0.5,
-                    "specular": 0.2,
-                    "shininess": 4.0,
-                    "metalness": 1.0,
-                    "roughness": 1.0
+                    "specular": 0.4,
+                    "shininess": 64.0,
+                    "metalness": 0.0,
+                    "roughness": 0.0
                 },
                 "radius": 0.5
             }
@@ -112,7 +112,7 @@
                     "ambient": 0.5,
                     "specular": 0.2,
                     "shininess": 4.0,
-                    "metalness": 0.65,
+                    "metalness": 0.0,
                     "roughness": 0.5
                 }
             },
@@ -150,7 +150,7 @@
                     "ambient": 0.5,
                     "specular": 0.2,
                     "shininess": 4.0,
-                    "metalness": 0.65,
+                    "metalness": 0.0,
                     "roughness": 0.5
                 }
             },
@@ -188,7 +188,7 @@
                     "ambient": 0.5,
                     "specular": 0.2,
                     "shininess": 4.0,
-                    "metalness": 0.2,
+                    "metalness": 0.0,
                     "roughness": 0.5
                 }
             },
@@ -226,7 +226,7 @@
                     "ambient": 0.5,
                     "specular": 0.2,
                     "shininess": 4.0,
-                    "metalness": 0.2,
+                    "metalness": 0.0,
                     "roughness": 0.5
                 }
             },
@@ -264,8 +264,8 @@
                     "ambient": 0.5,
                     "specular": 0.2,
                     "shininess": 4.0,
-                    "metalness": 0.65,
-                    "roughness": 0.5
+                    "metalness": 0.0,
+                    "roughness": 1.0
                 }
             }
         ]
@@ -296,7 +296,7 @@
                         "g": 255,
                         "b": 255
                     },
-                    "strength": 4.0,
+                    "strength": 2.0,
                     "falloff": 2,
                     "radius": 0.2
                 },
@@ -323,7 +323,7 @@
                         "g": 255,
                         "b": 255
                     },
-                    "strength": 4.0,
+                    "strength": 2.0,
                     "falloff": 2,
                     "radius": 0.2
                 },
@@ -350,7 +350,7 @@
                         "g": 255,
                         "b": 255
                     },
-                    "strength": 4.0,
+                    "strength": 2.0,
                     "falloff": 2,
                     "radius": 0.2
                 },
@@ -377,7 +377,34 @@
                         "g": 255,
                         "b": 255
                     },
-                    "strength": 4.0,
+                    "strength": 2.0,
+                    "falloff": 2,
+                    "radius": 0.2
+                },
+                {
+                    "transform": {
+                        "pos": {
+                            "x": 2,
+                            "y": 0.8,
+                            "z": 0.2
+                        },
+                        "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                        },
+                        "scale": {
+                            "x": 1,
+                            "y": 1,
+                            "z": 1
+                        }
+                    },
+                    "color": {
+                        "r": 255,
+                        "g": 255,
+                        "b": 255
+                    },
+                    "strength": 2.0,
                     "falloff": 2,
                     "radius": 0.2
                 }

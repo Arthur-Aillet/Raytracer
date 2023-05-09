@@ -166,7 +166,19 @@ impl Renderer {
                 if intersect.object.unwrap().get_texture().roughness != 0.0 {
                     reflection_ray.rotate(rng.gen_range(0.0..180.0 * intersect.object.unwrap().get_texture().roughness) - 90.0, 0.0, rng.gen_range(0.0..360.0));
                 }
-                self_color = self_color + self.get_color_from_ray(surface_point, reflection_ray, recursivity - 1) * intersect.object.unwrap().get_texture().metalness * (1.0/samples_nbr as f64);
+                if intersect.object.unwrap().get_texture().metalness > 0.0 {
+                    self_color =
+                        self_color
+                        + self.get_color_from_ray(surface_point, reflection_ray, recursivity - 1)
+                        * (1.0/samples_nbr as f64)
+                        * intersect.object.unwrap().get_texture().color.as_vector();
+                } else {
+                    self_color =
+                        self_color
+                        + self.get_color_from_ray(surface_point, reflection_ray, recursivity - 1)
+                        * (1.0/samples_nbr as f64)
+                        * intersect.object.unwrap().get_texture().specular;
+                }//intersect.object.unwrap().get_texture().metalness
             }
             self_color
         } else {
