@@ -187,14 +187,13 @@ impl Renderer {
                 let new_color = self.get_color_from_ray(surface_point, reflection_ray, recursivity - 1);
 
                 self_color =
-                    self_color + (new_color * (1.0 - metalness) * intersect.object.unwrap().get_texture().specular / 30.0) // 30 valeur arbitraire
+                    self_color + (((new_color * (1.0 - metalness) * intersect.object.unwrap().get_texture().specular)) // 30 valeur arbitraire
                     //+ new_color
                     //* ((1.0 - intersect.object.unwrap().get_texture().metalness)/samples_nbr as f64)
                     //* (intersect.object.unwrap().get_texture().specular * (1.0 - intersect.object.unwrap().get_texture().metalness))
                     + new_color // : metalness
-                    * ((metalness)/samples_nbr as f64)
                     * (intersect.object.unwrap().get_texture().color.as_vector()
-                    * metalness);
+                    * metalness)) * (1.0/samples_nbr as f64);
             }
             self_color
         } else {
