@@ -132,27 +132,28 @@ impl Parser {
         )
     }
 
+    pub fn get_object_from_json(&self, json: &Value) -> Option<Box::<dyn Object + Send + Sync>> {
+        if json["type"].is_string() {
+            return match json["type"].as_str().unwrap() {
+                "sphere" => Some(self.get_sphere_from_json(json)),
+                "plane" => Some(self.get_plane_from_json(json)),
+                "cylinder" => Some(self.get_cylinder_from_json(json)),
+                "cone" => Some(self.get_cone_from_json(json)),
+                _ => None
+            }
+        } else {
+            None
+        }
+    }
+
     pub fn get_objects_from_json(&self, json: &Value) -> Vec::<Box::<dyn Object + Send + Sync>> {
         let mut objects: Vec::<Box::<dyn Object + Send + Sync>> = Vec::new();
 
-        if json["spheres"].is_array() {
-            for sphere in json["spheres"].as_array().unwrap().iter() {
-                objects.push(self.get_sphere_from_json(sphere))
-            }
-        }
-        if json["planes"].is_array() {
-            for plane in json["planes"].as_array().unwrap().iter() {
-                objects.push(self.get_plane_from_json(plane))
-            }
-        }
-        if json["cylinders"].is_array() {
-            for cylinder in json["cylinders"].as_array().unwrap().iter() {
-                objects.push(self.get_cylinder_from_json(cylinder))
-            }
-        }
-        if json["cones"].is_array() {
-            for cone in json["cones"].as_array().unwrap().iter() {
-                objects.push(self.get_cone_from_json(cone))
+        if json.is_array() {
+            for object in json.as_array().unwrap().iter() {
+                if let Some(result) = self.get_object_from_json(object) {
+                objects.push(result)
+                }
             }
         }
         objects
@@ -263,7 +264,7 @@ impl Parser {
     pub fn get_renderer_from_json(&self, json: &Value, height: i64, width: i64) -> Renderer {
         let mut renderer: Renderer = Renderer {
             camera: if json["camera"].is_object() {self.get_camera_from_json(&json["camera"], height, width)} else {Camera::default(1920, 1080)},
-            primitives: if json["primitives"].is_object() {self.get_objects_from_json(&json["primitives"])} else {Vec::new()},
+            primitives: if json["primitives"].is_array() {self.get_objects_from_json(&json["primitives"])} else {Vec::new()},
             lights: if json["lights"].is_object() {self.get_lights_from_json(&json["lights"])} else {Lights::default()},
         };
         self.get_scenes_from_json(&mut renderer, json, &mut Vec::new());
