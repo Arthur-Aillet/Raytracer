@@ -215,7 +215,7 @@ impl Renderer {
             if recursivity == 1 {
                 return self_color;
             }
-            let samples_nbr = (1.0 + self.camera.reflection_samples as f64 * intersect.object.unwrap().get_texture().roughness).powf(intersect.object.unwrap().get_texture().supersampling);
+            let samples_nbr = (1.0 + self.camera.reflection_samples as f64 * intersect.object.unwrap().get_texture().roughness).powf(intersect.object.unwrap().get_texture().sampling_ponderation);
             for _ in 0..samples_nbr as i32 {
                 let mut rng = rand::thread_rng();
                 // random vector used for the roughness
