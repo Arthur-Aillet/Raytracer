@@ -135,6 +135,12 @@ impl Vector {
     pub fn len(self) -> f64 {
         (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
     }
+
+    pub fn lerp(&mut self, other: &Vector, t:f64) {
+        self.x = self.x + t * (other.x - self.x);
+        self.y = self.y + t * (other.y - self.y);
+        self.z = self.z + t * (other.z - self.z);
+    }
 }
 
 pub fn number_of_solution(a: f64, b: f64, c: f64) -> i8 {
