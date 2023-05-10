@@ -11,7 +11,7 @@ use vectors::Vector;
 use super::Renderer;
 use super::camera::{Lens, Camera};
 use super::primitives::{Sphere, Plane, Cylinder, Cone, Object};
-use super::lights::{Point, Ambient, Light, Lights};
+use super::lights::{Point, Ambient, Light, Lights, Directional};
 use super::renderer_common::{Transform, Color, Texture};
 use std::fs;
 
@@ -54,6 +54,7 @@ impl Parser {
             super_sampling: json["super_sampling"].as_u64().unwrap_or(1),
             super_sampling_precision: json["super_sampling_precision"].as_u64().unwrap_or(10),
             image_buffer_size: json["image_buffer_size"].as_u64().unwrap_or(1),
+            reflecion_samples: json["reflection_samples"].as_f64().unwrap_or(16.0),
         };
         camera.calculate_lens_distance();
         let vector_director = Vector {x: 0.0, y: camera.lens.distance, z: 0.0};
@@ -173,12 +174,34 @@ impl Parser {
         )
     }
 
+    pub fn get_directional_from_json(&self, json: &Value) -> Box::<Directional> {
+        let mut result = Box::new(
+            Directional {
+                transform: Transform {
+                    rotation: if json["transform"]["rotation"].is_object() {self.get_vector_from_json(&json["transform"]["rotation"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
+                    scale: if json["transform"]["scale"].is_object() {self.get_vector_from_json(&json["transform"]["scale"])} else {Vector {x: 1.0, y: 1.0, z: 1.0}},
+                    pos: Vector {x: 0.0, y: 0.0, z: 1.0},
+                },
+                color: if json["color"].is_object() {self.get_color_from_json(&json["color"])} else {Color::default()},
+                strength: json["strength"].as_f64().unwrap_or(80.0),
+                visible: json["visible"].as_bool().unwrap_or(false),
+            }
+        );
+        result.transform.pos.rotate(result.transform.rotation.x, result.transform.rotation.y, result.transform.rotation.z);
+        result
+    }
+
     pub fn get_object_lights_from_json(&self, json: &Value) -> Vec::<Box::<dyn Light + Send + Sync>> {
         let mut lights: Vec::<Box::<dyn Light + Send + Sync>> = Vec::new();
 
         if json["point"].is_array(){
             for point in json["point"].as_array().unwrap().iter() {
                 lights.push(self.get_point_from_json(point))
+            }
+        }
+        if json["directional"].is_array(){
+            for point in json["directional"].as_array().unwrap().iter() {
+                lights.push(self.get_directional_from_json(point))
             }
         }
         lights
