@@ -51,6 +51,22 @@ pub struct Cone {
     pub height: f64,
 }
 
+#[derive(Deserialize, Serialize)]
+pub struct Triangle {
+    pub transform : Transform,
+    pub texture: Texture,
+    pub point_a: Vector,
+    pub point_b: Vector,
+    pub point_c: Vector
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct Mesh {
+    pub transform: Transform,
+    pub texture: Texture,
+    pub triangles: Vec<Triangle>,
+}
+
 pub trait Object: erased_serde::Serialize {
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection>;
     fn surface_position(&self, position: Vector) -> Vector;
@@ -62,6 +78,8 @@ pub trait Object: erased_serde::Serialize {
     fn set_radius(&mut self, new: f64);
     fn set_height(&mut self, new: f64);
     fn set_normal(&mut self, new: Vector);
+    fn set_triangles(&mut self, new: String);
+    fn set_points(&mut self, new_a: Vector, new_b: Vector, new_c: Vector);
 }
 
 impl Object for Sphere {
@@ -109,6 +127,8 @@ impl Object for Sphere {
 
     fn set_height(&mut self, _new: f64) {}
     fn set_normal(&mut self, _new: Vector) {}
+    fn set_triangles(&mut self, _new: String) {}
+    fn set_points(&mut self, _new_a: Vector, _new_b: Vector, _new_c: Vector) {}
 }
 
 impl Object for Plane {
@@ -153,6 +173,8 @@ impl Object for Plane {
 
     fn set_height(&mut self, _new: f64) {}
     fn set_normal(&mut self, new: Vector) {self.normal = new}
+    fn set_triangles(&mut self, _new: String) {}
+    fn set_points(&mut self, _new_a: Vector, _new_b: Vector, _new_c: Vector) {}
 }
 
 impl Object for Cylinder {
@@ -176,6 +198,8 @@ impl Object for Cylinder {
 
     fn set_height(&mut self, new: f64) {self.height = new}
     fn set_normal(&mut self, _new: Vector) {}
+    fn set_triangles(&mut self, new: String) {}
+    fn set_points(&mut self, new_a: Vector, new_b: Vector, new_c: Vector) {}
 }
 
 impl Object for Cone {
@@ -190,6 +214,44 @@ impl Object for Cone {
 
     fn set_height(&mut self, new: f64) {self.height = new}
     fn set_normal(&mut self, _new: Vector) {}
+    fn set_triangles(&mut self, new: String) {}
+    fn set_points(&mut self, new_a: Vector, new_b: Vector, new_c: Vector) {}
+}
+
+impl Object for Triangle {
+    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {None}
+    fn surface_position(&self, position: Vector) -> Vector {Vector { x: 0.5, y: 0.5, z: 0.0}}
+    fn get_transform(&self) -> Transform {self.transform}
+    fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
+    fn set_transform(&mut self, new: Transform) {self.transform = new}
+    fn get_texture(&self) -> Texture {self.texture.clone()}
+    fn set_texture(&mut self, new: Texture) {self.texture = new}
+    fn set_points(&mut self, new_a: Vector, new_b: Vector, new_c: Vector) {
+        self.point_a = new_a;
+        self.point_b = new_b;
+        self.point_c = new_c;
+    }
+
+    fn set_radius(&mut self, _new: f64) {}
+    fn set_height(&mut self, _new: f64) {}
+    fn set_normal(&mut self, _new: Vector) {}
+    fn set_triangles(&mut self, _new: String) {}
+}
+
+impl Object for Mesh {
+    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {None}
+    fn surface_position(&self, position: Vector) -> Vector {Vector { x: 0.5, y: 0.5, z: 0.0}}
+    fn get_transform(&self) -> Transform {self.transform}
+    fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
+    fn set_transform(&mut self, new: Transform) {self.transform = new}
+    fn get_texture(&self) -> Texture {self.texture.clone()}
+    fn set_texture(&mut self, new: Texture) {self.texture = new}
+    fn set_triangles(&mut self, new: String) {self.triangles = Vec::new()}
+
+    fn set_radius(&mut self, _new: f64) {}
+    fn set_height(&mut self, _new: f64) {}
+    fn set_normal(&mut self, _new: Vector) {}
+    fn set_points(&mut self, _new_a: Vector, _new_b: Vector, _new_c: Vector) {}
 }
 
 serialize_trait_object!(Object);
