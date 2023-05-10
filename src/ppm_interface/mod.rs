@@ -13,7 +13,7 @@ pub struct PPMInterface {
 }
 
 impl PPMInterface {
-    pub fn new(file_path: String) -> Self {
+    pub fn new(file_path: &String) -> Self {
         let file = File::create(file_path).unwrap();
         PPMInterface { file }
     }

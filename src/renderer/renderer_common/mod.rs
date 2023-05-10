@@ -5,15 +5,14 @@
 // common structures to the renderer
 //
 
-use std::vec;
-
 use crate::vectors;
 use rand::{Rng,SeedableRng};
 use rand::rngs::StdRng;
 
+use std::ops::{Add, Mul, Sub};
 use vectors::Vector;
+use serde::{Deserialize, Serialize};
 
-use super::primitives::Object;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Textures_types {
@@ -38,6 +37,7 @@ impl Textures_types {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[derive(Deserialize, Serialize)]
 pub struct Transform {
     pub pos: Vector,
     pub rotation: Vector,
@@ -66,6 +66,46 @@ impl Transform {
     }
 }
 
+impl PartialEq for Transform {
+    fn eq(&self, other: &Self) -> bool {
+        self.pos == other.pos && self.rotation == other.rotation && self.scale == other.scale
+    }
+}
+
+impl Add<Transform> for Transform {
+    type Output = Transform;
+    fn add(self, other: Transform) -> Transform {
+        Transform {
+            pos: self.pos + other.pos,
+            rotation: self.rotation + other.rotation,
+            scale: self.scale + other.scale,
+        }
+    }
+}
+
+impl Sub<Transform> for Transform {
+    type Output = Transform;
+    fn sub(self, other: Transform) -> Transform {
+        Transform {
+            pos: self.pos - other.pos,
+            rotation: self.rotation - other.rotation,
+            scale: self.scale - other.scale,
+        }
+    }
+}
+
+impl Mul<Transform> for Transform {
+    type Output = Transform;
+    fn mul(self, other: Transform) -> Transform {
+        Transform {
+            pos: self.pos * other.pos,
+            rotation: self.rotation * other.rotation,
+            scale: self.scale * other.scale,
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize)]
 #[derive(Debug, Clone, Copy)]
 pub struct Color {
     pub r: f64,
@@ -92,6 +132,7 @@ impl Color {
 }
 
 #[derive(Debug, Clone)]
+#[derive(Deserialize, Serialize)]
 pub struct Image {
     pub vector: Vec<Color>,
     pub width: i64,
@@ -109,8 +150,9 @@ impl Image {
 }
 
 #[derive(Debug, Clone)]
+#[derive(Deserialize, Serialize)]
 pub struct Texture {
-    pub texture_type: Textures_types,
+    pub texture_type: u64,
     pub color: Color,
     pub secondary_color: Color,
     pub image: Image,
@@ -122,12 +164,13 @@ pub struct Texture {
     pub metalness: f64,
     pub shininess: f64,
     pub roughness: f64,
+    pub sampling_ponderation: f64,
 }
 
 impl Texture {
     pub fn default() -> Texture {
         Texture {
-            texture_type: Textures_types::COLOR,
+            texture_type: Textures_types::COLOR as u64,
             color: Color::default(),
             secondary_color: Color::default(),
             image: Image::default(),
@@ -139,6 +182,7 @@ impl Texture {
             metalness: 0.1,
             shininess: 4.0,
             roughness: 0.25,
+            sampling_ponderation: 1.0,
         }
     }
 
@@ -198,7 +242,7 @@ impl Texture {
     }
 
     pub fn texture(&self, x: f64, y: f64) -> Color {
-        match self.texture_type {
+        match Textures_types::from_u64(self.texture_type) {
             Textures_types::COLOR => self.color,
             Textures_types::GRADIENT => self.gradient_color(x, y),
             Textures_types::PERLIN => self.perlin_noise(x, y),
