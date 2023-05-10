@@ -219,23 +219,49 @@ impl Object for Cone {
 }
 
 impl Object for Triangle {
-    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {None}
+    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
+        let mut normal = (self.point_b - self.point_a).cross_product(self.point_c - self.point_a).normalize();
+        //normal.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+
+        let denom = ray.normalize().dot_product(normal);
+        if denom == 0.0 {
+            return None
+        }
+        let progress = (self.transform.pos - origin).dot_product(normal) / denom;
+        if progress < 0.0 {
+            return None
+        }
+        let intersection_point = Vector{
+            x: origin.x + ray.x * progress,
+            y: origin.y + ray.y * progress,
+            z: origin.z + ray.z * progress
+        };
+        if normal.dot_product(origin - intersection_point) < 0.0 {
+            normal = normal * -1.0;
+        }
+        Some ( Intersection {
+            intersection_point,
+            normal,
+            object: Some(self),
+            light: None,
+        })
+    }
     fn surface_position(&self, position: Vector) -> Vector {Vector { x: 0.5, y: 0.5, z: 0.0}}
     fn get_transform(&self) -> Transform {self.transform}
     fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
     fn set_transform(&mut self, new: Transform) {self.transform = new}
     fn get_texture(&self) -> Texture {self.texture.clone()}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
+    fn set_radius(&mut self, _new: f64) {}
+
+    fn set_height(&mut self, _new: f64) {}
+    fn set_normal(&mut self, _new: Vector) {}
+    fn set_triangles(&mut self, _new: String) {}
     fn set_points(&mut self, new_a: Vector, new_b: Vector, new_c: Vector) {
         self.point_a = new_a;
         self.point_b = new_b;
         self.point_c = new_c;
     }
-
-    fn set_radius(&mut self, _new: f64) {}
-    fn set_height(&mut self, _new: f64) {}
-    fn set_normal(&mut self, _new: Vector) {}
-    fn set_triangles(&mut self, _new: String) {}
 }
 
 impl Object for Mesh {
@@ -246,11 +272,11 @@ impl Object for Mesh {
     fn set_transform(&mut self, new: Transform) {self.transform = new}
     fn get_texture(&self) -> Texture {self.texture.clone()}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
-    fn set_triangles(&mut self, new: String) {self.triangles = Vec::new()}
-
     fn set_radius(&mut self, _new: f64) {}
+
     fn set_height(&mut self, _new: f64) {}
     fn set_normal(&mut self, _new: Vector) {}
+    fn set_triangles(&mut self, new: String) {self.triangles = Vec::new()}
     fn set_points(&mut self, _new_a: Vector, _new_b: Vector, _new_c: Vector) {}
 }
 
