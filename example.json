@@ -32,9 +32,9 @@
     "reflection_samples": 5,
     "aces_tone_mapping": true
   },
-  "primitives": {
-    "spheres": [
+  "primitives": [
       {
+        "type": "sphere",
         "transform": {
           "pos": {
             "x": -1,
@@ -69,6 +69,7 @@
         "radius": 1.5
       },
       {
+        "type": "sphere",
         "transform": {
           "pos": {
             "x": 7,
@@ -103,6 +104,7 @@
         "radius": 4
       },
       {
+        "type":"sphere",
         "transform": {
           "pos": {
             "x": 0,
@@ -135,10 +137,9 @@
           "roughness": 0
         },
         "radius": 0.5
-      }
-    ],
-    "planes" : [
+      },
       {
+        "type": "plane",
         "transform": {
           "pos": {
             "x": 0,
@@ -177,8 +178,7 @@
         },
         "vector": -1.5
       }
-    ]
-  },
+    ],
   "lights": {
     "objects": {
       "point": [
@@ -240,14 +240,56 @@
       ]
     },
     "ambient": [
-      {
-        "color": {
-          "r": 255,
-          "g": 255,
-          "b": 255
+            {
+                "color": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                },
+                "strength": 80.0
+            }
+        ]
+    },
+    "scenes": [
+        {
+        "file": "recursa.json",
+        "transform": {
+                "pos": {
+                    "x": 2,
+                    "y": 0,
+                    "z": 0
+                },
+                "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                }
+            }
         },
-        "strength": 1.0
-      }
+        {
+            "file": "recursb.json",
+            "transform": {
+                "pos": {
+                    "x": -2,
+                    "y": 0,
+                    "z": 0
+                },
+                "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                }
+            }
+        }
     ]
-  }
 }

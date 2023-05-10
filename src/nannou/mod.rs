@@ -8,7 +8,7 @@ use nannou::Frame;
 use nannou::App;
 
 use crate::renderer::Renderer;
-use crate::config::Config;
+use crate::config;
 use std::env;
 
 pub struct Model {
@@ -18,7 +18,7 @@ pub struct Model {
 
 fn model(app: &App) -> Model {
     let args: Vec<String> = env::args().collect();
-    let mut config = Config::from_args(&args);
+    let mut config = config::Config::from_args(&args);
     let window = app
         .new_window()
         .title("Rustracer")

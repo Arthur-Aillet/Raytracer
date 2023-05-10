@@ -6,12 +6,14 @@
 //
 
 use crate::vectors;
+use serde::{Deserialize, Serialize};
 use rand::Rng;
 
 use super::renderer_common::Transform;
 use vectors::Vector;
 
 #[derive(Debug, Clone, Copy)]
+#[derive(Deserialize, Serialize)]
 pub struct Lens {
     pub height: i64,
     pub width: i64,
@@ -35,6 +37,7 @@ impl Lens  {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[derive(Deserialize, Serialize)]
 pub struct Camera {
     pub transform: Transform,
     pub lens: Lens,

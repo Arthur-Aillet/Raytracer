@@ -18,8 +18,8 @@
             }
         },
         "lens" : {
-            "height": 720,
-            "width": 720,
+            "height": 512,
+            "width": 512,
             "distance": 0,
             "vector_to_first_pixel": {
                 "x": 0,
@@ -27,17 +27,17 @@
                 "z": 0
             }
         },
-        "fov": 90,
+        "fov": 45,
         "diffuse": 0.7,
         "ambient": 0.5,
-        "specular": 0.3,
-        "smooth_shadow": true,
-        "smooth_shadow_step": 64,
+        "specular": 0.4,
+        "smooth_shadow": false,
+        "smooth_shadow_step": 4,
         "shadow_bias": 1e-13,
         "recursivity": 2,
-        "reflection_samples": 1,
+        "reflecion_samples": 1024,
         "diffuse_samples": 50,
-        "threads": 12,
+        "threads": 20,
         "progression": true
     },
     "primitives": {
@@ -64,15 +64,15 @@
                     "texture_type": 1,
                     "color": {
                         "r": 255,
-                        "g": 255,
-                        "b": 255
+                        "g": 200,
+                        "b": 0
                     },
-                    "diffuse": 0.7,
+                    "diffuse": 1.0,
                     "ambient": 0.5,
-                    "specular": 0.2,
-                    "shininess": 4.0,
+                    "specular": 1.0,
+                    "shininess": 64.0,
                     "metalness": 0.0,
-                    "roughness": 0.5
+                    "roughness": 0.1
                 },
                 "radius": 0.5
             }
@@ -110,10 +110,11 @@
                     },
                     "diffuse": 0.7,
                     "ambient": 0.5,
-                    "specular": 0.2,
+                    "specular": 0.4,
                     "shininess": 4.0,
                     "metalness": 0.0,
-                    "roughness": 0.5
+                    "roughness": 0.8,
+                    "supersampling": 1.0
                 }
             },
             {
@@ -148,10 +149,11 @@
                     },
                     "diffuse": 0.7,
                     "ambient": 0.5,
-                    "specular": 0.2,
+                    "specular": 0.4,
                     "shininess": 4.0,
                     "metalness": 0.0,
-                    "roughness": 0.5
+                    "roughness": 0.8,
+                    "supersampling": 1.0
                 }
             },
             {
@@ -186,10 +188,10 @@
                     },
                     "diffuse": 0.7,
                     "ambient": 0.5,
-                    "specular": 0.2,
+                    "specular": 0.4,
                     "shininess": 4.0,
                     "metalness": 0.0,
-                    "roughness": 0.5
+                    "roughness": 0.4
                 }
             },
             {
@@ -224,10 +226,10 @@
                     },
                     "diffuse": 0.7,
                     "ambient": 0.5,
-                    "specular": 0.2,
+                    "specular": 0.4,
                     "shininess": 4.0,
                     "metalness": 0.0,
-                    "roughness": 0.5
+                    "roughness": 0.4
                 }
             },
             {
@@ -262,10 +264,10 @@
                     },
                     "diffuse": 0.7,
                     "ambient": 0.5,
-                    "specular": 0.2,
+                    "specular": 0.4,
                     "shininess": 4.0,
                     "metalness": 0.0,
-                    "roughness": 0.5
+                    "roughness": 0.4
                 }
             }
         ]
@@ -296,9 +298,9 @@
                         "g": 255,
                         "b": 255
                     },
-                    "strength": 4.0,
+                    "strength": 0.4,
                     "falloff": 2,
-                    "radius": 0.2
+                    "radius": 0.1
                 },
                 {
                     "transform": {
@@ -323,9 +325,9 @@
                         "g": 255,
                         "b": 255
                     },
-                    "strength": 4.0,
+                    "strength": 0.4,
                     "falloff": 2,
-                    "radius": 0.2
+                    "radius": 0.1
                 },
                 {
                     "transform": {
@@ -350,9 +352,9 @@
                         "g": 255,
                         "b": 255
                     },
-                    "strength": 4.0,
+                    "strength": 0.4,
                     "falloff": 2,
-                    "radius": 0.2
+                    "radius": 0.1
                 },
                 {
                     "transform": {
@@ -377,9 +379,117 @@
                         "g": 255,
                         "b": 255
                     },
-                    "strength": 4.0,
+                    "strength": 0.4,
                     "falloff": 2,
-                    "radius": 0.2
+                    "radius": 0.1
+                },
+                {
+                    "transform": {
+                        "pos": {
+                            "x": 2,
+                            "y": 0.8,
+                            "z": 0.2
+                        },
+                        "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                        },
+                        "scale": {
+                            "x": 1,
+                            "y": 1,
+                            "z": 1
+                        }
+                    },
+                    "color": {
+                        "r": 255,
+                        "g": 255,
+                        "b": 255
+                    },
+                    "strength": 0.4,
+                    "falloff": 2,
+                    "radius": 0.1
+                },
+                {
+                    "transform": {
+                        "pos": {
+                            "x": 2,
+                            "y": -0.8,
+                            "z": 1.8
+                        },
+                        "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                        },
+                        "scale": {
+                            "x": 1,
+                            "y": 1,
+                            "z": 1
+                        }
+                    },
+                    "color": {
+                        "r": 255,
+                        "g": 255,
+                        "b": 255
+                    },
+                    "strength": 0.4,
+                    "falloff": 2,
+                    "radius": 0.1
+                },
+                {
+                    "transform": {
+                        "pos": {
+                            "x": 2,
+                            "y": -0.8,
+                            "z": 0.2
+                        },
+                        "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                        },
+                        "scale": {
+                            "x": 1,
+                            "y": 1,
+                            "z": 1
+                        }
+                    },
+                    "color": {
+                        "r": 255,
+                        "g": 255,
+                        "b": 255
+                    },
+                    "strength": 0.4,
+                    "falloff": 2,
+                    "radius": 0.1
+                },
+                {
+                    "transform": {
+                        "pos": {
+                            "x": 2,
+                            "y": 0.8,
+                            "z": 1.8
+                        },
+                        "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                        },
+                        "scale": {
+                            "x": 1,
+                            "y": 1,
+                            "z": 1
+                        }
+                    },
+                    "color": {
+                        "r": 255,
+                        "g": 255,
+                        "b": 255
+                    },
+                    "strength": 0.4,
+                    "falloff": 2,
+                    "radius": 0.1
                 }
             ]
         },

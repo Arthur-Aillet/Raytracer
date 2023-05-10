@@ -9,8 +9,10 @@ use crate::vectors;
 
 use std::ops::{Add, Mul, Sub};
 use vectors::Vector;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy)]
+#[derive(Deserialize, Serialize)]
 pub struct Transform {
     pub pos: Vector,
     pub rotation: Vector,
@@ -38,7 +40,6 @@ impl Transform {
         }
     }
 }
-
 
 impl PartialEq for Transform {
     fn eq(&self, other: &Self) -> bool {
@@ -79,7 +80,7 @@ impl Mul<Transform> for Transform {
     }
 }
 
-
+#[derive(Deserialize, Serialize)]
 #[derive(Debug, Clone, Copy)]
 pub struct Color {
     pub r: f64,
@@ -105,6 +106,7 @@ impl Color {
     }
 }
 
+#[derive(Deserialize, Serialize)]
 #[derive(Debug, Clone, Copy)]
 pub struct Texture {
     pub texture_type: u64,
@@ -115,6 +117,7 @@ pub struct Texture {
     pub metalness: f64,
     pub shininess: f64,
     pub roughness: f64,
+    pub supersampling: f64,
 }
 
 impl Texture {
@@ -128,6 +131,7 @@ impl Texture {
             metalness: 0.1,
             shininess: 4.0,
             roughness: 0.25,
+            supersampling: 1.0,
         }
     }
 
