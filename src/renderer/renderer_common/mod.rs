@@ -7,9 +7,12 @@
 
 use crate::vectors;
 
+use std::ops::{Add, Mul, Sub};
 use vectors::Vector;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy)]
+#[derive(Deserialize, Serialize)]
 pub struct Transform {
     pub pos: Vector,
     pub rotation: Vector,
@@ -38,6 +41,46 @@ impl Transform {
     }
 }
 
+impl PartialEq for Transform {
+    fn eq(&self, other: &Self) -> bool {
+        self.pos == other.pos && self.rotation == other.rotation && self.scale == other.scale
+    }
+}
+
+impl Add<Transform> for Transform {
+    type Output = Transform;
+    fn add(self, other: Transform) -> Transform {
+        Transform {
+            pos: self.pos + other.pos,
+            rotation: self.rotation + other.rotation,
+            scale: self.scale + other.scale,
+        }
+    }
+}
+
+impl Sub<Transform> for Transform {
+    type Output = Transform;
+    fn sub(self, other: Transform) -> Transform {
+        Transform {
+            pos: self.pos - other.pos,
+            rotation: self.rotation - other.rotation,
+            scale: self.scale - other.scale,
+        }
+    }
+}
+
+impl Mul<Transform> for Transform {
+    type Output = Transform;
+    fn mul(self, other: Transform) -> Transform {
+        Transform {
+            pos: self.pos * other.pos,
+            rotation: self.rotation * other.rotation,
+            scale: self.scale * other.scale,
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize)]
 #[derive(Debug, Clone, Copy)]
 pub struct Color {
     pub r: f64,
@@ -63,6 +106,7 @@ impl Color {
     }
 }
 
+#[derive(Deserialize, Serialize)]
 #[derive(Debug, Clone, Copy)]
 pub struct Texture {
     pub texture_type: u64,
@@ -70,7 +114,10 @@ pub struct Texture {
     pub diffuse: f64,
     pub ambient: f64,
     pub specular: f64,
+    pub metalness: f64,
     pub shininess: f64,
+    pub roughness: f64,
+    pub supersampling: f64,
 }
 
 impl Texture {
@@ -81,7 +128,10 @@ impl Texture {
             diffuse: 0.7,
             ambient: 0.1,
             specular: 0.4,
+            metalness: 0.1,
             shininess: 4.0,
+            roughness: 0.25,
+            supersampling: 1.0,
         }
     }
 

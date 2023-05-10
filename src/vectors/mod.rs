@@ -8,10 +8,12 @@
 use std::f64::consts::PI;
 use crate::matrix;
 use matrix::Matrix;
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, Mul, Sub, Div};
 use rand::Rng;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy)]
+#[derive(Deserialize, Serialize)]
 pub struct Vector {
     pub x: f64,
     pub y: f64,
@@ -64,6 +66,17 @@ impl Mul<Vector> for Vector {
             x: self.x * other.x,
             y: self.y * other.y,
             z: self.z * other.z,
+        }
+    }
+}
+
+impl Div<f64> for Vector {
+    type Output = Vector;
+    fn div(self, other: f64) -> Vector {
+        Vector {
+            x: self.x / other,
+            y: self.y / other,
+            z: self.z / other,
         }
     }
 }
@@ -123,6 +136,12 @@ impl Vector {
 
     pub fn len(self) -> f64 {
         (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
+    }
+
+    pub fn lerp(&mut self, other: &Vector, t:f64) {
+        self.x = self.x + t * (other.x - self.x);
+        self.y = self.y + t * (other.y - self.y);
+        self.z = self.z + t * (other.z - self.z);
     }
 }
 
