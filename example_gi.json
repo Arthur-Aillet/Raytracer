@@ -31,13 +31,13 @@
     "diffuse": 0.7,
     "ambient": 0.5,
     "specular": 0.4,
-    "smooth_shadow": false,
-    "smooth_shadow_step": 4,
+    "smooth_shadow": true,
+    "smooth_shadow_step": 16,
     "shadow_bias": 1e-13,
-    "recursivity": 2,
-    "reflecion_samples": 1024,
-    "diffuse_samples": 50,
-    "threads": 20,
+    "recursivity": 3,
+    "reflection_samples": 32,
+    "diffuse_samples": 64,
+    "threads": 8,
     "progression": true
   },
   "primitives":
@@ -73,7 +73,8 @@
           "specular": 1.0,
           "shininess": 64.0,
           "metalness": 1.0,
-          "roughness": 0.1
+          "roughness": 1.0,
+          "supersampling": 2
         },
         "radius": 0.5
       },
