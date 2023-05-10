@@ -10,6 +10,7 @@ mod primitives;
 mod lights;
 mod parsing;
 mod renderer_common;
+use serde::{Serialize};
 
 use rand::Rng;
 use crate::renderer::primitives::{Object, Intersection};
@@ -17,15 +18,13 @@ use crate::renderer::lights::Light;
 use std::thread;
 use std::time;
 use std::sync::{Arc, Mutex};
-use std::fs;
-use serde_json::Value;
 use camera::{Camera};
 use lights::Lights;
 use parsing::Parser;
 use crate::config::Config;
 use crate::vectors::Vector;
 
-
+#[derive(Serialize)]
 pub struct Renderer {
     pub camera: Camera,
     pub primitives: Vec<Box<dyn Object + Send + Sync>>,
@@ -189,34 +188,57 @@ impl Renderer {
 
     fn get_color_from_ray(&self, origin: Vector, ray: Vector, recursivity: i64) -> Vector {
         if recursivity == 0 {
-            return Vector {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            }
+           return Vector {
+               x: 0.0,
+               y: 0.0,
+               z: 0.0,
+           }
         }
         let maybe_intersect = self.found_nearest_intersection(origin, ray);
 
         if let Some(intersect) = maybe_intersect {
+            // case of direct intersection with light object
             if let Some(light_touched) = intersect.light {
                 return light_touched.get_color().as_vector();
             }
+
             let mut self_color = self.get_ambient(intersect.object.unwrap());
 
+            // calculation of lighting
             for light in self.lights.lights.iter() {
                 self_color = self_color + self.calculate_light(light, &intersect, ray);
             }
+
             let surface_point = intersect.intersection_point + intersect.normal * self.camera.shadow_bias;
 
             self_color = self_color * (1.0 - intersect.object.unwrap().get_texture().metalness);
-            let samples_nbr = 1.0 + self.camera.reflection_samples as f64 * intersect.object.unwrap().get_texture().roughness;
+            if recursivity == 1 {
+                return self_color;
+            }
+            let samples_nbr = (1.0 + self.camera.reflection_samples as f64 * intersect.object.unwrap().get_texture().roughness).powf(intersect.object.unwrap().get_texture().supersampling);
             for _ in 0..samples_nbr as i32 {
                 let mut rng = rand::thread_rng();
+                // random vector used for the roughness
+                let random_a: f64 = rng.gen_range(0.0..6.28);
+                let random_b: f64 = rng.gen_range(0.0..6.28);
+                let random_vect = Vector {
+                    x: random_a.cos() * random_b.cos(),
+                    y: random_a.sin() * random_b.cos(),
+                    z: random_b.sin()
+                };
                 let mut reflection_ray = (ray.normalize() - intersect.normal.normalize() * 2.0 * intersect.normal.dot_product(ray.normalize())).normalize();
                 if intersect.object.unwrap().get_texture().roughness != 0.0 {
-                    reflection_ray.rotate(rng.gen_range(0.0..90.0 * intersect.object.unwrap().get_texture().roughness), 0.0, rng.gen_range(0.0..360.0));
+                    reflection_ray.lerp(&random_vect, intersect.object.unwrap().get_texture().roughness);
                 }
-                self_color = self_color + self.get_color_from_ray(surface_point, reflection_ray, recursivity - 1) * intersect.object.unwrap().get_texture().metalness * (1.0 / samples_nbr as f64);
+                let metalness = intersect.object.unwrap().get_texture().metalness;
+
+                let new_color = self.get_color_from_ray(surface_point, reflection_ray, recursivity - 1);
+
+                self_color =
+                    self_color
+                    + (((new_color * (1.0 - metalness) * intersect.object.unwrap().get_texture().specular))
+                    + (new_color * intersect.object.unwrap().get_texture().color.as_vector() * metalness))
+                    * (1.0/samples_nbr as f64);
             }
             self_color
         } else {
@@ -348,14 +370,13 @@ impl Renderer {
         result
     }
 
-    pub fn get_renderer_from_file(config: &Config) -> Renderer {
-        let data = fs::read_to_string(&config.config_file).expect("Unable to read file");
-        let json: Value = serde_json::from_str(&data.to_string()).unwrap();
+    pub fn get_renderer_from_file(config: &Config) -> Option<Renderer> {
+        let mut _result: Option<Renderer> = None;
         let parser = Parser{};
-        Renderer {
-            camera: if json["camera"].is_object() {parser.get_camera_from_json(&json["camera"], config.height, config.width)} else {Camera::default(config.height, config.width)},
-            primitives: if json["primitives"].is_object() {parser.get_objects_from_json(&json["primitives"])} else {Vec::new()},
-            lights: if json["lights"].is_object() {parser.get_lights_from_json(&json["lights"])} else {Lights::default()},
+        if parser.get_json(&config.config_file).is_some() {
+            _result = Some(parser.get_renderer_from_json(&parser.get_json(&config.config_file).unwrap(), config.height, config.width));
+            return _result
         }
+        None
     }
 }

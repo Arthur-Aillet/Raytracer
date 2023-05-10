@@ -1,21 +1,20 @@
 //
 // EPITECH PROJECT, 2023
-// Rustracer
+// Rustracer Major
 // File description:
-// Main
+// main
 //
 
 use renderer::Renderer;
 
 mod ppm_interface;
-mod nannou;
 mod vectors;
 mod matrix;
 mod renderer;
 mod config;
+mod nannou;
 
 use std::env;
-use std::io;
 
 fn print_help() {
     let config = config::Config::new();
@@ -32,10 +31,15 @@ fn print_help() {
     config.print();
 }
 
-fn main() -> io::Result<()> {
+fn main() -> std::io::Result<()> {
     let args: Vec<String> = env::args().collect();
     let config = config::Config::from_args(&args);
-    let mut renderer: Renderer = Renderer::get_renderer_from_file(&config);
+    let mut renderer: Option<Renderer> = Renderer::get_renderer_from_file(&config);
+
+    if renderer.is_none() {
+        println!("Error: Invalid file");
+        return Ok(());
+    }
 
     if config.help {
         print_help();
@@ -48,9 +52,8 @@ fn main() -> io::Result<()> {
         app.run();
     } else {
         let mut ppm = ppm_interface::PPMInterface::new(&config.save_file);
-        ppm.write(config.width, config.height, renderer.render(&config));
+        ppm.write(config.width, config.height, renderer.unwrap().render(&config));
     }
 
     Ok(())
 }
-

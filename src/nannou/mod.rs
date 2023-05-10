@@ -14,7 +14,6 @@ use std::env;
 struct Model {
     _window: window::Id,
     config: config::Config,
-    renderer: Renderer,
 }
 
 fn model(app: &App) -> Model {
@@ -33,14 +32,14 @@ fn model(app: &App) -> Model {
     Model {
         _window: window,
         config: config.clone(),
-        renderer: Renderer::get_renderer_from_file(&config),
     }
 }
 
 fn update(_app: &App, _model: &mut Model, _update: Update) {}
 
 fn view(app: &App, model: &Model, frame: Frame) {
-    let pixels = model.renderer.render(&model.config);
+    let mut renderer: Option<Renderer> = Renderer::get_renderer_from_file(&model.config);
+    let pixels = renderer.unwrap().render(&model.config);
     let mut index = 0;
 
     let window = app.window_rect();
