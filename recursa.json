@@ -1,0 +1,38 @@
+{
+    "primitives": {
+        "spheres": [
+            {
+                "transform": {
+                    "pos": {
+                        "x": 0,
+                        "y": 8,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    }
+                },
+                "texture": {
+                    "texture_type": 1,
+                    "color": {
+                        "r": 0,
+                        "g": 100,
+                        "b": 255
+                    },
+                "diffuse": 0.7,
+                "ambient": 0.1,
+                "specular": 0.4,
+                "shininess": 4.0
+                },
+                "radius": 1
+            }
+        ]
+    }
+}

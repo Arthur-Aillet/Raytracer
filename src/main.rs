@@ -18,8 +18,9 @@ use std::env;
 fn main() -> std::io::Result<()> {
     let args: Vec<String> = env::args().collect();
     let config = config::Config::from_args(&args);
-    let mut renderer: Renderer = Renderer::get_renderer_from_file(config.config_file, config.height, config.width);
+    let renderer : Renderer = Renderer::get_renderer_from_file(config.config_file, config.height, config.width).unwrap_or(Renderer::new(config.height, config.width));
 
+    print!("{}\n", serde_json::to_string_pretty(&renderer).unwrap());
     if config.g_flag {
         return Ok(());
     } else {

@@ -10,6 +10,7 @@ mod primitives;
 mod lights;
 mod parsing;
 mod renderer_common;
+use serde::{Serialize};
 
 use rand::Rng;
 use crate::renderer::primitives::{Object, Intersection};
@@ -17,14 +18,12 @@ use crate::renderer::lights::Light;
 use std::thread;
 use std::time;
 use std::sync::{Arc, Mutex};
-use std::fs;
-use serde_json::Value;
 use camera::{Camera};
 use lights::Lights;
 use parsing::Parser;
 use crate::vectors::Vector;
 
-
+#[derive(Serialize)]
 pub struct Renderer {
     pub camera: Camera,
     pub primitives: Vec<Box<dyn Object + Send + Sync>>,
@@ -370,14 +369,13 @@ impl Renderer {
         result
     }
 
-    pub fn get_renderer_from_file(file: String, height: i64, width: i64) -> Renderer {
-        let data = fs::read_to_string(file).expect("Unable to read file");
-        let json: Value = serde_json::from_str(&data.to_string()).unwrap();
+    pub fn get_renderer_from_file(file: String, height: i64, width: i64) -> Option<Renderer> {
+        let mut _result: Option<Renderer> = None;
         let parser = Parser{};
-        Renderer {
-            camera: if json["camera"].is_object() {parser.get_camera_from_json(&json["camera"], height, width)} else {Camera::default(height, width)},
-            primitives: if json["primitives"].is_object() {parser.get_objects_from_json(&json["primitives"])} else {Vec::new()},
-            lights: if json["lights"].is_object() {parser.get_lights_from_json(&json["lights"])} else {Lights::default()},
+        if parser.get_json(&file).is_some() {
+            _result = Some(parser.get_renderer_from_json(&parser.get_json(&file).unwrap(), height, width));
+            return _result
         }
+        None
     }
 }
