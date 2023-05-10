@@ -8,8 +8,9 @@ use nannou::Frame;
 use nannou::App;
 
 use crate::renderer::Renderer;
-use crate::config;
 use std::env;
+use crate::config;
+use crate::config::Config;
 
 pub struct Model {
     window: WindowId,
@@ -55,7 +56,7 @@ fn handle_keys(app: &App) {
 fn view(_app: &App, model: &Model, frame: Frame) {
     handle_keys(&_app);
     let renderer = Renderer::get_renderer_from_file(&model.config);
-    let pixels = renderer.render(&model.config);
+    let pixels = renderer.unwrap().render(&model.config);
     let mut index = 0;
 
     let window = _app.window_rect();
