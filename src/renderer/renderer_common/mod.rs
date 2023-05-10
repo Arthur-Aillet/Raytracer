@@ -117,7 +117,7 @@ pub struct Texture {
     pub metalness: f64,
     pub shininess: f64,
     pub roughness: f64,
-    pub supersampling: f64,
+    pub sampling_ponderation: f64,
 }
 
 impl Texture {
@@ -131,7 +131,7 @@ impl Texture {
             metalness: 0.1,
             shininess: 4.0,
             roughness: 0.25,
-            supersampling: 1.0,
+            sampling_ponderation: 1.0,
         }
     }
 

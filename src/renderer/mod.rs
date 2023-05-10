@@ -21,6 +21,7 @@ use std::sync::{Arc, Mutex};
 use camera::{Camera};
 use lights::Lights;
 use parsing::Parser;
+use crate::config::Config;
 use crate::vectors::Vector;
 
 #[derive(Serialize)]
@@ -167,7 +168,7 @@ impl Renderer {
             if recursivity == 1 {
                 return self_color;
             }
-            let samples_nbr = (1.0 + self.camera.reflecion_samples as f64 * intersect.object.unwrap().get_texture().roughness).powf(intersect.object.unwrap().get_texture().supersampling);
+            let samples_nbr = (1.0 + self.camera.reflection_samples as f64 * intersect.object.unwrap().get_texture().roughness).powf(intersect.object.unwrap().get_texture().sampling_ponderation);
             for _ in 0..samples_nbr as i32 {
                 let mut rng = rand::thread_rng();
                 // random vector used for the roughness
@@ -215,8 +216,8 @@ impl Renderer {
         true
     }
 
-    pub fn render_pixel(&self, x:i64, y:i64) -> Vector {
-        if true == true {
+    pub fn render_pixel(&self, x:i64, y:i64, config: &Config) -> Vector {
+        if config.fast_mode != 0 {
             return self.get_color_from_ray_fast(self.camera.transform.pos, self.camera.get_pixel_vectors(x, y, 1)[0]);
         }
 
@@ -232,7 +233,7 @@ impl Renderer {
         self.combine_pixel(&samples)
     }
 
-    pub fn naive_thread_renderer(&self, pixel_states:Arc<Mutex<Vec<bool>>>, pixels:Arc<Mutex<Vec<u8>>>, progression:Arc<Mutex<u64>>) {
+    pub fn naive_thread_renderer(&self, pixel_states:Arc<Mutex<Vec<bool>>>, pixels:Arc<Mutex<Vec<u8>>>, progression:Arc<Mutex<u64>>, config: &Config) {
         //println!("thread {id:?} started");
         let mut pixel_id: usize;
         let mut line_state_id: usize;
@@ -250,7 +251,7 @@ impl Renderer {
             let mut local_pixel_line: Vec<u8> = vec![0; (self.camera.lens.width * 3) as usize];
             for j in 0..self.camera.lens.width {
                 pixel_id = (j * 3) as usize;
-                let calculated_pixel = self.render_pixel(j, i);
+                let calculated_pixel = self.render_pixel(j, i, &config);
 
                 local_pixel_line[pixel_id + 0] = (self.camera.aces_curve(calculated_pixel.x).powf(1.0/2.2) * 255.0) as u8;
                 local_pixel_line[pixel_id + 1] = (self.camera.aces_curve(calculated_pixel.y).powf(1.0/2.2) * 255.0) as u8;
@@ -287,9 +288,9 @@ impl Renderer {
         }
     }
 
-    pub fn render(&self) -> Vec<u8> {
+    pub fn render(&self, config: &Config) -> Vec<u8> {
         let mut result: Vec<u8> = Vec::new();
-        let buf_size = if true == false { self.camera.image_buffer_size } else { 1 };
+        let buf_size = if config.fast_mode != 0 { 1 } else { self.camera.image_buffer_size };
         for n in 0..buf_size {
             let pixels:Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize]));
             let pixels_state:Arc<Mutex<Vec<bool>>> = Arc::new(Mutex::new(vec![false; self.camera.lens.height as usize]));
@@ -300,7 +301,7 @@ impl Renderer {
                     let clone_pixels_state = Arc::clone(&pixels_state);
                     let clone_progression = Arc::clone(&progression);
                     scope.spawn(move || {
-                        self.naive_thread_renderer(clone_pixels_state, clone_pixels, clone_progression);
+                        self.naive_thread_renderer(clone_pixels_state, clone_pixels, clone_progression, &config);
                     });
                 }
 
@@ -322,11 +323,11 @@ impl Renderer {
         result
     }
 
-    pub fn get_renderer_from_file(file: String, height: i64, width: i64) -> Option<Renderer> {
+    pub fn get_renderer_from_file(config: &Config) -> Option<Renderer> {
         let mut _result: Option<Renderer> = None;
         let parser = Parser{};
-        if parser.get_json(&file).is_some() {
-            _result = Some(parser.get_renderer_from_json(&parser.get_json(&file).unwrap(), height, width));
+        if parser.get_json(&config.config_file).is_some() {
+            _result = Some(parser.get_renderer_from_json(&parser.get_json(&config.config_file).unwrap(), config.height, config.width));
             return _result
         }
         None

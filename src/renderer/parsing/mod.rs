@@ -48,7 +48,7 @@ impl Parser {
             shadow_bias: json["shadow_bias"].as_f64().unwrap_or(1e-14),
             aces_tone_mapping: json["aces_tone_mapping"].as_bool().unwrap_or(true),
             recursivity: json["recursivity"].as_i64().unwrap_or(5),
-            reflection_samples: json["reflection_samples"].as_i64().unwrap_or(5),
+            reflection_samples: json["reflection_samples"].as_i64().unwrap_or(16),
             threads: json["threads"].as_u64().unwrap_or(8),
             progression: json["progression"].as_bool().unwrap_or(false),
             super_sampling: json["super_sampling"].as_u64().unwrap_or(1),
@@ -88,7 +88,7 @@ impl Parser {
             metalness: json["metalness"].as_f64().unwrap_or(0.1),
             shininess: json["shininess"].as_f64().unwrap_or(4.0),
             roughness: json["roughness"].as_f64().unwrap_or(0.25),
-            supersampling: json["supersampling"].as_f64().unwrap_or(1.0),
+            sampling_ponderation: json["sampling_ponderation"].as_f64().unwrap_or(1.0),
         }
     }
 
