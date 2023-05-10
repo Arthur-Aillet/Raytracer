@@ -5,15 +5,16 @@
 // json parsing
 //
 
+use std::fs;
+
 use crate::vectors;
 use serde_json::Value;
 use vectors::Vector;
 use super::Renderer;
 use super::camera::{Lens, Camera};
 use super::primitives::{Sphere, Plane, Cylinder, Cone, Object};
-use super::lights::{Point, Ambient, Light, Lights};
-use super::renderer_common::{Transform, Color, Texture};
-use std::fs;
+use super::lights::{Point, Ambient, Light, Lights, Directional};
+use super::renderer_common::{Transform, Color, Texture, Image, Textures_types};
 
 pub struct Parser {
 }
@@ -48,12 +49,13 @@ impl Parser {
             shadow_bias: json["shadow_bias"].as_f64().unwrap_or(1e-14),
             aces_tone_mapping: json["aces_tone_mapping"].as_bool().unwrap_or(true),
             recursivity: json["recursivity"].as_i64().unwrap_or(5),
-            reflection_samples: json["reflection_samples"].as_i64().unwrap_or(5),
+            reflection_samples: json["reflection_samples"].as_i64().unwrap_or(16),
             threads: json["threads"].as_u64().unwrap_or(8),
             progression: json["progression"].as_bool().unwrap_or(false),
             super_sampling: json["super_sampling"].as_u64().unwrap_or(1),
             super_sampling_precision: json["super_sampling_precision"].as_u64().unwrap_or(10),
             image_buffer_size: json["image_buffer_size"].as_u64().unwrap_or(1),
+            reflecion_samples: json["reflection_samples"].as_f64().unwrap_or(16.0),
         };
         camera.calculate_lens_distance();
         let vector_director = Vector {x: 0.0, y: camera.lens.distance, z: 0.0};
@@ -77,17 +79,33 @@ impl Parser {
         }
     }
 
+    pub fn get_image_from_json(&self, json: &Value) -> Image {
+        let filename = json["file"].as_str().unwrap_or("missing_texture.ppm").to_string();
+        let data = fs::read_to_string(filename).unwrap_or(fs::read_to_string("missing_texture.ppm").expect("missing missing texture texture\n"));
+
+        print!("{}\n", data);
+        Image {
+            height: 0,
+            width: 0,
+            vector: Vec::new(),
+        }
+    }
+
     pub fn get_texture_from_json(&self, json: &Value) -> Texture {
         Texture {
-            texture_type: json["texture_type"].as_u64().unwrap_or(1),
+            texture_type: json["texture_type"].as_u64().unwrap_or(0),
             color: if json["color"].is_object(){self.get_color_from_json(&json["color"])} else {Color::default()},
+            secondary_color: if json["secondary_color"].is_object(){self.get_color_from_json(&json["secondary_color"])} else {Color::default()},
+            image: if json["image"].is_object() {self.get_image_from_json(&json["image"])} else {Image::default()},
+            mod1: json["mod1"].as_f64().unwrap_or(2.0),
+            mod2: json["mod2"].as_f64().unwrap_or(2.0),
             diffuse: json["diffuse"].as_f64().unwrap_or(0.7),
             ambient: json["ambient"].as_f64().unwrap_or(0.1),
             specular: json["specular"].as_f64().unwrap_or(0.4),
             metalness: json["metalness"].as_f64().unwrap_or(0.1),
             shininess: json["shininess"].as_f64().unwrap_or(4.0),
             roughness: json["roughness"].as_f64().unwrap_or(0.25),
-            supersampling: json["supersampling"].as_f64().unwrap_or(1.0),
+            sampling_ponderation: json["sampling_ponderation"].as_f64().unwrap_or(1.0),
         }
     }
 
@@ -173,12 +191,34 @@ impl Parser {
         )
     }
 
+    pub fn get_directional_from_json(&self, json: &Value) -> Box::<Directional> {
+        let mut result = Box::new(
+            Directional {
+                transform: Transform {
+                    rotation: if json["transform"]["rotation"].is_object() {self.get_vector_from_json(&json["transform"]["rotation"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
+                    scale: if json["transform"]["scale"].is_object() {self.get_vector_from_json(&json["transform"]["scale"])} else {Vector {x: 1.0, y: 1.0, z: 1.0}},
+                    pos: Vector {x: 0.0, y: 0.0, z: 1.0},
+                },
+                color: if json["color"].is_object() {self.get_color_from_json(&json["color"])} else {Color::default()},
+                strength: json["strength"].as_f64().unwrap_or(80.0),
+                visible: json["visible"].as_bool().unwrap_or(false),
+            }
+        );
+        result.transform.pos.rotate(result.transform.rotation.x, result.transform.rotation.y, result.transform.rotation.z);
+        result
+    }
+
     pub fn get_object_lights_from_json(&self, json: &Value) -> Vec::<Box::<dyn Light + Send + Sync>> {
         let mut lights: Vec::<Box::<dyn Light + Send + Sync>> = Vec::new();
 
         if json["point"].is_array(){
             for point in json["point"].as_array().unwrap().iter() {
                 lights.push(self.get_point_from_json(point))
+            }
+        }
+        if json["directional"].is_array(){
+            for point in json["directional"].as_array().unwrap().iter() {
+                lights.push(self.get_directional_from_json(point))
             }
         }
         lights
