@@ -102,7 +102,7 @@ impl Light for Point {
     }
     fn calculate_light(&self, intersect: &Intersection, camera_to_pixel: Vector, camera: Camera, primitives: &Vec<Box<dyn Object + Send + Sync>>) -> Vector {
         let normal_vector = intersect.normal.normalize();
-        let light_vector = (self.transform.pos - intersect.intersection_point).normalize();
+        let light_vector = (self.get_transform().pos - intersect.intersection_point).normalize();
         let mut light_uncovered = 1.0;
 
         if camera.smooth_shadow == false {
@@ -116,7 +116,7 @@ impl Light for Point {
         } else {
             let mut light_reached: i16 = 0;
             for _ in 0..camera.smooth_shadow_step {
-                let inter_to_light = self.transform.pos + Vector::get_random_point_in_sphere(self.radius) - intersect.intersection_point;
+                let inter_to_light = self.get_transform().pos + Vector::get_random_point_in_sphere(self.get_radius()) - intersect.intersection_point;
                 if self.light_is_intersected(inter_to_light.normalize(), intersect, normal_vector, camera, primitives) == false {
                     light_reached += 1;
                 }
@@ -128,10 +128,11 @@ impl Light for Point {
         let reflected = light_vector.reflect(normal_vector).normalize();
         let view = (camera_to_pixel * -1.0).normalize();
         let specular = camera.specular * intersect.object.unwrap().get_texture().specular * reflected.dot_product(view).max(0.0).powf(intersect.object.unwrap().get_texture().shininess);
-        let distance = intersect.intersection_point.distance(self.transform.pos);
-        let light_falloff = (self.strength/ distance.powi(self.falloff)).max(0.0);
-        intersect.object.unwrap().get_texture().color.as_vector() * self.color.as_vector() * diffuse * light_falloff * light_uncovered + self.color.as_vector() * specular * light_falloff * light_uncovered
-    }
+        let distance = intersect.intersection_point.distance(self.get_transform().pos);
+        let light_falloff = (self.get_strength() / distance.powi(self.get_falloff())).max(0.0);
+        let texture_coordinates = intersect.object.unwrap().surface_position(intersect.intersection_point - intersect.object.unwrap().get_transform().pos);
+        intersect.object.unwrap().get_texture().texture(texture_coordinates.x, texture_coordinates.y).as_vector() * self.get_color().as_vector() * diffuse * light_falloff * light_uncovered + self.get_color().as_vector() * specular * light_falloff * light_uncovered
+        }
 }
 
 impl Light for Directional {
@@ -212,7 +213,8 @@ impl Light for Directional {
         let reflected = self.transform.pos.reflect(normal_vector).normalize();
         let view = (camera_to_pixel * -1.0).normalize();
         let specular = camera.specular * intersect.object.unwrap().get_texture().specular * reflected.dot_product(view).max(0.0).powf(intersect.object.unwrap().get_texture().shininess);
-        intersect.object.unwrap().get_texture().color.as_vector() * self.color.as_vector() * diffuse * light_uncovered + self.color.as_vector() * specular * light_uncovered
+        let texture_coordinates = intersect.object.unwrap().surface_position(intersect.intersection_point - intersect.object.unwrap().get_transform().pos);
+        intersect.object.unwrap().get_texture().texture(texture_coordinates.x, texture_coordinates.y).as_vector() * self.get_color().as_vector() * diffuse * light_uncovered + self.get_color().as_vector() * specular * light_uncovered
     }
 }
 

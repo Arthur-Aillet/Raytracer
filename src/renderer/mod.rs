@@ -96,7 +96,7 @@ impl Renderer {
         found_intersection
     }
 
-    fn get_ambient<'a>(&self, object :&'a dyn Object) -> Vector {
+    fn get_ambient<'a>(&self, object :&'a dyn Object, position: Vector) -> Vector {
         let mut self_color = Vector{
             x: 0.0,
             y: 0.0,
@@ -104,7 +104,8 @@ impl Renderer {
         };
 
         for ambient in self.lights.ambient.iter() {
-            self_color = self_color + object.get_texture().color.as_vector() * object.get_texture().ambient * ambient.color.as_vector() * ambient.strength * self.camera.ambient;
+            let texture_coordinates = object.surface_position(position - object.get_transform().pos);
+            self_color = self_color + object.get_texture().texture(texture_coordinates.x, texture_coordinates.y).as_vector() * object.get_texture().ambient * ambient.color.as_vector() * ambient.strength * self.camera.ambient;
         }
         self_color
     }
@@ -125,11 +126,12 @@ impl Renderer {
             let normal_vector = intersect.normal.normalize();
             let light_vector = (self.camera.transform.pos - intersect.intersection_point).normalize();
 
-            let ambient = intersect.object.unwrap().get_texture().color.as_vector() * intersect.object.unwrap().get_texture().ambient * self.camera.ambient;
+            let texture_coordinates = intersect.object.unwrap().surface_position(intersect.intersection_point - intersect.object.unwrap().get_transform().pos);
+            let ambient = intersect.object.unwrap().get_texture().texture(texture_coordinates.x, texture_coordinates.y).as_vector() * intersect.object.unwrap().get_texture().ambient * self.camera.ambient;
 
             let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * intersect.object.unwrap().get_texture().diffuse;
 
-            ambient + intersect.object.unwrap().get_texture().color.as_vector() * diffuse
+            ambient + intersect.object.unwrap().get_texture().texture(texture_coordinates.x, texture_coordinates.y).as_vector() * diffuse
         } else {
             Vector {
                 x: 0.0,
@@ -154,8 +156,7 @@ impl Renderer {
             if let Some(light_touched) = intersect.light {
                 return light_touched.get_color().as_vector();
             }
-
-            let mut self_color = self.get_ambient(intersect.object.unwrap());
+            let mut self_color = self.get_ambient(intersect.object.unwrap(), intersect.intersection_point);
 
             // calculation of lighting
             for light in self.lights.lights.iter() {

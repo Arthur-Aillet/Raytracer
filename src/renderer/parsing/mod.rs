@@ -5,6 +5,8 @@
 // json parsing
 //
 
+use std::fs;
+
 use crate::vectors;
 use serde_json::Value;
 use vectors::Vector;
@@ -12,8 +14,7 @@ use super::Renderer;
 use super::camera::{Lens, Camera};
 use super::primitives::{Sphere, Plane, Cylinder, Cone, Object};
 use super::lights::{Point, Ambient, Light, Lights, Directional};
-use super::renderer_common::{Transform, Color, Texture};
-use std::fs;
+use super::renderer_common::{Transform, Color, Texture, Image, Textures_types};
 
 pub struct Parser {
 }
@@ -78,10 +79,26 @@ impl Parser {
         }
     }
 
+    pub fn get_image_from_json(&self, json: &Value) -> Image {
+        let filename = json["file"].as_str().unwrap_or("missing_texture.ppm").to_string();
+        let data = fs::read_to_string(filename).unwrap_or(fs::read_to_string("missing_texture.ppm").expect("missing missing texture texture\n"));
+
+        print!("{}\n", data);
+        Image {
+            height: 0,
+            width: 0,
+            vector: Vec::new(),
+        }
+    }
+
     pub fn get_texture_from_json(&self, json: &Value) -> Texture {
         Texture {
-            texture_type: json["texture_type"].as_u64().unwrap_or(1),
+            texture_type: json["texture_type"].as_u64().unwrap_or(0),
             color: if json["color"].is_object(){self.get_color_from_json(&json["color"])} else {Color::default()},
+            secondary_color: if json["secondary_color"].is_object(){self.get_color_from_json(&json["secondary_color"])} else {Color::default()},
+            image: if json["image"].is_object() {self.get_image_from_json(&json["image"])} else {Image::default()},
+            mod1: json["mod1"].as_f64().unwrap_or(2.0),
+            mod2: json["mod2"].as_f64().unwrap_or(2.0),
             diffuse: json["diffuse"].as_f64().unwrap_or(0.7),
             ambient: json["ambient"].as_f64().unwrap_or(0.1),
             specular: json["specular"].as_f64().unwrap_or(0.4),
