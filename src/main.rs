@@ -11,15 +11,20 @@ mod ppm_interface;
 mod vectors;
 mod matrix;
 mod renderer;
+mod config;
 
 use std::env;
 
 fn main() -> std::io::Result<()> {
     let args: Vec<String> = env::args().collect();
-    let mut ppm = ppm_interface::PPMInterface::new(String::from(args[1].clone()));
-    let height = 512;
-    let width = 512;
-    let mut renderer : Renderer = Renderer::get_renderer_from_file(String::from(args[2].clone()));
-    ppm.write(width, height, renderer.render());
+    let config = config::Config::from_args(&args);
+    let mut renderer: Renderer = Renderer::get_renderer_from_file(config.config_file, config.height, config.width);
+
+    if config.g_flag {
+        return Ok(());
+    } else {
+        let mut ppm = ppm_interface::PPMInterface::new(config.save_file);
+        ppm.write(config.width, config.height, renderer.render());
+    }
     Ok(())
 }

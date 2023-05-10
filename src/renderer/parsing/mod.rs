@@ -33,19 +33,10 @@ impl Parser {
         }
     }
 
-    pub fn get_lens_from_json(&self, json: &Value) -> Lens {
-        Lens {
-            height: json["height"].as_i64().unwrap_or(1080),
-            width: json["width"].as_i64().unwrap_or(1920),
-            distance: json["distance"].as_f64().unwrap_or(0.0),
-            vector_to_first_pixel: if json["vector_to_first_pixel"].is_object() {self.get_vector_from_json(&json["vector_to_first_pixel"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
-        }
-    }
-
-    pub fn get_camera_from_json(&self, json: &Value) -> Camera {
+    pub fn get_camera_from_json(&self, json: &Value, height: i64, width: i64) -> Camera {
         let mut camera = Camera {
             transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
-            lens: if json["lens"].is_object() {self.get_lens_from_json(&json["lens"])} else {Lens::default()},
+            lens: Lens::default(height, width),
             fov: json["fov"].as_i64().unwrap_or(60),
             smooth_shadow: json["smooth_shadow"].as_bool().unwrap_or(true),
             smooth_shadow_step: json["smooth_shadow_step"].as_i64().unwrap_or(50) as i16,
@@ -53,10 +44,14 @@ impl Parser {
             ambient: json["ambient"].as_f64().unwrap_or(0.3),
             specular: json["specular"].as_f64().unwrap_or(0.6),
             shadow_bias: json["shadow_bias"].as_f64().unwrap_or(1e-14),
+            aces_tone_mapping: json["aces_tone_mapping"].as_bool().unwrap_or(true),
             recursivity: json["recursivity"].as_i64().unwrap_or(5),
-            reflecion_samples: json["reflecion_samples"].as_i64().unwrap_or(5),
+            reflection_samples: json["reflection_samples"].as_i64().unwrap_or(5),
             threads: json["threads"].as_u64().unwrap_or(8),
-            progression: json["progression"].as_bool().unwrap_or(false)
+            progression: json["progression"].as_bool().unwrap_or(false),
+            super_sampling: json["super_sampling"].as_u64().unwrap_or(1),
+            super_sampling_precision: json["super_sampling_precision"].as_u64().unwrap_or(10),
+            image_buffer_size: json["image_buffer_size"].as_u64().unwrap_or(1),
         };
         camera.calculate_lens_distance();
         let vector_director = Vector {x: 0.0, y: camera.lens.distance, z: 0.0};
@@ -165,6 +160,7 @@ impl Parser {
     pub fn get_point_from_json(&self, json: &Value) -> Box::<Point> {
         Box::new(
             Point {
+                visible: json["visible"].as_bool().unwrap_or(false),
                 transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
                 color: if json["color"].is_object() {self.get_color_from_json(&json["color"])} else {Color::default()},
                 strength: json["strength"].as_f64().unwrap_or(80.0),
