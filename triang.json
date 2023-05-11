@@ -4,10 +4,10 @@
       "pos": {
         "x": 0,
         "y": 0,
-        "z": 0
+        "z": 3
       },
       "rotation": {
-        "x": 0,
+        "x": -45,
         "y": 0,
         "z": 0
       },
@@ -38,13 +38,13 @@
       "transform": {
         "pos": {
           "x": 0,
-          "y": 3,
+          "y": 5,
           "z": 0
         },
         "rotation": {
           "x": 0,
           "y": 0,
-          "z": 180
+          "z": 0
         },
         "scale": {
           "x": 1,
@@ -55,9 +55,9 @@
       "texture": {
         "texture_type": 1,
         "secondary_color": {
-          "r" : 200,
+          "r" : 100,
           "g" : 100,
-          "b" : 0
+          "b" : 200
         },
         "color": {
           "r": 255,
@@ -71,7 +71,7 @@
         "metalness": 0.5,
         "roughness": 0
       },
-      "file": "test.obj"
+      "file": "cube.obj"
     }
   ],
   "lights": {
