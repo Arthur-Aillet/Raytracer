@@ -6,12 +6,14 @@
 //
 
 use crate::vectors;
+use serde::{Deserialize, Serialize};
 use rand::Rng;
 
 use super::renderer_common::Transform;
 use vectors::Vector;
 
 #[derive(Debug, Clone, Copy)]
+#[derive(Deserialize, Serialize)]
 pub struct Lens {
     pub height: i64,
     pub width: i64,
@@ -35,6 +37,7 @@ impl Lens  {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[derive(Deserialize, Serialize)]
 pub struct Camera {
     pub transform: Transform,
     pub lens: Lens,
@@ -53,6 +56,7 @@ pub struct Camera {
     pub image_buffer_size: u64,
     pub super_sampling: u64,
     pub super_sampling_precision: u64,
+    pub reflecion_samples: f64,
 }
 
 impl Camera {
@@ -75,6 +79,7 @@ impl Camera {
             image_buffer_size: 1,
             super_sampling: 5,
             super_sampling_precision: 10,
+            reflecion_samples: 16.0,
         };
         camera.calculate_lens_distance();
         let vector_director = Vector {x: 0.0, y: camera.lens.distance, z: 0.0};

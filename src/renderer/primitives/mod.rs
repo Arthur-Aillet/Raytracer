@@ -5,13 +5,14 @@
 // implementations
 //
 
-use std::process::exit;
 use crate::vectors;
 
 use vectors::Vector;
 use vectors::resolve_quadratic_equation;
 use crate::renderer::lights::Light;
 use super::renderer_common::{Transform, Texture};
+use serde::{Deserialize, Serialize};
+use erased_serde::serialize_trait_object;
 
 pub struct Intersection<'a> {
     pub intersection_point: Vector,
@@ -20,18 +21,21 @@ pub struct Intersection<'a> {
     pub light: Option<&'a dyn Light>,
 }
 
+#[derive(Deserialize, Serialize)]
 pub struct Sphere {
     pub transform: Transform,
     pub texture: Texture,
     pub radius: f64,
 }
 
+#[derive(Deserialize, Serialize)]
 pub struct Plane {
     pub transform: Transform,
     pub texture: Texture,
     pub normal: Vector,
 }
 
+#[derive(Deserialize, Serialize)]
 pub struct Cylinder {
     pub transform: Transform,
     pub texture: Texture,
@@ -39,6 +43,7 @@ pub struct Cylinder {
     pub radius: f64,
 }
 
+#[derive(Deserialize, Serialize)]
 pub struct Cone {
     pub transform: Transform,
     pub texture: Texture,
@@ -46,14 +51,30 @@ pub struct Cone {
     pub height: f64,
 }
 
-pub trait Object {
+#[derive(Deserialize, Serialize)]
+pub struct Triangle {
+    pub transform : Transform,
+    pub texture: Texture,
+    pub point_a: Vector,
+    pub point_b: Vector,
+    pub point_c: Vector
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct Mesh {
+    pub transform: Transform,
+    pub texture: Texture,
+    pub triangles: Vec<Triangle>,
+}
+
+pub trait Object: erased_serde::Serialize {
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection>;
+    fn surface_position(&self, position: Vector) -> Vector;
+    fn get_transform(&self) -> Transform;
+    fn move_obj(&mut self, offset: Transform);
     fn set_transform(&mut self, new: Transform);
     fn get_texture(&self) -> Texture;
     fn set_texture(&mut self, new: Texture);
-    fn set_radius(&mut self, new: f64);
-    fn set_height(&mut self, new: f64);
-    fn set_normal(&mut self, new: Vector);
 }
 
 impl Object for Sphere {
@@ -61,7 +82,7 @@ impl Object for Sphere {
         let diff = origin - self.transform.pos;
         let result = resolve_quadratic_equation(ray.dot_product(ray), // could be 1 if normalized
                                                 2.0 * (ray.dot_product(diff)),
-                                                (diff.dot_product(diff)) - self.radius.powi(2));
+                                                (diff.dot_product(diff)) - (self.radius * self.transform.scale.x).powi(2));
 
         let smallest_result: Option<&f64> = result.iter().filter(|number| **number > 0.0).min_by(|a, b| a.partial_cmp(b).unwrap());
 
@@ -81,18 +102,28 @@ impl Object for Sphere {
             })
         }
     }
-    fn set_transform(&mut self, new: Transform) {self.transform = new}
-    fn get_texture(&self) -> Texture {self.texture}
-    fn set_texture(&mut self, new: Texture) {self.texture = new}
-    fn set_radius(&mut self, new: f64) {self.radius = new}
 
-    fn set_height(&mut self, _new: f64) {}
-    fn set_normal(&mut self, _new: Vector) {}
+    fn surface_position(&self, position: Vector) -> Vector {
+        let mut rotated_position = position;
+
+        rotated_position.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        Vector {
+            x: 2.0 * (1.0 - (rotated_position.x.atan2(rotated_position.y)/ (2.0 * std::f64::consts::PI) + 0.5)),
+            y: 1.0 - (rotated_position.z / (rotated_position.x.powi(2) + rotated_position.y.powi(2) + rotated_position.z.powi(2)).sqrt()).acos() / std::f64::consts::PI,
+            z: 0.0
+        }
+    }
+    fn get_transform(&self) -> Transform {self.transform}
+    fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
+    fn set_transform(&mut self, new: Transform) {self.transform = new}
+    fn get_texture(&self) -> Texture {self.texture.clone()}
+    fn set_texture(&mut self, new: Texture) {self.texture = new}
 }
 
 impl Object for Plane {
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
-        let normal = self.normal.normalize();
+        let mut normal = self.normal.normalize();
+        normal.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
         let denom = ray.normalize().dot_product(normal);
         if denom == 0.0 {
             return None
@@ -112,13 +143,21 @@ impl Object for Plane {
             light: None,
         })
     }
-    fn set_transform(&mut self, new: Transform) {self.transform = new}
-    fn get_texture(&self) -> Texture {self.texture}
-    fn set_texture(&mut self, new: Texture) {self.texture = new}
-    fn set_radius(&mut self, _new: f64) {}
+    fn surface_position(&self, position: Vector) -> Vector {
+        let mut rotated_position = position;
 
-    fn set_height(&mut self, _new: f64) {}
-    fn set_normal(&mut self, new: Vector) {self.normal = new}
+        rotated_position.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        Vector {
+            x: if position.x < 0.0 {position.x % 1.0 + 1.0} else {position.x % 1.0},
+            y: if position.y < 0.0 {position.y % 1.0 + 1.0} else {position.y % 1.0},
+            z: 0.0
+        }
+    }
+    fn get_transform(&self) -> Transform {self.transform}
+    fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
+    fn set_transform(&mut self, new: Transform) {self.transform = new}
+    fn get_texture(&self) -> Texture {self.texture.clone()}
+    fn set_texture(&mut self, new: Texture) {self.texture = new}
 }
 
 impl Cone {
@@ -223,13 +262,22 @@ impl Object for Cylinder {
         }
         None
     }
-    fn set_transform(&mut self, new: Transform) {self.transform = new}
-    fn get_texture(&self) -> Texture {self.texture}
-    fn set_texture(&mut self, new: Texture) {self.texture = new}
-    fn set_radius(&mut self, new: f64) {self.radius = new}
+    fn surface_position(&self, position: Vector) -> Vector {
+        let mut rotated_position = position;
 
-    fn set_height(&mut self, new: f64) {self.height = new}
-    fn set_normal(&mut self, _new: Vector) {}
+        rotated_position.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        Vector {
+            x: 1.0 - (rotated_position.x.atan2(rotated_position.y) / (2.0 * std::f64::consts::PI) + 0.5),
+            y: rotated_position.z % 1.0,
+            z: 0.0
+        }
+    }
+    fn get_transform(&self) -> Transform {self.transform}
+    fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
+    fn set_transform(&mut self, new: Transform) {self.transform = new}
+    fn get_texture(&self) -> Texture {self.texture.clone()}
+    fn set_texture(&mut self, new: Texture) {self.texture = new}
+
 }
 
 impl Object for Cone {
@@ -239,6 +287,7 @@ impl Object for Cone {
             y: 0.0,
             z: 1.0,
         };
+
         axis.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z); // Ĥ
         let base = self.transform.pos - axis * (self.height / 2.0);
         let top = self.transform.pos + axis * (self.height / 2.0);// C
@@ -276,11 +325,41 @@ impl Object for Cone {
         }
         None
     }
-    fn set_transform(&mut self, new: Transform) {self.transform = new}
-    fn get_texture(&self) -> Texture {self.texture}
-    fn set_texture(&mut self, new: Texture) {self.texture = new}
-    fn set_radius(&mut self, new: f64) {self.radius = new}
+    fn surface_position(&self, position: Vector) -> Vector {
+        let mut rotated_position = position;
 
-    fn set_height(&mut self, new: f64) {self.height = new}
-    fn set_normal(&mut self, _new: Vector) {}
+        rotated_position.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        Vector {
+            x: 1.0 - (rotated_position.x.atan2(rotated_position.y) / (2.0 * std::f64::consts::PI) + 0.5),
+            y: rotated_position.z % 1.0,
+            z: 0.0
+        }
+    }
+    fn get_transform(&self) -> Transform {self.transform}
+    fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
+    fn set_transform(&mut self, new: Transform) {self.transform = new}
+    fn get_texture(&self) -> Texture {self.texture.clone()}
+    fn set_texture(&mut self, new: Texture) {self.texture = new}
 }
+
+impl Object for Triangle {
+    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {None}
+    fn surface_position(&self, position: Vector) -> Vector {Vector { x: 0.5, y: 0.5, z: 0.0}}
+    fn get_transform(&self) -> Transform {self.transform}
+    fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
+    fn set_transform(&mut self, new: Transform) {self.transform = new}
+    fn get_texture(&self) -> Texture {self.texture.clone()}
+    fn set_texture(&mut self, new: Texture) {self.texture = new}
+}
+
+impl Object for Mesh {
+    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {None}
+    fn surface_position(&self, position: Vector) -> Vector {Vector { x: 0.5, y: 0.5, z: 0.0}}
+    fn get_transform(&self) -> Transform {self.transform}
+    fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
+    fn set_transform(&mut self, new: Transform) {self.transform = new}
+    fn get_texture(&self) -> Texture {self.texture.clone()}
+    fn set_texture(&mut self, new: Texture) {self.texture = new}
+}
+
+serialize_trait_object!(Object);

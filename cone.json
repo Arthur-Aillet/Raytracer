@@ -32,13 +32,13 @@
     "reflection_samples": 30,
     "aces_tone_mapping": true
   },
-  "primitives": {
-    "spheres": [
+  "primitives": [
       {
+        "type": "cone",
         "transform": {
           "pos": {
             "x": 0,
-            "y": 18,
+            "y": 5,
             "z": 0
           },
           "rotation": {
@@ -66,47 +66,10 @@
           "metalness": 0.5,
           "roughness": 0
         },
-        "radius": 1
+        "radius": 1,
+        "height": 3
       }
     ],
-    "cones": [
-      {
-        "transform": {
-          "pos": {
-            "x": 1,
-            "y": 5,
-            "z": 0
-          },
-          "rotation": {
-            "x": 0,
-            "y": 100,
-            "z": 20
-          },
-          "scale": {
-            "x": 1,
-            "y": 1,
-            "z": 1
-          }
-        },
-        "texture": {
-          "texture_type": 1,
-          "color": {
-            "r": 255,
-            "g": 255,
-            "b": 255
-          },
-          "diffuse": 0.7,
-          "ambient": 0.5,
-          "specular": 0.2,
-          "shininess": 4.0,
-          "metalness": 0.5,
-          "roughness": 0
-        },
-        "radius": 1,
-        "height": 2
-      }
-    ]
-  },
   "lights": {
     "objects": {
       "point": [

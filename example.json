@@ -25,21 +25,21 @@
     "smooth_shadow_step": 32,
     "shadow_bias": 1e-13,
     "threads": 8,
-    "progression": true,
-    "image_buffer_size": 1,
+    "progression": false,
+    "image_buffer_size": 4,
     "super_sampling": 1,
-    "recursivity": 4,
+    "recursivity": 5,
     "reflection_samples": 30,
     "aces_tone_mapping": true
   },
-  "primitives": {
-    "spheres": [
+  "primitives": [
       {
+        "type": "sphere",
         "transform": {
           "pos": {
-            "x": -1,
-            "y": 8,
-            "z": 0
+            "x": 0,
+            "y": 100,
+            "z": 20
           },
           "rotation": {
             "x": 0,
@@ -54,9 +54,14 @@
         },
         "texture": {
           "texture_type": 1,
+          "secondary_color": {
+            "r" : 200,
+            "g" : 100,
+            "b" : 0
+          },
           "color": {
             "r": 255,
-            "g": 255,
+            "g": 0,
             "b": 255
           },
           "diffuse": 0.7,
@@ -66,13 +71,13 @@
           "metalness": 0.5,
           "roughness": 0
         },
-        "radius": 1.5
+        "radius": 20
       },
       {
         "transform": {
           "pos": {
             "x": 0,
-            "y": 4,
+            "y": 100,
             "z": 0
           },
           "rotation": {
@@ -89,9 +94,14 @@
         "texture": {
           "texture_type": 1,
           "color": {
-            "r": 255,
-            "g": 100,
-            "b": 100
+            "r": 50,
+            "g": 0,
+            "b": 255
+          },
+          "secondary_color" : {
+            "r": 0,
+            "g": 0,
+            "b": 0
           },
           "diffuse": 0.7,
           "ambient": 0.5,
@@ -100,9 +110,10 @@
           "metalness": 0.5,
           "roughness": 0
         },
-        "radius": 0.7
+        "radius": 100
       },
       {
+        "type": "sphere",
         "transform": {
           "pos": {
             "x": 7,
@@ -110,9 +121,9 @@
             "z": 0
           },
           "rotation": {
-            "x": 0,
+            "x": 20,
             "y": 0,
-            "z": 0
+            "z": 20
           },
           "scale": {
             "x": 2,
@@ -121,12 +132,14 @@
           }
         },
         "texture": {
-          "texture_type": 1,
+          "texture_type": 3,
           "color": {
-            "r": 255,
-            "g": 255,
-            "b": 255
+            "r": 0,
+            "g": 0,
+            "b": 0
           },
+          "mod1": 12,
+          "mod2": 12,
           "diffuse": 0.9,
           "ambient": 0.3,
           "specular": 0.5,
@@ -137,9 +150,10 @@
         "radius": 4
       },
       {
+        "type":"sphere",
         "transform": {
           "pos": {
-            "x": 0,
+            "x": -3,
             "y": 5,
             "z": 1
           },
@@ -155,12 +169,19 @@
           }
         },
         "texture": {
-          "texture_type": 1,
+          "texture_type": 2,
           "color": {
-            "r": 100,
+            "r": 0,
             "g": 255,
-            "b": 100
+            "b": 0
           },
+          "secondary_color" : {
+            "r": 255,
+            "g": 0,
+            "b": 255
+          },
+          "mod1": 0,
+          "mod2": 1,
           "diffuse": 0.7,
           "ambient": 0.5,
           "specular": 0.2,
@@ -169,10 +190,9 @@
           "roughness": 0
         },
         "radius": 0.5
-      }
-    ],
-    "planes" : [
+      },
       {
+        "type": "plane",
         "transform": {
           "pos": {
             "x": 0,
@@ -196,12 +216,20 @@
           "z": 1.0
         },
         "texture": {
-          "texture_type": 1,
+          "texture_type": 3,
           "color": {
-            "r": 255,
-            "g": 250,
-            "b": 200
+            "r": 180,
+            "g": 20,
+            "b": 230
           },
+          "secondary_color": {
+            "r": 0,
+            "g": 120,
+            "b": 150
+          },
+          "image": "saul.ppm",
+          "mod1": 1.02,
+          "mod2": 1.02,
           "diffuse": 0.7,
           "ambient": 0.5,
           "specular": 0.2,
@@ -211,77 +239,145 @@
         },
         "vector": -1.5
       }
-    ]
-  },
-  "lights": {
-    "objects": {
-      "point": [
-        {
-          "transform": {
-            "pos": {
-              "x": 3.2,
-              "y": 2,
-              "z": 2
-            },
-            "rotation": {
-              "x": 0,
-              "y": 0,
-              "z": 0
-            },
-            "scale": {
-              "x": 1,
-              "y": 1,
-              "z": 1
-            }
-          },
-          "color": {
-            "r": 255,
-            "g": 220,
-            "b": 210
-          },
-          "strength": 40.0,
-          "falloff": 2,
-          "radius": 3.0
+    ],
+    "lights": {
+        "objects": {
+            "directional" :[
+              {
+                  "transform": {
+                    "pos": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 180
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 180,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    }
+                },
+                "strength": 200,
+                "color": {
+                  "r": 255,
+                  "g": 0,
+                  "b": 0
+                }
+              }
+            ],
+            "point": [
+                {
+                    "transform": {
+                        "pos": {
+                            "x": 2,
+                            "y": -2,
+                            "z": 2
+                        },
+                        "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                        },
+                        "scale": {
+                            "x": 1,
+                            "y": 1,
+                            "z": 1
+                        }
+                    },
+                    "color": {
+                        "r": 255,
+                        "g": 255,
+                        "b": 255
+                    },
+                    "strength": 80.0,
+                    "falloff": 2,
+                    "radius": 1.0
+                },
+                {
+                    "transform": {
+                        "pos": {
+                            "x": -5,
+                            "y": 20,
+                            "z": 0
+                        },
+                        "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                        },
+                        "scale": {
+                            "x": 1,
+                            "y": 1,
+                            "z": 1
+                        }
+                    },
+                    "color": {
+                        "r": 100,
+                        "g": 100,
+                        "b": 255
+                    },
+                    "strength": 80.0,
+                    "falloff": 2,
+                    "radius": 1.0
+                }
+            ]
         },
-        {
-          "transform": {
-            "pos": {
-              "x": -5,
-              "y": 12,
-              "z": 1
-            },
-            "rotation": {
-              "x": 0,
-              "y": 0,
-              "z": 0
-            },
-            "scale": {
-              "x": 1,
-              "y": 1,
-              "z": 1
+        "ambient": [
+            {
+                "color": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                },
+                "strength": 80.0
             }
-          },
-          "color": {
-            "r": 100,
-            "g": 100,
-            "b": 255
-          },
-          "strength": 80.0,
-          "falloff": 2,
-          "radius": 1.0,
-          "visible": true
-        }
-      ]
+        ]
     },
-    "ambient": [
-      {
-        "color": {
-          "r": 255,
-          "g": 255,
-          "b": 255
+    "scenes": [
+        {
+        "file": "recursa.json",
+        "transform": {
+                "pos": {
+                    "x": 2,
+                    "y": 0,
+                    "z": 0
+                },
+                "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                }
+            }
         },
-        "strength": 1.0
-      }
+        {
+            "file": "recursb.json",
+            "transform": {
+                "pos": {
+                    "x": -2,
+                    "y": 0,
+                    "z": 0
+                },
+                "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                }
+            }
+        }
     ]
-  }
 }
+
