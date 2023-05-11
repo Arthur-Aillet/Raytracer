@@ -4,10 +4,10 @@
       "pos": {
         "x": 0,
         "y": 0,
-        "z": 3
+        "z": 1
       },
       "rotation": {
-        "x": -45,
+        "x": 0,
         "y": 0,
         "z": 0
       },
@@ -44,7 +44,7 @@
         "rotation": {
           "x": 0,
           "y": 0,
-          "z": 0
+          "z": 90
         },
         "scale": {
           "x": 1,
@@ -71,7 +71,7 @@
         "metalness": 0.5,
         "roughness": 0
       },
-      "file": "cube.obj"
+      "file": "monkey.obj"
     }
   ],
   "lights": {

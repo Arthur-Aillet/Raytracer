@@ -237,7 +237,7 @@ impl Object for Triangle {
         if denom == 0.0 {
             return None
         }
-        let progress = (self.transform.pos - origin).dot_product(normal) / denom;
+        let progress = (((point_a + point_b + point_c) / 3.0) - origin).dot_product(normal) / denom;
         if progress < 0.0 {
             return None
         }
@@ -343,7 +343,7 @@ impl Mesh {
         let mut iter = line.split_ascii_whitespace().filter(|&x| !x.is_empty());
 
         iter.next();
-        for coord in [&mut new_vertex.x, &mut new_vertex.y, &mut new_vertex.z].iter_mut() {
+        for coord in [&mut new_vertex.x, &mut new_vertex.z, &mut new_vertex.y].iter_mut() {
             if let Some(point) = iter.next() {
                 if let Ok(point) = (point).parse::<f64>() {
                     **coord = point;
@@ -369,7 +369,7 @@ impl Mesh {
                     if line.chars().all(|x| x.is_ascii_whitespace()) {
                         continue;
                     }
-                    else if line.starts_with("# ") {
+                    else if line.starts_with("#") {
                         continue;
                     }
                     else if line.starts_with("o ") {
