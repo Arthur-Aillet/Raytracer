@@ -259,10 +259,10 @@ impl Object for Cone {
         if smallest_result == None { return None; }
 
         let intersection_point = origin + ray * *smallest_result.unwrap();
-        if 0.0 <= (intersection_point - base).dot_product(axis) && (intersection_point - base).dot_product(axis) <= self.height { // too far from center
-            let cos_angle = axis.dot_product((top - intersection_point).normalize());
+        if 0.0 <= (intersection_point - base).dot_product(axis) && (intersection_point - base).dot_product(axis) <= self.height { // too far from center*/
+            let cos_angle = axis.dot_product(top - intersection_point);
             //println!("{:?}", top);
-            let normal = intersection_point - (top - axis * ((intersection_point - top).len() / cos_angle));
+            let normal = (intersection_point - (top - axis * ((top - intersection_point).len2() / cos_angle))).normalize();
 
             return Some ( Intersection {
                 intersection_point,
