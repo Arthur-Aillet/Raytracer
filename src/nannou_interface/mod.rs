@@ -8,18 +8,20 @@ use nannou::Frame;
 use nannou::App;
 
 use crate::renderer::Renderer;
+use std::thread;
+use std::time::Duration;
 use std::env;
 use crate::config;
 use crate::config::Config;
 
-// Model struct for nannou
+// Model struct for nannou_interface
 
 pub struct Model {
     window: WindowId,
     config: Config,
 }
 
-// model function for nannou
+// model function for nannou_interface
 
 fn model(app: &App) -> Model {
     let args: Vec<String> = env::args().collect();
@@ -40,33 +42,19 @@ fn model(app: &App) -> Model {
     }
 }
 
-// Update function for nannou
+// Update function for nannou_interface
 
 fn update(_app: &App, _model: &mut Model, _update: Update) {}
 
-// Event handler for nannou
+fn event(_app: &App, _model: &mut Model, _event: Event) {}
 
-fn event(_app: &App, _model: &mut Model, _event: Event) {
-    if _app.keys.down.contains(&Key::Left) {
-        println!("Left");
-    }
-    if _app.keys.down.contains(&Key::Right) {
-        println!("Right");
-    }
-    if _app.keys.down.contains(&Key::Up) {
-        println!("Up");
-    }
-    if _app.keys.down.contains(&Key::Down) {
-        println!("Down");
-    }
-}
-
-fn draw_canvas(draw: &Draw, pixels: &[u8], model: &Model) {
+pub fn draw_canvas(draw: &Draw, pixels: &[u8], model: &Model) {
     let mut index = 0;
 
     for y in (-model.config.height / 2)..(model.config.height / 2) {
         for x in (-model.config.width / 2)..(model.config.width / 2) {
             let color = pixels[index..index + 3].to_vec();
+
             draw.rect()
                 .x_y((x as f32) * (if model.config.fast_mode == 0 { 1 } else { model.config.fast_mode }) as f32, (-y as f32) * (if model.config.fast_mode == 0 { 1 } else { model.config.fast_mode }) as f32)
                 .w_h((if model.config.fast_mode == 0 { 1 } else { model.config.fast_mode }) as f32, (if model.config.fast_mode == 0 { 1 } else { model.config.fast_mode }) as f32)
@@ -80,17 +68,17 @@ fn draw_canvas(draw: &Draw, pixels: &[u8], model: &Model) {
     }
 }
 
-// Main view function for nannou
+// Main view function for nannou_interface
 
 fn view(_app: &App, model: &Model, frame: Frame) {
+    let draw = _app.draw();
+    draw.background().color(BLACK);
     let renderer = Renderer::get_renderer_from_file(&model.config);
     let pixels = renderer.unwrap().render(&model.config);
 
     let window = _app.window_rect();
     let view = window.pad(100.0);
 
-    let draw = _app.draw();
-    draw.background().color(BLACK);
 
     draw_canvas(&draw, &pixels, &model);
 

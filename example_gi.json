@@ -18,8 +18,6 @@
       }
     },
     "lens" : {
-      "height": 512,
-      "width": 512,
       "distance": 0,
       "vector_to_first_pixel": {
         "x": 0,
@@ -32,11 +30,13 @@
     "ambient": 0.5,
     "specular": 0.4,
     "smooth_shadow": true,
-    "smooth_shadow_step": 16,
+    "smooth_shadow_step": 8,
     "shadow_bias": 1e-13,
-    "recursivity": 3,
-    "reflection_samples": 32,
-    "diffuse_samples": 64,
+    "recursivity": 1,
+    "image_buffer_size": 10,
+    "super_sampling": 0,
+    "reflection_samples": 16,
+    "diffuse_samples": 8,
     "threads": 8,
     "progression": true
   },
@@ -73,8 +73,8 @@
           "specular": 1.0,
           "shininess": 64.0,
           "metalness": 1.0,
-          "roughness": 1.0,
-          "supersampling": 2
+          "roughness": 0.5,
+          "supersampling": 2.5
         },
         "radius": 0.5
       },
@@ -114,7 +114,7 @@
           "specular": 0.4,
           "shininess": 4.0,
           "metalness": 0.0,
-          "roughness": 0.8,
+          "roughness": 0,
           "supersampling": 1.0
         }
       },
@@ -154,47 +154,8 @@
           "specular": 0.4,
           "shininess": 4.0,
           "metalness": 0.0,
-          "roughness": 0.8,
+          "roughness": 0,
           "supersampling": 1.0
-        }
-      },
-      {
-        "type": "plane",
-        "transform": {
-          "pos": {
-            "x": 0,
-            "y": -1,
-            "z": 1
-          },
-          "rotation": {
-            "x": 0,
-            "y": 0,
-            "z": 0
-          },
-          "scale": {
-            "x": 1,
-            "y": 1,
-            "z": 1
-          }
-        },
-        "normal": {
-          "x": 0.0,
-          "y": 1.0,
-          "z": 0.0
-        },
-        "texture": {
-          "texture_type": 1,
-          "color": {
-            "r": 0,
-            "g": 255,
-            "b": 0
-          },
-          "diffuse": 0.7,
-          "ambient": 0.5,
-          "specular": 0.4,
-          "shininess": 4.0,
-          "metalness": 0.0,
-          "roughness": 0.4
         }
       },
       {
@@ -224,16 +185,55 @@
         "texture": {
           "texture_type": 1,
           "color": {
-            "r": 255,
-            "g": 0,
-            "b": 0
+            "r": 100,
+            "g": 255,
+            "b": 20
           },
           "diffuse": 0.7,
           "ambient": 0.5,
           "specular": 0.4,
           "shininess": 4.0,
           "metalness": 0.0,
-          "roughness": 0.4
+          "roughness": 0
+        }
+      },
+      {
+        "type": "plane",
+        "transform": {
+          "pos": {
+            "x": 0,
+            "y": -1,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "normal": {
+          "x": 0.0,
+          "y": 1.0,
+          "z": 0.0
+        },
+        "texture": {
+          "texture_type": 1,
+          "color": {
+            "r": 255,
+            "g": 20,
+            "b": 100
+          },
+          "diffuse": 0.7,
+          "ambient": 0.5,
+          "specular": 0.4,
+          "shininess": 4.0,
+          "metalness": 0.0,
+          "roughness": 0
         }
       },
       {
@@ -272,7 +272,7 @@
           "specular": 0.4,
           "shininess": 4.0,
           "metalness": 0.0,
-          "roughness": 0.4
+          "roughness": 0
         }
       }
     ],

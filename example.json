@@ -22,14 +22,14 @@
     "ambient": 0.2,
     "specular": 0.3,
     "smooth_shadow": false,
-    "smooth_shadow_step": 32,
+    "smooth_shadow_step": 16,
     "shadow_bias": 1e-13,
     "threads": 8,
-    "progression": false,
-    "image_buffer_size": 2,
-    "super_sampling": 1,
-    "recursivity": 3,
-    "reflection_samples": 1,
+    "progression": true,
+    "image_buffer_size": 4,
+    "super_sampling": 2,
+    "recursivity": 2,
+    "reflection_samples": 4,
     "aces_tone_mapping": true
   },
   "primitives": [
@@ -66,12 +66,13 @@
           },
           "mod1": 6,
           "mod2": 6,
+          "super_sampling": 5,
           "diffuse": 0.7,
           "ambient": 0.5,
           "specular": 0.2,
           "shininess": 4.0,
           "metalness": 0.5,
-          "roughness": 0
+          "roughness": 0.5
         },
         "radius": 20
       },
@@ -111,7 +112,7 @@
           "specular": 0.2,
           "shininess": 4.0,
           "metalness": 0.5,
-          "roughness": 0
+          "roughness": 0.5
         },
         "radius": 100
       },
@@ -148,7 +149,7 @@
           "specular": 0.5,
           "shininess": 8,
           "metalness": 0.5,
-          "roughness": 0
+          "roughness": 0.5
         },
         "radius": 2
       },
@@ -190,58 +191,154 @@
           "specular": 0.2,
           "shininess": 4.0,
           "metalness": 0.5,
-          "roughness": 0
+          "roughness": 0.5
         },
-        "radius": 0.5
+        "radius": 1
       },
-      {
-        "type": "plane",
-        "transform": {
-          "pos": {
-            "x": 0,
-            "y": 0,
-            "z": -1.4
-          },
-          "rotation": {
-            "x": 0,
-            "y": 0,
-            "z": 0
-          },
-          "scale": {
-            "x": 1,
-            "y": 1,
-            "z": 1
-          }
+    {
+      "type": "plane",
+      "transform": {
+        "pos": {
+          "x": 0,
+          "y": 0,
+          "z": -1.4
         },
-        "normal": {
-          "x": 0.0,
-          "y": 0.0,
-          "z": 1.0
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0
         },
-        "texture": {
-          "texture_type": 3,
-          "color": {
-            "r": 180,
-            "g": 20,
-            "b": 230
-          },
-          "secondary_color": {
-            "r": 0,
-            "g": 120,
-            "b": 150
-          },
-          "image": "saul.ppm",
-          "mod1": 2,
-          "mod2": 2,
-          "diffuse": 0.7,
-          "ambient": 0.5,
-          "specular": 0.2,
-          "shininess": 4.0,
-          "metalness": 0.5,
-          "roughness": 0
+        "scale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "normal": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      },
+      "texture": {
+        "texture_type": 3,
+        "color": {
+          "r": 180,
+          "g": 20,
+          "b": 230
         },
-        "vector": -1.5
-      }
+        "secondary_color": {
+          "r": 0,
+          "g": 120,
+          "b": 150
+        },
+        "image": "saul.ppm",
+        "mod1": 2,
+        "mod2": 2,
+        "diffuse": 0.7,
+        "ambient": 0.5,
+        "specular": 0.2,
+        "shininess": 4.0,
+        "metalness": 0.8,
+        "roughness": 0
+      },
+      "vector": -1.5
+    },
+    {
+      "type": "plane",
+      "transform": {
+        "pos": {
+          "x": 50,
+          "y": 0,
+          "z": -1.4
+        },
+        "rotation": {
+          "x": 0,
+          "y": 45,
+          "z": 0
+        },
+        "scale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "normal": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      },
+      "texture": {
+        "texture_type": 3,
+        "color": {
+          "r": 180,
+          "g": 20,
+          "b": 230
+        },
+        "secondary_color": {
+          "r": 0,
+          "g": 120,
+          "b": 150
+        },
+        "image": "saul.ppm",
+        "mod1": 2,
+        "mod2": 2,
+        "diffuse": 0.7,
+        "ambient": 0.5,
+        "specular": 0.2,
+        "shininess": 4.0,
+        "metalness": 0.5,
+        "roughness": 0
+      },
+      "vector": -1.5
+    },
+    {
+      "type": "plane",
+      "transform": {
+        "pos": {
+          "x": -50,
+          "y": 0,
+          "z": -1.4
+        },
+        "rotation": {
+          "x": 0,
+          "y": -45,
+          "z": 0
+        },
+        "scale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "normal": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      },
+      "texture": {
+        "texture_type": 3,
+        "color": {
+          "r": 180,
+          "g": 20,
+          "b": 230
+        },
+        "secondary_color": {
+          "r": 0,
+          "g": 120,
+          "b": 150
+        },
+        "image": "saul.ppm",
+        "mod1": 2,
+        "mod2": 2,
+        "diffuse": 0.7,
+        "ambient": 0.5,
+        "specular": 0.2,
+        "shininess": 4.0,
+        "metalness": 0.5,
+        "roughness": 0
+      },
+      "vector": -1.5
+    }
     ],
     "lights": {
         "objects": {
@@ -303,9 +400,9 @@
                 {
                     "transform": {
                         "pos": {
-                            "x": -5,
-                            "y": 20,
-                            "z": 0
+                            "x": 0,
+                            "y": 30,
+                            "z": 45
                         },
                         "rotation": {
                             "x": 0,
@@ -319,13 +416,13 @@
                         }
                     },
                     "color": {
-                        "r": 100,
-                        "g": 100,
-                        "b": 255
+                        "r": 255,
+                        "g": 255,
+                        "b": 50
                     },
-                    "strength": 80.0,
+                    "strength": 10000.0,
                     "falloff": 2,
-                    "radius": 1.0
+                    "radius": 5.0
                 }
             ]
         },
@@ -336,7 +433,7 @@
                     "g": 255,
                     "b": 255
                 },
-                "strength": 1.0
+                "strength": 8.0
             }
         ]
     },

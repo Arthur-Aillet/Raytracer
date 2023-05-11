@@ -10,11 +10,15 @@ mod primitives;
 mod lights;
 mod parsing;
 mod renderer_common;
+
+use nannou::{App, Draw, Frame};
+use nannou::draw::Drawing;
 use serde::{Serialize};
 
 use rand::Rng;
 use crate::renderer::primitives::{Object, Intersection};
 use crate::renderer::lights::Light;
+use crate::nannou_interface::draw_canvas;
 use std::thread;
 use std::time;
 use std::sync::{Arc, Mutex};
@@ -22,6 +26,7 @@ use camera::{Camera};
 use lights::Lights;
 use parsing::Parser;
 use crate::config::Config;
+use crate::nannou_interface::Model;
 use crate::vectors::Vector;
 
 #[derive(Serialize)]
@@ -276,7 +281,7 @@ impl Renderer {
         let mut last_progression:u64 = 0;
 
         while last_progression as u64 != self.camera.lens.height as u64 {
-            thread::sleep(time::Duration::from_millis(1000));
+            thread::sleep(time::Duration::from_millis(50));
             let locked_progression = progression.lock().unwrap();
             print!("rendered [");
             for _i in 0..(((*locked_progression + (self.camera.lens.height as u64 * buf_step)) * 100) / (self.camera.lens.height as u64 * buf_size)) {
@@ -293,10 +298,12 @@ impl Renderer {
     pub fn render(&self, config: &Config) -> Vec<u8> {
         let mut result: Vec<u8> = Vec::new();
         let buf_size = if config.fast_mode != 0 { 1 } else { self.camera.image_buffer_size };
+
         for n in 0..buf_size {
             let pixels:Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize]));
             let pixels_state:Arc<Mutex<Vec<bool>>> = Arc::new(Mutex::new(vec![false; self.camera.lens.height as usize]));
             let progression:Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
+
             thread::scope(|scope| {
                 for _ in 0..self.camera.threads {
                     let clone_pixels = Arc::clone(&pixels);
@@ -311,7 +318,9 @@ impl Renderer {
                     self.print_progression(progression, n, buf_size);
                 }
             });
+
             let final_pixels = pixels.lock().unwrap().to_vec();
+
             if result.len() != final_pixels.len() {
                 for i in 0..final_pixels.len() {
                     result.push(final_pixels[i]);
@@ -326,9 +335,11 @@ impl Renderer {
     }
 
     pub fn get_renderer_from_file(config: &Config) -> Option<Renderer> {
+        let mut _result: Option<Renderer> = None;
         let parser = Parser{};
         if parser.get_json(&config.config_file).is_some() {
-            Some(parser.get_renderer_from_json(&parser.get_json(&config.config_file).unwrap(), config.height, config.width));
+            _result = Some(parser.get_renderer_from_json(&parser.get_json(&config.config_file).unwrap(), config.height, config.width));
+            return _result
         }
         None
     }

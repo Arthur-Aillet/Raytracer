@@ -5,14 +5,14 @@
 // main
 //
 
+use raytracer::config;
 use renderer::Renderer;
 
 mod ppm_interface;
 mod vectors;
 mod matrix;
 mod renderer;
-mod config;
-mod nannou;
+mod nannou_interface;
 
 use std::env;
 
@@ -34,12 +34,7 @@ fn print_help() {
 fn main() -> std::io::Result<()> {
     let args: Vec<String> = env::args().collect();
     let config = config::Config::from_args(&args);
-    let mut renderer: Option<Renderer> = Renderer::get_renderer_from_file(&config);
-
-    if renderer.is_none() {
-        println!("Error: Invalid file");
-        return Ok(());
-    }
+    let renderer: Option<Renderer> = Renderer::get_renderer_from_file(&config);
 
     if config.help {
         print_help();
@@ -48,7 +43,7 @@ fn main() -> std::io::Result<()> {
     config.print();
 
     if config.graphic {
-        let mut app = nannou::NannouInterface::new(config.width, config.height);
+        let mut app = nannou_interface::NannouInterface::new(config.width, config.height);
         app.run();
     } else {
         let mut ppm = ppm_interface::PPMInterface::new(&config.save_file);
