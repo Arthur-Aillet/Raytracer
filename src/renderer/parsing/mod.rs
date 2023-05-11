@@ -12,7 +12,8 @@ use serde_json::Value;
 use vectors::Vector;
 use super::Renderer;
 use super::camera::{Lens, Camera};
-use super::primitives::{Sphere, Plane, Cylinder, Cone, Object, Triangle, Mesh};
+use super::primitives::{Sphere, Plane, Cylinder, Cone, Object, Triangle};
+use super::primitives::mesh::Mesh;
 use super::lights::{Point, Ambient, Light, Lights, Directional};
 use super::renderer_common::{Transform, Color, Texture, Image, Textures_types};
 

@@ -71,7 +71,7 @@
         "metalness": 0.5,
         "roughness": 0
       },
-      "file": "monkey.obj"
+      "file": "cube.obj"
     }
   ],
   "lights": {
