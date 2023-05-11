@@ -232,7 +232,6 @@ impl Object for Cylinder {
         let distance = origin - base; // W
         // ray == V
 
-        //println!("{:?}", ray.dot_product(ray));
         let a = 1.0 /*ray.dot_product(ray) car normalisé */ - (ray.dot_product(axis)).powi(2);
         let b = 2.0 * (ray.dot_product(distance) - ray.dot_product(axis) * distance.dot_product(axis));
         let c = distance.dot_product(distance) - distance.dot_product(axis).powi(2) - (self.radius.powi(2) / self.height.powi(2));
@@ -297,7 +296,6 @@ impl Object for Cone {
 
         let radius_constant = self.radius.powi(2) / self.height.powi(2);
 
-        //println!("{:?}", ray.dot_product(ray));
         let a = 1.0 - radius_constant * (ray.dot_product(axis)).powi(2) - (ray.dot_product(axis)).powi(2);
         let b = 2.0 * (ray.dot_product(distance) - radius_constant * ray.dot_product(axis) * distance.dot_product(axis) - ray.dot_product(axis) * distance.dot_product(axis));
         let c = distance.dot_product(distance) - radius_constant * distance.dot_product(axis).powi(2) - distance.dot_product(axis).powi(2);
@@ -310,7 +308,6 @@ impl Object for Cone {
         let intersection_point = origin + ray * *smallest_result.unwrap();
         if 0.0 <= (intersection_point - base).dot_product(axis) && (intersection_point - base).dot_product(axis) <= self.height { // too far from center*/
             let cos_angle = axis.dot_product(top - intersection_point);
-            //println!("{:?}", top);
             let normal = (intersection_point - (top - axis * ((top - intersection_point).len2() / cos_angle))).normalize();
 
             return Some ( Intersection {
