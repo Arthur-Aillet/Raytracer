@@ -52,7 +52,7 @@ pub struct Cone {
     pub height: f64,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Triangle {
     pub transform : Transform,
     pub texture: Texture,

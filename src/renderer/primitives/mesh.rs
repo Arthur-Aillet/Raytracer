@@ -21,50 +21,61 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    pub fn parse_face(&mut self, line :String, verteces : &Vec<Vector>) -> Option<Triangle>{
-        let mut new_triangle: Triangle = Triangle {
+    pub fn parse_face(&mut self, line :String, verteces : &Vec<Vector>) -> (Option<Triangle>, Option<Triangle>){
+        let points: Vec<&str> = line.split_ascii_whitespace()
+                                    .filter(|&x| !x.is_empty())
+                                    .skip(1)
+                                    .collect();
+        let vertices_available = verteces.len();
+        let len = points.len();
+        if len < 3 || len > 4 {
+            return (None, None);
+        }
+
+        let mut points_res = [Vector { x: 0.0, y: 0.0, z: 0.0, }; 4];
+        let mut count = 0;
+
+        for point in points {
+            let mut iter = &mut point.split('/');
+
+            for (i, item) in iter.take(3).enumerate() {
+                if i == 1 && item.is_empty() {
+                    continue;
+                }
+                match item.parse::<usize>() {
+                    Ok(num) => if i == 0 {
+                        if (num - 1) > vertices_available {
+                            return (None, None)
+                        }
+                        points_res[count] = verteces[num - 1];
+                    }
+                    Err(_) => return (None, None),
+                }
+            }
+            if iter.next().is_some() {
+                return (None, None);
+            }
+            count += 1;
+        }
+        println!("points => {points_res:?}");
+        let fst_triangle: Triangle = Triangle {
             transform: self.transform,
             texture: self.texture.clone(),
-            point_a: Vector {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            },
-            point_b: Vector {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            },
-            point_c: Vector {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            },
+            point_a: points_res[0],
+            point_b: points_res[1],
+            point_c: points_res[2],
         };
-        let mut iter = line.split_ascii_whitespace().filter(|&x| !x.is_empty());
-
-        iter.next();
-        for coord in [&mut new_triangle.point_a, &mut new_triangle.point_b, &mut new_triangle.point_c].iter_mut() {
-            if let Some(point) = iter.next() {
-                let mut split = point.split('/');
-
-                let str = split.next();
-                if str.is_none() {
-                    return None;
-                }
-                if let Ok(id) = str.unwrap().parse::<usize>() {
-                    if verteces.len() < id {
-                        return None;
-                    }
-                    **coord = verteces[id - 1];
-                } else {
-                    return None;
-                };
-            } else {
-                return None;
-            }
+        if len == 3 {
+            return (Some(fst_triangle), None);
         }
-        Some(new_triangle)
+        let snd_triangle: Triangle = Triangle {
+            transform: self.transform,
+            texture: self.texture.clone(),
+            point_a: points_res[1],
+            point_b: points_res[2],
+            point_c: points_res[3],
+        };
+        return (Some(fst_triangle), Some(snd_triangle));
     }
 
     pub fn parse_vertex(&mut self, line: String) -> Option<Vector> {
@@ -122,8 +133,13 @@ impl Mesh {
                         continue;
                     }
                     else if line.starts_with("f ") {
-                        if let Some(face) = self.parse_face(line, &vertexes) {
-                            self.triangles.push(face);
+                        println!("line => {line}");
+                        let face_parsed = self.parse_face(line, &vertexes);
+                        if let Some(face_fst) = face_parsed.0 {
+                            self.triangles.push(face_fst);
+                            if let Some(face_snd) = face_parsed.1 {
+                                self.triangles.push(face_snd);
+                            }
                         } else {
                             println!("Invalid face in \"{}\" !", file_name);
                             return;
