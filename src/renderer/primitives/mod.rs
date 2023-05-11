@@ -139,8 +139,8 @@ impl Object for Plane {
 
         rotated_position.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
         Vector {
-            x: if position.x < 0.0 {position.x % 1.0 + 1.0} else {position.x % 1.0},
-            y: if position.y < 0.0 {position.y % 1.0 + 1.0} else {position.y % 1.0},
+            x: {position.x % 1.0},
+            y: {position.y % 1.0},
             z: 0.0
         }
     }
