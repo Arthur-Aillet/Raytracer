@@ -326,11 +326,9 @@ impl Renderer {
     }
 
     pub fn get_renderer_from_file(config: &Config) -> Option<Renderer> {
-        let mut _result: Option<Renderer> = None;
         let parser = Parser{};
         if parser.get_json(&config.config_file).is_some() {
-            _result = Some(parser.get_renderer_from_json(&parser.get_json(&config.config_file).unwrap(), config.height, config.width));
-            return _result
+            Some(parser.get_renderer_from_json(&parser.get_json(&config.config_file).unwrap(), config.height, config.width));
         }
         None
     }
