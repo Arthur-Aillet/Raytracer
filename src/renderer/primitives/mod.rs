@@ -204,7 +204,16 @@ impl Object for Cylinder {
 
 impl Object for Cone {
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {return None;}
-    fn surface_position(&self, position: Vector) -> Vector {Vector { x: 0.5, y: 0.5, z: 0.0}}
+    fn surface_position(&self, position: Vector) -> Vector {
+        let mut rotated_position = position;
+
+        rotated_position.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        Vector {
+            x: 1.0 - (rotated_position.x.atan2(rotated_position.y) / (2.0 * std::f64::consts::PI) + 0.5),
+            y: rotated_position.z % 1.0,
+            z: 0.0
+        }
+    }
     fn get_transform(&self) -> Transform {self.transform}
     fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
     fn set_transform(&mut self, new: Transform) {self.transform = new}
