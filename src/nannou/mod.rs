@@ -12,10 +12,14 @@ use std::env;
 use crate::config;
 use crate::config::Config;
 
+// Model struct for nannou
+
 pub struct Model {
     window: WindowId,
     config: Config,
 }
+
+// model function for nannou
 
 fn model(app: &App) -> Model {
     let args: Vec<String> = env::args().collect();
@@ -36,39 +40,35 @@ fn model(app: &App) -> Model {
     }
 }
 
+// Update function for nannou
+
 fn update(_app: &App, _model: &mut Model, _update: Update) {}
 
-fn handle_keys(app: &App) {
-    if app.keys.down.contains(&Key::Left) {
+// Event handler for nannou
+
+fn event(_app: &App, _model: &mut Model, _event: Event) {
+    if _app.keys.down.contains(&Key::Left) {
         println!("Left");
     }
-    if app.keys.down.contains(&Key::Right) {
+    if _app.keys.down.contains(&Key::Right) {
         println!("Right");
     }
-    if app.keys.down.contains(&Key::Up) {
+    if _app.keys.down.contains(&Key::Up) {
         println!("Up");
     }
-    if app.keys.down.contains(&Key::Down) {
+    if _app.keys.down.contains(&Key::Down) {
         println!("Down");
     }
 }
 
-fn view(_app: &App, model: &Model, frame: Frame) {
-    handle_keys(&_app);
-    let renderer = Renderer::get_renderer_from_file(&model.config);
-    let pixels = renderer.unwrap().render(&model.config);
+fn draw_canvas(draw: &Draw, pixels: &[u8], model: &Model) {
     let mut index = 0;
 
-    let window = _app.window_rect();
-    let view = window.pad(100.0);
-
-    let draw = _app.draw();
-    draw.background().color(BLUE);
     for y in (-model.config.height / 2)..(model.config.height / 2) {
         for x in (-model.config.width / 2)..(model.config.width / 2) {
             let color = pixels[index..index + 3].to_vec();
             draw.rect()
-                .x_y((x as f32) * (if model.config.fast_mode == 0 { 1 } else { model.config.fast_mode })as f32, (-y as f32) * (if model.config.fast_mode == 0 { 1 } else { model.config.fast_mode }) as f32)
+                .x_y((x as f32) * (if model.config.fast_mode == 0 { 1 } else { model.config.fast_mode }) as f32, (-y as f32) * (if model.config.fast_mode == 0 { 1 } else { model.config.fast_mode }) as f32)
                 .w_h((if model.config.fast_mode == 0 { 1 } else { model.config.fast_mode }) as f32, (if model.config.fast_mode == 0 { 1 } else { model.config.fast_mode }) as f32)
                 .color(Rgb::new(
                     color[0] as f32 / 255.0,
@@ -78,14 +78,34 @@ fn view(_app: &App, model: &Model, frame: Frame) {
             index += 3;
         }
     }
+}
+
+// Main view function for nannou
+
+fn view(_app: &App, model: &Model, frame: Frame) {
+    let renderer = Renderer::get_renderer_from_file(&model.config);
+    let pixels = renderer.unwrap().render(&model.config);
+
+    let window = _app.window_rect();
+    let view = window.pad(100.0);
+
+    let draw = _app.draw();
+    draw.background().color(BLACK);
+
+    draw_canvas(&draw, &pixels, &model);
+
     draw.to_frame(_app, &frame).unwrap();
 }
+
+// Nannou interface struct
 
 pub struct NannouInterface {
     height: i64,
     width: i64,
     vec_pixels: Vec<u8>,
 }
+
+// Nannou interface implementation
 
 impl NannouInterface {
     pub fn new(width: i64, height: i64) -> Self {
@@ -98,7 +118,7 @@ impl NannouInterface {
     }
 
     pub fn run(&self) {
-        nannou::app(model).update(update).run();
+        nannou::app(model).event(event).update(update).run();
     }
 
     pub fn write(&mut self, x: i64, y: i64, color: Vec<u8>) {
