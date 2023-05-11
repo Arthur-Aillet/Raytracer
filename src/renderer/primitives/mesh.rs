@@ -71,9 +71,9 @@ impl Mesh {
         let snd_triangle: Triangle = Triangle {
             transform: self.transform,
             texture: self.texture.clone(),
-            point_a: points_res[1],
-            point_b: points_res[2],
-            point_c: points_res[3],
+            point_a: points_res[2],
+            point_b: points_res[3],
+            point_c: points_res[0],
         };
         return (Some(fst_triangle), Some(snd_triangle));
     }
@@ -83,7 +83,7 @@ impl Mesh {
         let mut iter = line.split_ascii_whitespace().filter(|&x| !x.is_empty());
 
         iter.next();
-        for coord in [&mut new_vertex.x, &mut new_vertex.z, &mut new_vertex.y].iter_mut() {
+        for coord in [&mut new_vertex.x, &mut new_vertex.y, &mut new_vertex.z].iter_mut() {
             if let Some(point) = iter.next() {
                 if let Ok(point) = (point).parse::<f64>() {
                     **coord = point;
