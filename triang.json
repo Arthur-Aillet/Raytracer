@@ -34,17 +34,17 @@
   },
   "primitives": [
     {
-      "type": "triangle",
+      "type": "mesh",
       "transform": {
         "pos": {
           "x": 0,
           "y": 3,
-          "z": -0.1
+          "z": 0
         },
         "rotation": {
           "x": 0,
           "y": 0,
-          "z": 0
+          "z": 180
         },
         "scale": {
           "x": 1,
@@ -71,19 +71,7 @@
         "metalness": 0.5,
         "roughness": 0
       },
-      "point_a": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      }, "point_b": {
-        "x": 0,
-        "y": 1,
-        "z": 0
-      }, "point_c": {
-        "x": 1,
-        "y": 0,
-        "z": 0
-      }
+      "file": "test.obj"
     }
   ],
   "lights": {

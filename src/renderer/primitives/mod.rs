@@ -220,8 +220,17 @@ impl Object for Cone {
 
 impl Object for Triangle {
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
-        let mut normal = (self.point_b - self.point_a).cross_product(self.point_c - self.point_a).normalize();
-        //normal.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        let mut point_a = self.point_a.clone();
+        point_a.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        point_a = point_a + self.transform.pos;
+        let mut point_b = self.point_b.clone();
+        point_b.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        point_b = point_b + self.transform.pos;
+        let mut point_c = self.point_c.clone();
+        point_c.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        point_c = point_c + self.transform.pos;
+
+        let mut normal = (point_b - point_a).cross_product(point_c - point_a).normalize();
 
         let denom = ray.normalize().dot_product(normal);
         if denom == 0.0 {
@@ -236,9 +245,26 @@ impl Object for Triangle {
             y: origin.y + ray.y * progress,
             z: origin.z + ray.z * progress
         };
+
+        let cross = (point_b - point_a).cross_product(intersection_point - point_a);
+        if normal.dot_product(cross) < 0.0 {
+            return None;
+        }
+
+        let cross = (point_c - point_b).cross_product(intersection_point - point_b);
+        if normal.dot_product(cross) < 0.0 {
+            return None;
+        }
+
+        let cross = (point_a - point_c).cross_product(intersection_point - point_c);
+        if normal.dot_product(cross) < 0.0 {
+            return None;
+        }
+
         if normal.dot_product(origin - intersection_point) < 0.0 {
             normal = normal * -1.0;
         }
+
         Some ( Intersection {
             intersection_point,
             normal,
@@ -261,6 +287,50 @@ impl Object for Triangle {
         self.point_a = new_a;
         self.point_b = new_b;
         self.point_c = new_c;
+    }
+}
+
+use std::fs::OpenOptions;
+use std::io::{BufRead, BufReader};
+
+impl Mesh {
+    pub fn parse_obj(&mut self, file_name: &str) {
+        let file = OpenOptions::new().read(true).open(file_name);
+
+        if let Ok(obj) = file {
+            // Consumes the iterator, returns an (Optional) String
+            for option_line in BufReader::new(obj).lines() {
+                if let Ok(line) = option_line {
+                    if line.starts_with("# ") {
+                        continue;
+                    }
+                    if line.starts_with("o ") {
+                        continue;
+                    }
+                    if line.starts_with("vn ") {
+                        continue;
+                    }
+                    if line.starts_with("vt ") {
+                        continue;
+                    }
+                    if line.starts_with("v ") {
+                        continue;
+                    }
+                    if line.starts_with("s ") {
+                        continue;
+                    }
+                    if line.starts_with("f ") {
+                        continue;
+                    }
+                    if line.starts_with("mtllib ") {
+                        continue;
+                    }
+                    println!("{}", line);
+                }
+            }
+        } else {
+            println!("Cant open \"{}\" mesh file!", file_name)
+        }
     }
 }
 

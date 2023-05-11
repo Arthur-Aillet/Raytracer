@@ -164,12 +164,16 @@ impl Parser {
     }
 
     pub fn get_mesh_from_json(&self, json: &Value) -> Box<Mesh> {
-        Box::new(
-            Mesh {transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
-                texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
-                triangles: Vec::new(),
-            }
-        )
+        let mut mesh = Mesh {
+            transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
+            texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
+            triangles: Vec::new(),
+        };
+        if json["file"].is_string() {
+            let filename = json["file"].as_str().unwrap();
+            mesh.parse_obj(filename);
+        }
+        Box::new(mesh)
     }
 
     pub fn get_object_from_json(&self, json: &Value) -> Option<Box::<dyn Object + Send + Sync>> {
