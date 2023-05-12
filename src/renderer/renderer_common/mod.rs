@@ -41,7 +41,7 @@ impl Textures_types {
 pub struct Transform {
     pub pos: Vector,
     pub rotation: Vector,
-    pub scale: Vector,
+    pub scale: f64,
 }
 
 impl Transform {
@@ -57,11 +57,7 @@ impl Transform {
                 y: 0.0,
                 z: 0.0,
             },
-            scale: Vector {
-                x: 1.0,
-                y: 1.0,
-                z: 1.0,
-            },
+            scale: 1.0,
         }
     }
 }
