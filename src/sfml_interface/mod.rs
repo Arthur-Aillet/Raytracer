@@ -48,7 +48,7 @@ impl SfmlInterface {
 
     fn draw_buffer(&mut self) {
         let renderer = Renderer::get_renderer_from_file(&self.config);
-        PPMInterface::new(&self.config.save_file).write(self.config.width, self.config.height, renderer.unwrap().render(&self.config));
+        PPMInterface::new(&self.config.save_file).write(self.config.width, self.config.height, renderer.unwrap().pull_new_image(&self.config));
 
         let mut texture = sfml::graphics::Texture::new().unwrap();
         let rect = sfml::graphics::IntRect::new(0, 0, self.config.width as i32, self.config.height as i32);

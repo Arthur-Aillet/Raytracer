@@ -290,6 +290,37 @@ impl Renderer {
         }
     }
 
+    pub fn merge_image(&self, config: &Config, last_image: &mut Vec<u8>, new_image: &Vec<u8>, image_nbr: u64) {
+        let buf_size = if config.fast_mode != 0 { 1 } else { self.camera.image_buffer_size };
+
+        for i in 0..last_image.len() {
+            last_image[i] = (((last_image[i] as u64 * (image_nbr - 1)) + new_image[i] as u64) / image_nbr) as u8;
+        }
+    }
+
+    pub fn pull_new_image(&self, config: &Config) -> Vec<u8> {
+        let pixels:Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize]));
+        let pixels_state:Arc<Mutex<Vec<bool>>> = Arc::new(Mutex::new(vec![false; self.camera.lens.height as usize]));
+        let progression:Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
+
+        thread::scope(|scope| {
+            for _ in 0..self.camera.threads {
+                let clone_pixels = Arc::clone(&pixels);
+                let clone_pixels_state = Arc::clone(&pixels_state);
+                let clone_progression = Arc::clone(&progression);
+                scope.spawn(move || {
+                    self.naive_thread_renderer(clone_pixels_state, clone_pixels, clone_progression, &config);
+                });
+            }
+
+            if self.camera.progression == true {
+                self.print_progression(progression, 0, 1);
+            }
+        });
+        let final_pixels = pixels.lock().unwrap().to_vec();
+        final_pixels
+    }
+
     pub fn render(&self, config: &Config) -> Vec<u8> {
         let mut result: Vec<u8> = Vec::new();
         let buf_size = if config.fast_mode != 0 { 1 } else { self.camera.image_buffer_size };
@@ -310,7 +341,7 @@ impl Renderer {
                 }
 
                 if self.camera.progression == true {
-                    self.print_progression(progression, n, buf_size);
+                    self.print_progression(progression, 0, buf_size);
                 }
             });
 

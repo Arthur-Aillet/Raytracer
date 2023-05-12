@@ -17,6 +17,8 @@ use crate::config::Config;
 pub struct Model {
     window: WindowId,
     config: Config,
+    last_image: Vec<u8>,
+    image_nbr: u64,
 }
 
 // model function for nannou_interface
@@ -31,18 +33,30 @@ fn model(app: &App) -> Model {
         .view(view)
         .build()
         .expect("Failed to build the window");
+    let last_image = vec![0; (config.height * config.width * 3) as usize];
 
     config.height = config.height / if config.fast_mode == 0 { 1 } else { config.fast_mode };
     config.width = config.width / if config.fast_mode == 0 { 1 } else { config.fast_mode };
     Model {
         window,
         config,
+        last_image,
+        image_nbr: 0,
     }
 }
 
 // Update function for nannou_interface
 
-fn update(_app: &App, _model: &mut Model, _update: Update) {}
+fn update(_app: &App, model: &mut Model, _update: Update) {
+    let renderer = Renderer::get_renderer_from_file(&model.config);
+    if let Some(render) = renderer {
+        let new_image = render.pull_new_image(&model.config);
+        model.image_nbr += 1;
+        render.merge_image(&model.config, &mut model.last_image, &new_image, model.image_nbr);
+    } else {
+        println!("Invalid Config!")
+    }
+}
 
 fn event(_app: &App, _model: &mut Model, _event: Event) {}
 
@@ -68,19 +82,16 @@ pub fn draw_canvas(draw: &Draw, pixels: &[u8], model: &Model) {
 
 // Main view function for nannou_interface
 
-fn view(_app: &App, model: &Model, frame: Frame) {
-    let draw = _app.draw();
+fn view(app: &App, model: &Model, frame: Frame) {
+    let draw = app.draw();
     draw.background().color(BLACK);
-    let renderer = Renderer::get_renderer_from_file(&model.config);
-    let pixels = renderer.unwrap().render(&model.config);
 
-    let window = _app.window_rect();
+    let window = app.window_rect();
     let view = window.pad(100.0);
 
+    draw_canvas(&draw, &model.last_image, &model);
 
-    draw_canvas(&draw, &pixels, &model);
-
-    draw.to_frame(_app, &frame).unwrap();
+    draw.to_frame(app, &frame).unwrap();
 }
 
 // Nannou interface struct
