@@ -164,6 +164,8 @@ pub struct Texture {
     pub metalness: f64,
     pub shininess: f64,
     pub roughness: f64,
+    pub transmission: f64,
+    pub ior: f64,
     pub sampling_ponderation: f64,
 }
 
@@ -182,6 +184,8 @@ impl Texture {
             metalness: 0.1,
             shininess: 4.0,
             roughness: 0.25,
+            transmission: 0.0,
+            ior: 1.333,
             sampling_ponderation: 1.0,
         }
     }

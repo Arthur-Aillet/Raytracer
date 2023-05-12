@@ -17,16 +17,6 @@
                 "z": 1
             }
         },
-        "lens" : {
-            "height": 512,
-            "width": 512,
-            "distance": 0,
-            "vector_to_first_pixel": {
-                "x": 0,
-                "y": 0,
-                "z": 0
-            }
-        },
         "fov": 45,
         "diffuse": 0.7,
         "ambient": 0.5,
@@ -34,7 +24,7 @@
         "smooth_shadow": false,
         "smooth_shadow_step": 4,
         "shadow_bias": 1e-13,
-        "recursivity": 2,
+        "recursivity": 5,
         "reflection_samples": 16,
         "diffuse_samples": 50,
         "threads": 20,
@@ -61,7 +51,7 @@
                 }
             },
             "texture": {
-                "texture_type": 1,
+                "texture_type": 0,
                 "color": {
                     "r": 255,
                     "g": 200,
@@ -72,8 +62,8 @@
                 "specular": 1.0,
                 "shininess": 64.0,
                 "metalness": 0.0,
-                "roughness": 0.7,
-                "sampling_ponderation": 2.0
+                "roughness": 0.0,
+                "transmission": 0.0
             },
             "radius": 0.5
         },
@@ -102,7 +92,7 @@
                 "z": 1.0
             },
             "texture": {
-                "texture_type": 1,
+                "texture_type": 0,
                 "color": {
                     "r": 255,
                     "g": 255,
@@ -113,7 +103,7 @@
                 "specular": 0.4,
                 "shininess": 4.0,
                 "metalness": 0.0,
-                "roughness": 0.8
+                "roughness": 0.0
             }
         },
         {
@@ -141,7 +131,7 @@
                 "z": -1.0
             },
             "texture": {
-                "texture_type": 1,
+                "texture_type": 0,
                 "color": {
                     "r": 255,
                     "g": 255,
@@ -152,7 +142,7 @@
                 "specular": 0.4,
                 "shininess": 4.0,
                 "metalness": 0.0,
-                "roughness": 0.8
+                "roughness": 0.0
             }
         },
         {
@@ -180,7 +170,7 @@
                 "z": 0.0
             },
             "texture": {
-                "texture_type": 1,
+                "texture_type": 0,
                 "color": {
                     "r": 0,
                     "g": 255,
@@ -191,7 +181,7 @@
                 "specular": 0.4,
                 "shininess": 4.0,
                 "metalness": 0.0,
-                "roughness": 0.4
+                "roughness": 0.0
             }
         },
         {
@@ -219,7 +209,7 @@
                 "z": 0.0
             },
             "texture": {
-                "texture_type": 1,
+                "texture_type": 0,
                 "color": {
                     "r": 255,
                     "g": 0,
@@ -230,7 +220,7 @@
                 "specular": 0.4,
                 "shininess": 4.0,
                 "metalness": 0.0,
-                "roughness": 0.4
+                "roughness": 0.0
             }
         },
         {
@@ -258,7 +248,7 @@
                 "z": 0.0
             },
             "texture": {
-                "texture_type": 1,
+                "texture_type": 0,
                 "color": {
                     "r": 255,
                     "g": 255,
@@ -269,7 +259,7 @@
                 "specular": 0.4,
                 "shininess": 4.0,
                 "metalness": 0.0,
-                "roughness": 0.4
+                "roughness": 0.0
             }
         }
     ],

@@ -12,6 +12,7 @@ mod parsing;
 mod renderer_common;
 use serde::{Serialize};
 
+use std::mem;
 use rand::Rng;
 use crate::renderer::primitives::{Object, Intersection};
 use crate::renderer::lights::Light;
@@ -141,6 +142,49 @@ impl Renderer {
         }
     }
 
+    fn refract(&self, incident:Vector, normal:Vector, ratio:f64) -> Vector{
+        let c = - (incident.dot_product(normal));
+        let v = 1.0 - ratio * ratio * (1.0 - c * c);
+        ((incident * ratio) + (normal * (ratio * c - v.sqrt()))).normalize()
+    }
+
+    fn transmission(&self, intersect: &Intersection, incident_ray: Vector, recursivity: i64) -> Vector {
+        if recursivity <= 0 {
+            return Vector { x: 0.0, y: 0.0, z: 1.0 }; // FIXME remettre 0,0,0
+        }
+        let mut normal = intersect.normal.normalize();
+        let mut object_ior = 1.333;//intersect.object.unwrap().get_texture().ior;
+        let mut other_ior = 1.0; //FIXME - inexact si deux objects transmissifs se touchent / l'un dans l'autre
+        let mut dot_product = incident_ray.normalize().dot_product(intersect.normal.normalize());
+
+        if dot_product < 0.0 { // normal condition : outside
+            dot_product = -dot_product;
+        } else { // inverted condition : inside
+            return self.get_color_from_ray(intersect.intersection_point + normal * self.camera.shadow_bias, incident_ray, 3); //FIXME: mettre une vraie récursivité
+            normal = normal * -1.0;
+            mem::swap(&mut object_ior, &mut other_ior);
+        }
+
+        let ratio = other_ior / object_ior;
+        let k = 1.0 - (ratio * ratio) * (1.0 - dot_product * dot_product);
+        if k < 0.0 { //reflet
+            return Vector {x:0.0,y:1.0,z:1.0} // FIXME remettre 0,0,0
+        }
+
+        //let new_ray = ((incident_ray + dot_product + normal) * ratio - normal * k.sqrt()).normalize();
+        let new_ray = self.refract(incident_ray.normalize(), normal, ratio);
+        let maybe_intersect = self.found_nearest_intersection(intersect.intersection_point - normal * self.camera.shadow_bias, new_ray);
+
+        if let Some(new_intersect) = maybe_intersect {
+            if new_intersect.object.unwrap().get_texture().transmission > 0.0 {
+                return self.transmission(&new_intersect, new_ray, recursivity - 1);
+            } else {
+                return self.get_color_from_ray(intersect.intersection_point + normal * self.camera.shadow_bias, new_ray, 3); //FIXME: mettre une vraie récursivité
+            }
+        }
+        Vector { x: 1.0, y: 0.0, z: 0.0 } // FIXME remettre 0,0,0
+    }
+
     fn get_color_from_ray(&self, origin: Vector, ray: Vector, recursivity: i64) -> Vector {
         if recursivity == 0 {
            return Vector {
@@ -186,13 +230,17 @@ impl Renderer {
                 }
                 let metalness = intersect.object.unwrap().get_texture().metalness;
 
-                let new_color = self.get_color_from_ray(surface_point, reflection_ray, recursivity - 1);
-
-                self_color =
-                    self_color
-                    + (((new_color * (1.0 - metalness) * intersect.object.unwrap().get_texture().specular))
-                    + (new_color * intersect.object.unwrap().get_texture().color.as_vector() * metalness))
-                    * (1.0/samples_nbr as f64);
+                let new_color;
+                //if intersect.object.unwrap().get_texture().transmission == 0.0 {
+                    new_color = self.get_color_from_ray(surface_point, reflection_ray, recursivity - 1);
+                    self_color =
+                        self_color
+                        + (((new_color * (1.0 - metalness) * intersect.object.unwrap().get_texture().specular))
+                        + (new_color * intersect.object.unwrap().get_texture().color.as_vector() * metalness))
+                        * (1.0/samples_nbr as f64);
+                //} else {
+                //    self_color = self.transmission(&intersect, ray, 6);
+                //}
             }
             self_color
         } else {
