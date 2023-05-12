@@ -5,7 +5,7 @@
 // main
 //
 
-use raytracer::config;
+use raytracer::{config, sfml_interface};
 use renderer::Renderer;
 
 mod ppm_interface;

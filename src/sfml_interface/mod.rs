@@ -3,14 +3,11 @@
 // File description:
 // ppm interface module
 
-use nannou::prelude::*;
-use nannou::Frame;
-use nannou::App;
-
-use crate::renderer::Renderer;
-use std::time::Duration;
-use crate::config;
 use crate::config::Config;
+use sfml::graphics::{RenderWindow, RenderTarget, Color, Image};
+use sfml::window::{Event, Style};
+use crate::renderer::Renderer;
+use crate::ppm_interface::PPMInterface;
 
 pub struct SfmlInterface {
     config: Config,
@@ -18,9 +15,9 @@ pub struct SfmlInterface {
 }
 
 impl SfmlInterface {
-    pub fn new(mut config: &Config) -> Self {
+    pub fn new(config: Config) -> Self {
         let mut window = RenderWindow::new(
-            (config.width, config.height),
+            (config.width as u32, config.height as u32),
             "Rustracer",
             Style::CLOSE,
             &Default::default(),
@@ -43,8 +40,22 @@ impl SfmlInterface {
                     _ => {}
                 }
             }
-            self.window.clear(&Color::BLACK);
+            self.window.clear(Color::BLACK);
+            self.draw_buffer();
             self.window.display();
         }
+    }
+
+    fn draw_buffer(&mut self) {
+        let renderer = Renderer::get_renderer_from_file(&self.config);
+        PPMInterface::new(&self.config.save_file).write(self.config.width, self.config.height, renderer.unwrap().render(&self.config));
+
+        let mut texture = sfml::graphics::Texture::new().unwrap();
+        let rect = sfml::graphics::IntRect::new(0, 0, self.config.width as i32, self.config.height as i32);
+        let mut sprite = sfml::graphics::Sprite::new();
+
+        texture.load_from_file("scene_example.ppm", rect).unwrap();
+        sprite.set_texture(&texture, true);
+        self.window.draw(&sprite);
     }
 }

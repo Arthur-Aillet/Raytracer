@@ -11,14 +11,10 @@ mod lights;
 mod parsing;
 mod renderer_common;
 
-use nannou::{App, Draw, Frame};
-use nannou::draw::Drawing;
 use serde::{Serialize};
 
 use rand::Rng;
 use crate::renderer::primitives::{Object, Intersection};
-use crate::renderer::lights::Light;
-use crate::nannou_interface::draw_canvas;
 use std::thread;
 use std::time;
 use std::sync::{Arc, Mutex};
@@ -26,7 +22,6 @@ use camera::{Camera};
 use lights::Lights;
 use parsing::Parser;
 use crate::config::Config;
-use crate::nannou_interface::Model;
 use crate::vectors::Vector;
 
 #[derive(Serialize)]

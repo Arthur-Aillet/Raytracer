@@ -8,8 +8,6 @@ use nannou::Frame;
 use nannou::App;
 
 use crate::renderer::Renderer;
-use std::thread;
-use std::time::Duration;
 use std::env;
 use crate::config;
 use crate::config::Config;

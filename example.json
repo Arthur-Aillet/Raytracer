@@ -232,8 +232,8 @@
           "b": 150
         },
         "image": "saul.ppm",
-        "mod1": 2,
-        "mod2": 2,
+        "mod1": 4,
+        "mod2": 4,
         "diffuse": 0.7,
         "ambient": 0.5,
         "specular": 0.2,

@@ -14,7 +14,7 @@ use super::Renderer;
 use super::camera::{Lens, Camera};
 use super::primitives::{Sphere, Plane, Cylinder, Cone, Object};
 use super::lights::{Point, Ambient, Light, Lights, Directional};
-use super::renderer_common::{Transform, Color, Texture, Image, Textures_types};
+use super::renderer_common::{Transform, Color, Texture, Image};
 
 pub struct Parser {
 }
