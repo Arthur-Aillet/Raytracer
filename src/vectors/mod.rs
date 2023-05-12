@@ -112,6 +112,14 @@ impl Vector {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
 
+    pub fn cross_product(&self, other: Vector) -> Vector {
+        Vector {
+            x: self.y * other.z - self.z * other.y,
+            y: self.z * other.x - self.x * other.z,
+            z: self.x * other.y - self.y * other.x
+        }
+    }
+
     pub fn reflect(&self, reference: Vector) -> Self {
         let reflected = reference * 2.0 * (self.dot_product(reference));
         Vector {

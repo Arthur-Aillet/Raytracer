@@ -5,8 +5,9 @@
 // implementations
 //
 
-use crate::vectors;
+pub mod mesh;
 
+use crate::vectors;
 use vectors::Vector;
 use vectors::resolve_quadratic_equation;
 use crate::renderer::lights::Light;
@@ -58,13 +59,6 @@ pub struct Triangle {
     pub point_a: Vector,
     pub point_b: Vector,
     pub point_c: Vector
-}
-
-#[derive(Deserialize, Serialize)]
-pub struct Mesh {
-    pub transform: Transform,
-    pub texture: Texture,
-    pub triangles: Vec<Triangle>,
 }
 
 pub trait Object: erased_serde::Serialize {
@@ -340,17 +334,59 @@ impl Object for Cone {
 }
 
 impl Object for Triangle {
-    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {None}
-    fn surface_position(&self, position: Vector) -> Vector {Vector { x: 0.5, y: 0.5, z: 0.0}}
-    fn get_transform(&self) -> Transform {self.transform}
-    fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
-    fn set_transform(&mut self, new: Transform) {self.transform = new}
-    fn get_texture(&self) -> Texture {self.texture.clone()}
-    fn set_texture(&mut self, new: Texture) {self.texture = new}
-}
+    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
+        let mut point_a = self.point_a.clone();
+        point_a.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        point_a = point_a + self.transform.pos;
+        let mut point_b = self.point_b.clone();
+        point_b.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        point_b = point_b + self.transform.pos;
+        let mut point_c = self.point_c.clone();
+        point_c.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        point_c = point_c + self.transform.pos;
 
-impl Object for Mesh {
-    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {None}
+        let mut normal = (point_b - point_a).cross_product(point_c - point_a).normalize();
+
+        let denom = ray.normalize().dot_product(normal);
+        if denom == 0.0 {
+            return None
+        }
+        let progress = (((point_a + point_b + point_c) / 3.0) - origin).dot_product(normal) / denom;
+        if progress < 0.0 {
+            return None
+        }
+        let intersection_point = Vector{
+            x: origin.x + ray.x * progress,
+            y: origin.y + ray.y * progress,
+            z: origin.z + ray.z * progress
+        };
+
+        let cross = (point_b - point_a).cross_product(intersection_point - point_a);
+        if normal.dot_product(cross) < 0.0 {
+            return None;
+        }
+
+        let cross = (point_c - point_b).cross_product(intersection_point - point_b);
+        if normal.dot_product(cross) < 0.0 {
+            return None;
+        }
+
+        let cross = (point_a - point_c).cross_product(intersection_point - point_c);
+        if normal.dot_product(cross) < 0.0 {
+            return None;
+        }
+
+        if normal.dot_product(origin - intersection_point) < 0.0 {
+            normal = normal * -1.0;
+        }
+
+        Some ( Intersection {
+            intersection_point,
+            normal,
+            object: Some(self),
+            light: None,
+        })
+    }
     fn surface_position(&self, position: Vector) -> Vector {Vector { x: 0.5, y: 0.5, z: 0.0}}
     fn get_transform(&self) -> Transform {self.transform}
     fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
