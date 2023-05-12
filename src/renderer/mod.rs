@@ -32,6 +32,11 @@ pub struct Renderer {
     pub lights: Lights,
 }
 
+struct Recursivity {
+    general: i64,
+    transmission: i64,
+}
+
 impl Renderer {
     pub fn new(height: i64, width: i64) -> Renderer {
         Renderer {
@@ -148,9 +153,9 @@ impl Renderer {
         ((incident * ratio) + (normal * (ratio * c - v.sqrt()))).normalize()
     }
 
-    fn transmission(&self, intersect: &Intersection, incident_ray: Vector, recursivity: i64) -> Vector {
-        if recursivity <= 0 {
-            return Vector { x: 0.0, y: 0.0, z: 1.0 }; // FIXME remettre 0,0,0
+    fn transmission(&self, intersect: &Intersection, incident_ray: Vector, recursivity: &mut Recursivity) -> Vector {
+        if recursivity.transmission <= 0 {
+            return Vector { x: 0.0, y: 0.0, z: 0.0 }; // FIXME remettre 0,0,0
         }
         let mut normal = intersect.normal.normalize();
         let mut object_ior = 1.333;//intersect.object.unwrap().get_texture().ior;
@@ -159,16 +164,17 @@ impl Renderer {
 
         if dot_product < 0.0 { // normal condition : outside
             dot_product = -dot_product;
-        } else { // inverted condition : inside
-            return self.get_color_from_ray(intersect.intersection_point + normal * self.camera.shadow_bias, incident_ray, 3); //FIXME: mettre une vraie récursivité
-            normal = normal * -1.0;
-            mem::swap(&mut object_ior, &mut other_ior);
+        } else { // inverted condition : inside // FIXME : pour l'instant on bypass si on est dedans, donc la refraction est mauvaise
+            recursivity.general -= 1;
+            return self.get_color_from_ray(intersect.intersection_point + normal * self.camera.shadow_bias, incident_ray, recursivity);
+            //normal = normal * -1.0;
+            //mem::swap(&mut object_ior, &mut other_ior);
         }
 
         let ratio = other_ior / object_ior;
         let k = 1.0 - (ratio * ratio) * (1.0 - dot_product * dot_product);
         if k < 0.0 { //reflet
-            return Vector {x:0.0,y:1.0,z:1.0} // FIXME remettre 0,0,0
+            return Vector {x:1.0,y:0.0,z:0.0} // FIXME remettre 0,0,0
         }
 
         //let new_ray = ((incident_ray + dot_product + normal) * ratio - normal * k.sqrt()).normalize();
@@ -177,16 +183,18 @@ impl Renderer {
 
         if let Some(new_intersect) = maybe_intersect {
             if new_intersect.object.unwrap().get_texture().transmission > 0.0 {
-                return self.transmission(&new_intersect, new_ray, recursivity - 1);
+                recursivity.transmission -= 1;
+                return self.transmission(&new_intersect, new_ray, recursivity);
             } else {
-                return self.get_color_from_ray(intersect.intersection_point + normal * self.camera.shadow_bias, new_ray, 3); //FIXME: mettre une vraie récursivité
+                recursivity.general -= 1;
+                return self.get_color_from_ray(intersect.intersection_point + normal * self.camera.shadow_bias, new_ray, recursivity);
             }
         }
-        Vector { x: 1.0, y: 0.0, z: 0.0 } // FIXME remettre 0,0,0
+        Vector { x: 0.0, y: 0.0, z: 0.0 } // FIXME remettre 0,0,0
     }
 
-    fn get_color_from_ray(&self, origin: Vector, ray: Vector, recursivity: i64) -> Vector {
-        if recursivity == 0 {
+    fn get_color_from_ray(&self, origin: Vector, ray: Vector, recursivity: &mut Recursivity) -> Vector {
+        if recursivity.general == 0 {
            return Vector {
                x: 0.0,
                y: 0.0,
@@ -210,7 +218,7 @@ impl Renderer {
             let surface_point = intersect.intersection_point + intersect.normal * self.camera.shadow_bias;
 
             self_color = self_color * (1.0 - intersect.object.unwrap().get_texture().metalness);
-            if recursivity == 1 {
+            if recursivity.general == 1 {
                 return self_color;
             }
             let samples_nbr = (1.0 + self.camera.reflection_samples as f64 * intersect.object.unwrap().get_texture().roughness).powf(intersect.object.unwrap().get_texture().sampling_ponderation);
@@ -231,16 +239,17 @@ impl Renderer {
                 let metalness = intersect.object.unwrap().get_texture().metalness;
 
                 let new_color;
-                //if intersect.object.unwrap().get_texture().transmission == 0.0 {
-                    new_color = self.get_color_from_ray(surface_point, reflection_ray, recursivity - 1);
+                if intersect.object.unwrap().get_texture().transmission == 0.0 {
+                    recursivity.general -= 1;
+                    new_color = self.get_color_from_ray(surface_point, reflection_ray, recursivity);
                     self_color =
                         self_color
                         + (((new_color * (1.0 - metalness) * intersect.object.unwrap().get_texture().specular))
                         + (new_color * intersect.object.unwrap().get_texture().color.as_vector() * metalness))
                         * (1.0/samples_nbr as f64);
-                //} else {
-                //    self_color = self.transmission(&intersect, ray, 6);
-                //}
+                } else {
+                    self_color = self.transmission(&intersect, ray, recursivity);
+                }
             }
             self_color
         } else {
@@ -273,7 +282,8 @@ impl Renderer {
         let mut samples : Vec<Vector> = Vec::new();
         let mut camera_to_pixel_vector = self.camera.get_pixel_vectors(x, y, self.camera.super_sampling);
         for i in 0..camera_to_pixel_vector.len() {
-            samples.push(self.get_color_from_ray(self.camera.transform.pos, camera_to_pixel_vector[i], self.camera.recursivity));
+            let mut recursion = Recursivity{general: self.camera.recursivity, transmission: 5};
+            samples.push(self.get_color_from_ray(self.camera.transform.pos, camera_to_pixel_vector[i], &mut recursion));
 
             if self.camera.super_sampling > 4 && i == 3 && self.check_pixels_proximity(&samples) {
                 for _ in 4..self.camera.super_sampling {camera_to_pixel_vector.push(self.camera.get_random_pixel_vector(x, y))}
