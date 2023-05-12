@@ -24,7 +24,7 @@
     "smooth_shadow": true,
     "smooth_shadow_step": 32,
     "shadow_bias": 1e-13,
-    "threads": 8,
+    "threads": 10,
     "progression": true,
     "image_buffer_size": 1,
     "super_sampling": 1,

@@ -19,6 +19,7 @@ pub struct FastTriangle {
     pub point_b: Vector,
     pub point_c: Vector,
     pub texture: Texture,
+    pub normal: Vector,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -30,13 +31,11 @@ pub struct Mesh  {
 
 impl Object for FastTriangle {
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
-        let mut normal = (self.point_b - self.point_a).cross_product(self.point_c - self.point_a).normalize();
-
-        let denom = ray.normalize().dot_product(normal);
+        let denom = ray.normalize().dot_product(self.normal);
         if denom == 0.0 {
             return None
         }
-        let progress = (((self.point_a + self.point_b + self.point_c) / 3.0) - origin).dot_product(normal) / denom;
+        let progress = (((self.point_a + self.point_b + self.point_c) / 3.0) - origin).dot_product(self.normal) / denom;
         if progress < 0.0 {
             return None
         }
@@ -47,27 +46,23 @@ impl Object for FastTriangle {
         };
 
         let cross = (self.point_b - self.point_a).cross_product(intersection_point - self.point_a);
-        if normal.dot_product(cross) < 0.0 {
+        if self.normal.dot_product(cross) < 0.0 {
             return None;
         }
 
         let cross = (self.point_c - self.point_b).cross_product(intersection_point - self.point_b);
-        if normal.dot_product(cross) < 0.0 {
+        if self.normal.dot_product(cross) < 0.0 {
             return None;
         }
 
         let cross = (self.point_a - self.point_c).cross_product(intersection_point - self.point_c);
-        if normal.dot_product(cross) < 0.0 {
+        if self.normal.dot_product(cross) < 0.0 {
             return None;
-        }
-
-        if normal.dot_product(origin - intersection_point) < 0.0 {
-            normal = normal * -1.0;
         }
 
         Some ( Intersection {
             intersection_point,
-            normal,
+            normal: if self.normal.dot_product(origin - intersection_point) < 0.0 { self.normal * -1.0 } else { self.normal },
             object: Some(self),
             light: None,
         })
@@ -126,6 +121,7 @@ impl Mesh {
             point_b: points_res[1] + self.transform.pos,
             point_c: points_res[2] + self.transform.pos,
             texture: self.texture.clone(),
+            normal: (points_res[1] - points_res[0]).cross_product(points_res[2] - points_res[0]).normalize()
         };
         if len == 3 {
             return (Some(fst_triangle), None);
@@ -136,6 +132,8 @@ impl Mesh {
             point_b: points_res[3] + self.transform.pos,
             point_c: points_res[0] + self.transform.pos,
             texture: self.texture.clone(),
+            normal: (points_res[3] - points_res[2]).cross_product(points_res[0] - points_res[2]).normalize()
+
         };
         return (Some(fst_triangle), Some(snd_triangle));
     }
@@ -156,7 +154,6 @@ impl Mesh {
                 return None;
             }
         }
-        println!("{new_vertex:?}");
         Some(new_vertex)
     }
     pub fn parse_obj(&mut self, file_name: &str) {

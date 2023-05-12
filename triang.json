@@ -24,10 +24,10 @@
     "smooth_shadow": false,
     "smooth_shadow_step": 32,
     "shadow_bias": 1e-13,
-    "threads": 3,
+    "threads": 10,
     "progression": true,
-    "image_buffer_size": 3,
-    "super_sampling": 3,
+    "image_buffer_size": 1,
+    "super_sampling": 1,
     "recursivity": 1,
     "reflection_samples": 1,
     "aces_tone_mapping": true
@@ -71,7 +71,7 @@
         "metalness": 0.5,
         "roughness": 0
       },
-      "file": "small_monkey.obj"
+      "file": "monkey.obj"
     }
   ],
   "lights": {
@@ -125,33 +125,6 @@
           "color": {
             "r": 255,
             "g": 255,
-            "b": 255
-          },
-          "strength": 40.0,
-          "falloff": 2,
-          "radius": 1.0
-        },
-        {
-          "transform": {
-            "pos": {
-              "x": -5,
-              "y": 20,
-              "z": 0
-            },
-            "rotation": {
-              "x": 0,
-              "y": 0,
-              "z": 0
-            },
-            "scale": {
-              "x": 1,
-              "y": 1,
-              "z": 1
-            }
-          },
-          "color": {
-            "r": 100,
-            "g": 100,
             "b": 255
           },
           "strength": 40.0,
