@@ -234,7 +234,7 @@ impl Object for Cylinder {
 
         let a = 1.0 /*ray.dot_product(ray) car normalisé */ - (ray.dot_product(axis)).powi(2);
         let b = 2.0 * (ray.dot_product(distance) - ray.dot_product(axis) * distance.dot_product(axis));
-        let c = distance.dot_product(distance) - distance.dot_product(axis).powi(2) - (self.radius.powi(2) / self.height.powi(2));
+        let c = distance.dot_product(distance) - distance.dot_product(axis).powi(2) - (self.radius.powi(2));
 
         let result = resolve_quadratic_equation(a, b, c);
 
