@@ -50,9 +50,14 @@ fn model(app: &App) -> Model {
 fn update(_app: &App, model: &mut Model, _update: Update) {
     let renderer = Renderer::get_renderer_from_file(&model.config);
     if let Some(render) = renderer {
-        let new_image = render.pull_new_image(&model.config);
         model.image_nbr += 1;
-        render.merge_image(&model.config, &mut model.last_image, &new_image, model.image_nbr);
+        if model.config.fast_mode == 0 {
+            let new_image = render.pull_new_image(&model.config);
+
+            render.merge_image(&model.config, &mut model.last_image, &new_image, model.image_nbr);
+        } else {
+            model.last_image = render.pull_new_image(&model.config);
+        }
     } else {
         println!("Invalid Config!")
     }
