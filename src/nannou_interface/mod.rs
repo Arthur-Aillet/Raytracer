@@ -8,10 +8,11 @@ use nannou::Frame;
 use nannou::App;
 use nannou::image::{open, DynamicImage};
 
+use nannou::image;
 use crate::renderer::Renderer;
 use std::env;
 use nannou::color::chromatic_adaptation::AdaptInto;
-use nannou::event::Key::G;
+use nannou::event;
 use crate::config;
 use crate::config::Config;
 use crate::ppm_interface::PPMInterface;
@@ -113,10 +114,21 @@ fn event(_app: &App, model: &mut Model, event: WindowEvent) {
     }
 }
 
-pub fn draw_canvas(draw: &Draw, pixels: &[u8], model: &Model) {
-    PPMInterface::new(&model.img_buf).write(model.config.width, model.config.height, pixels.to_vec());
-    let img_result: Result<DynamicImage, _> = open(model.img_buf.clone());
-    //let image_texture =  app.window(window_builder.id()).unwrap().texture().from_image(&img);
+pub fn draw_canvas(draw: &Draw, pixels: &[u8], model: &Model, app: &App) {
+    let img_path = &model.img_buf;
+    PPMInterface::new(img_path).write(model.config.width, model.config.height, pixels.to_vec());
+
+    if let Ok(img) = image::open(img_path) {
+        // Convertir l'image en une texture utilisable par Nannou
+        let texture = wgpu::Texture::from_path(app, img_path).unwrap();
+
+        // Dessiner l'image sur le canvas
+        draw.texture(&texture)
+            .xy(app.window_rect().xy())
+            .wh(app.window_rect().wh());
+    } else {
+        eprintln!("Failed to open image: {}", img_path);
+    }
 }
 
 // Main view function for nannou_interface
@@ -128,7 +140,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
     let window = app.window_rect();
     let view = window.pad(100.0);
 
-    draw_canvas(&draw, &model.last_image, &model);
+    draw_canvas(&draw, &model.last_image, &model, &app);
 
     draw.to_frame(app, &frame).unwrap();
 }
