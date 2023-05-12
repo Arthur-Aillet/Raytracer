@@ -35,6 +35,7 @@ impl SfmlInterface {
         window.set_vertical_sync_enabled(true);
         window.set_framerate_limit(60);
 
+
         SfmlInterface {
             config,
             window
