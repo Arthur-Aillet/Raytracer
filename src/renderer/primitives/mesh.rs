@@ -180,10 +180,4 @@ impl Object for Mesh {
     fn set_transform(&mut self, new: Transform) {self.transform = new}
     fn get_texture(&self) -> Texture {self.texture.clone()}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
-    fn set_radius(&mut self, _new: f64) {}
-
-    fn set_height(&mut self, _new: f64) {}
-    fn set_normal(&mut self, _new: Vector) {}
-    fn set_triangles(&mut self, new: String) {self.triangles = Vec::new()}
-    fn set_points(&mut self, _new_a: Vector, _new_b: Vector, _new_c: Vector) {}
 }
