@@ -27,6 +27,7 @@ use crate::ppm_interface::PPMInterface;
 use crate::vectors::Vector;
 use sfml::graphics::{RenderWindow};
 use crate::sfml_interface::draw_buffer;
+use crate::sfml_interface::poll_event;
 
 #[derive(Serialize)]
 pub struct Renderer {
@@ -365,7 +366,7 @@ impl Renderer {
     }
 
     pub fn grender(&self, config: &Config, window: &mut RenderWindow) -> Vec<u8> {
-        let mut results: Vec<Vec<u8>> = Vec::new();
+        let mut results: Vec<Vec<u8>> = vec![vec![0; (config.width * config.height) as usize]; (config.width * config.height) as usize];
         let buf_size = if config.fast_mode != 0 { 1 } else { self.camera.image_buffer_size };
 
         for n in 0..buf_size {
@@ -404,13 +405,13 @@ impl Renderer {
                     }
                 }
             }
+            poll_event(window);
             PPMInterface::new(&config.save_file).write(config.width, config.height, results[0].clone());
             draw_buffer(&config, window);
             window.display();
         }
         results.into_iter().flatten().collect()
     }
-
 
     pub fn get_renderer_from_file(config: &Config) -> Option<Renderer> {
         let mut _result: Option<Renderer> = None;

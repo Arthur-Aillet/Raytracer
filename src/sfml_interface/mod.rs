@@ -24,6 +24,15 @@ pub fn draw_buffer(config: &Config, window: &mut RenderWindow) {
     window.draw(&sprite);
 }
 
+pub fn poll_event(window: &mut RenderWindow) {
+    while let Some(event) = window.poll_event() {
+        match event {
+            Event::Closed => window.close(),
+            _ => {}
+        }
+    }
+}
+
 impl SfmlInterface {
     pub fn new(config: Config) -> Self {
         let mut window = RenderWindow::new(
@@ -44,12 +53,7 @@ impl SfmlInterface {
 
     pub fn run(&mut self) {
         while self.window.is_open() {
-            while let Some(event) = self.window.poll_event() {
-                match event {
-                    Event::Closed => self.window.close(),
-                    _ => {}
-                }
-            }
+            poll_event(&mut self.window);
             let renderer = Renderer::get_renderer_from_file(&self.config);
 
             PPMInterface::new(&self.config.save_file).write(self.config.width, self.config.height, renderer.unwrap().grender(&self.config, &mut self.window));
