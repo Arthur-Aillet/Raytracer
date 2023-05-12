@@ -26,8 +26,8 @@
     "shadow_bias": 1e-13,
     "threads": 8,
     "progression": true,
-    "image_buffer_size": 4,
-    "super_sampling": 2,
+    "image_buffer_size": 100,
+    "super_sampling": 1,
     "recursivity": 2,
     "reflection_samples": 4,
     "aces_tone_mapping": true

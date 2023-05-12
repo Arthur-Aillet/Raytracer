@@ -11,7 +11,17 @@ use crate::ppm_interface::PPMInterface;
 
 pub struct SfmlInterface {
     config: Config,
-    window: RenderWindow
+    pub window: RenderWindow
+}
+
+pub fn draw_buffer(config: &Config, window: &mut RenderWindow) {
+    let mut texture = sfml::graphics::Texture::new().unwrap();
+    let rect = sfml::graphics::IntRect::new(0, 0, config.width as i32, config.height as i32);
+    let mut sprite = sfml::graphics::Sprite::new();
+
+    texture.load_from_file(&config.save_file, rect).unwrap();
+    sprite.set_texture(&texture, true);
+    window.draw(&sprite);
 }
 
 impl SfmlInterface {
@@ -24,7 +34,6 @@ impl SfmlInterface {
         );
         window.set_vertical_sync_enabled(true);
         window.set_framerate_limit(60);
-
 
         SfmlInterface {
             config,
@@ -40,22 +49,12 @@ impl SfmlInterface {
                     _ => {}
                 }
             }
+            let renderer = Renderer::get_renderer_from_file(&self.config);
+
+            PPMInterface::new(&self.config.save_file).write(self.config.width, self.config.height, renderer.unwrap().grender(&self.config, &mut self.window));
             self.window.clear(Color::BLACK);
-            self.draw_buffer();
+            draw_buffer(&self.config, &mut self.window);
             self.window.display();
         }
-    }
-
-    fn draw_buffer(&mut self) {
-        let renderer = Renderer::get_renderer_from_file(&self.config);
-        PPMInterface::new(&self.config.save_file).write(self.config.width, self.config.height, renderer.unwrap().render(&self.config));
-
-        let mut texture = sfml::graphics::Texture::new().unwrap();
-        let rect = sfml::graphics::IntRect::new(0, 0, self.config.width as i32, self.config.height as i32);
-        let mut sprite = sfml::graphics::Sprite::new();
-
-        texture.load_from_file("scene_example.ppm", rect).unwrap();
-        sprite.set_texture(&texture, true);
-        self.window.draw(&sprite);
     }
 }
