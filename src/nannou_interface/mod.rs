@@ -9,6 +9,8 @@ use nannou::App;
 
 use crate::renderer::Renderer;
 use std::env;
+use nannou::color::chromatic_adaptation::AdaptInto;
+use nannou::event::Key::G;
 use crate::config;
 use crate::config::Config;
 
@@ -31,6 +33,7 @@ fn model(app: &App) -> Model {
         .title("Rustracer")
         .size(config.width as u32, config.height as u32)
         .view(view)
+        .event(event)
         .build()
         .expect("Failed to build the window");
     let last_image = vec![0; (config.height * config.width * 3) as usize];
@@ -63,7 +66,18 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
     }
 }
 
-fn event(_app: &App, _model: &mut Model, _event: Event) {}
+fn event(_app: &App, _model: &mut Model, event: WindowEvent) {
+    match event {
+        // Handle window events like mouse, keyboard, resize, etc here.
+        KeyPressed(key) => {
+            println!("{key:?}");
+            if key == G {
+                println!("Switch!");
+            }
+        },
+        _ => {}
+    }
+}
 
 pub fn draw_canvas(draw: &Draw, pixels: &[u8], model: &Model) {
     let mut index = 0;
@@ -120,7 +134,7 @@ impl NannouInterface {
     }
 
     pub fn run(&self) {
-        nannou::app(model).event(event).update(update).run();
+        nannou::app(model).update(update).run();
     }
 
     pub fn write(&mut self, x: i64, y: i64, color: Vec<u8>) {
