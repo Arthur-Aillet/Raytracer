@@ -57,7 +57,6 @@ impl Mesh {
             }
             count += 1;
         }
-        println!("points => {points_res:?}");
         let fst_triangle: Triangle = Triangle {
             transform: self.transform,
             texture: self.texture.clone(),
@@ -133,7 +132,6 @@ impl Mesh {
                         continue;
                     }
                     else if line.starts_with("f ") {
-                        println!("line => {line}");
                         let face_parsed = self.parse_face(line, &vertexes);
                         if let Some(face_fst) = face_parsed.0 {
                             self.triangles.push(face_fst);
