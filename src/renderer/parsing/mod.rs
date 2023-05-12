@@ -12,7 +12,8 @@ use serde_json::Value;
 use vectors::Vector;
 use super::Renderer;
 use super::camera::{Lens, Camera};
-use super::primitives::{Sphere, Plane, Cylinder, Cone, Object, Triangle, Mesh};
+use super::primitives::{Sphere, Plane, Cylinder, Cone, Object, Triangle};
+use super::primitives::mesh::Mesh;
 use super::lights::{Point, Ambient, Light, Lights, Directional};
 use super::renderer_common::{Transform, Color, Texture, Image, Textures_types};
 
@@ -164,24 +165,33 @@ impl Parser {
     }
 
     pub fn get_triangle_from_json(&self, json: &Value) -> Box<Triangle> {
-        Box::new(
-            Triangle {
-                transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
-                texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
-                point_a: if json["point_a"].is_object() {self.get_vector_from_json(&json["point_a"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
-                point_b: if json["point_b"].is_object() {self.get_vector_from_json(&json["point_b"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
-                point_c: if json["point_c"].is_object() {self.get_vector_from_json(&json["point_c"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
-            }
-        )
+        let mut triangle = Triangle {
+            transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
+            texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
+            point_a: if json["point_a"].is_object() {self.get_vector_from_json(&json["point_a"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
+            point_b: if json["point_b"].is_object() {self.get_vector_from_json(&json["point_b"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
+            point_c: if json["point_c"].is_object() {self.get_vector_from_json(&json["point_c"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
+            point_a_applied: Vector { x: 0.0, y: 0.0, z: 0.0, },
+            point_b_applied: Vector { x: 0.0, y: 0.0, z: 0.0, },
+            point_c_applied: Vector { x: 0.0, y: 0.0, z: 0.0, },
+            normal: Vector { x: 0.0, y: 0.0, z: 0.0, },
+        };
+        triangle.apply_transform();
+        Box::new(triangle)
     }
 
     pub fn get_mesh_from_json(&self, json: &Value) -> Box<Mesh> {
-        Box::new(
-            Mesh {transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
-                texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
-                triangles: Vec::new(),
-            }
-        )
+        let mut mesh = Mesh {
+            transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
+            texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
+            triangles: Vec::new(),
+        };
+        if json["file"].is_string() {
+            let filename = json["file"].as_str().unwrap();
+            mesh.parse_obj(filename);
+        }
+        mesh.apply_transform();
+        Box::new(mesh)
     }
 
     pub fn get_object_from_json(&self, json: &Value) -> Option<Box::<dyn Object + Send + Sync>> {
@@ -351,5 +361,4 @@ impl Parser {
         let data = fs::read_to_string(file).expect("Unable to read file");
         serde_json::from_str(&data.to_string()).unwrap_or(None)
     }
-
 }

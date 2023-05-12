@@ -5,8 +5,9 @@
 // implementations
 //
 
-use crate::vectors;
+pub mod mesh;
 
+use crate::vectors;
 use vectors::Vector;
 use vectors::resolve_quadratic_equation;
 use crate::renderer::lights::Light;
@@ -69,7 +70,11 @@ pub struct Triangle {
     pub texture: Texture,
     pub point_a: Vector,
     pub point_b: Vector,
-    pub point_c: Vector
+    pub point_c: Vector,
+    pub(crate) point_a_applied: Vector,
+    pub(crate) point_b_applied: Vector,
+    pub(crate) point_c_applied: Vector,
+    pub(crate) normal: Vector
 }
 
 #[derive(Deserialize, Serialize)]
@@ -255,7 +260,7 @@ impl Object for Cylinder {
 
         let a = 1.0 /*ray.dot_product(ray) car normalisé */ - (ray.dot_product(self.axis)).powi(2);
         let b = 2.0 * (ray.dot_product(distance) - ray.dot_product(self.axis) * distance.dot_product(self.axis));
-        let c = distance.dot_product(distance) - distance.dot_product(self.axis).powi(2) - (self.radius_applied.powi(2) / self.height_applied.powi(2));
+        let c = distance.dot_product(distance) - distance.dot_product(self.axis).powi(2) - self.radius_applied.powi(2);
 
         let result = resolve_quadratic_equation(a, b, c);
 
@@ -363,19 +368,56 @@ impl Object for Cone {
 }
 
 impl Object for Triangle {
-    fn apply_transform(&mut self) {}
-    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {None}
-    fn surface_position(&self, position: Vector) -> Vector {Vector { x: 0.5, y: 0.5, z: 0.0}}
-    fn get_transform(&self) -> Transform {self.transform}
-    fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
-    fn set_transform(&mut self, new: Transform) {self.transform = new}
-    fn get_texture(&self) -> Texture {self.texture.clone()}
-    fn set_texture(&mut self, new: Texture) {self.texture = new}
-}
+    fn apply_transform(&mut self) {
+        self.point_a_applied = self.point_a.clone();
+        self.point_a_applied.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        self.point_a_applied = self.point_a_applied + self.transform.pos;
+        self.point_b_applied = self.point_b.clone();
+        self.point_b_applied.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        self.point_b_applied = self.point_b_applied + self.transform.pos;
+        self.point_c_applied = self.point_c.clone();
+        self.point_c_applied.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        self.point_c_applied = self.point_c_applied + self.transform.pos;
+        self.normal = (self.point_b_applied - self.point_a_applied).cross_product(self.point_c_applied - self.point_a_applied).normalize();
+    }
 
-impl Object for Mesh {
-    fn apply_transform(&mut self) {}
-    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {None}
+    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
+        let denom = ray.normalize().dot_product(self.normal);
+        if denom == 0.0 {
+            return None
+        }
+        let progress = (((self.point_a_applied + self.point_b_applied + self.point_c_applied) / 3.0) - origin).dot_product(self.normal) / denom;
+        if progress < 0.0 {
+            return None
+        }
+        let intersection_point = Vector{
+            x: origin.x + ray.x * progress,
+            y: origin.y + ray.y * progress,
+            z: origin.z + ray.z * progress
+        };
+
+        let cross = (self.point_b_applied - self.point_a_applied).cross_product(intersection_point - self.point_a_applied);
+        if self.normal.dot_product(cross) < 0.0 {
+            return None;
+        }
+
+        let cross = (self.point_c_applied - self.point_b_applied).cross_product(intersection_point - self.point_b_applied);
+        if self.normal.dot_product(cross) < 0.0 {
+            return None;
+        }
+
+        let cross = (self.point_a_applied - self.point_c_applied).cross_product(intersection_point - self.point_c_applied);
+        if self.normal.dot_product(cross) < 0.0 {
+            return None;
+        }
+
+        Some ( Intersection {
+            intersection_point,
+            normal: if self.normal.dot_product(origin - intersection_point) < 0.0 { self.normal * -1.0 } else { self.normal },
+            object: Some(self),
+            light: None,
+        })
+    }
     fn surface_position(&self, position: Vector) -> Vector {Vector { x: 0.5, y: 0.5, z: 0.0}}
     fn get_transform(&self) -> Transform {self.transform}
     fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
