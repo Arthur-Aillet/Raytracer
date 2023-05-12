@@ -8,7 +8,7 @@
 use raytracer::matrix::Matrix;
 
 fn test_matrix() {
-    let matrix = Matrix::new(2, 3);
+    let _matrix = Matrix::new(2, 3);
 }
 
 #[cfg(test)]
@@ -26,7 +26,7 @@ mod tests {
     #[test]
     fn test_matrix_mul_scalar() {
         let matrix = Matrix::new(2, 2);
-        let matrix_scaled = matrix.clone() * 2.0;
+        let matrix_scaled = matrix * 2.0;
         assert_eq!(matrix_scaled.data, vec![vec![0.0, 0.0], vec![0.0, 0.0]]);
     }
 
@@ -42,7 +42,7 @@ mod tests {
             cols: 2,
             data: vec![vec![7.0, 8.0], vec![9.0, 10.0], vec![11.0, 12.0]],
         };
-        let matrix_result = matrix1.clone() * matrix2.clone();
+        let matrix_result = matrix1 * matrix2;
         assert_eq!(
             matrix_result.data,
             vec![vec![58.0, 64.0], vec![139.0, 154.0]]
