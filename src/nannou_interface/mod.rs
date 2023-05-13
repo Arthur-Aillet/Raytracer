@@ -3,26 +3,30 @@
 // File description:
 // nannou interface module
 
+mod layout;
+
+use std::env;
 use nannou::prelude::*;
 use nannou::Frame;
 use nannou::App;
 use nannou::image::{open, DynamicImage};
-
 use nannou::image;
-use crate::renderer::Renderer;
-use std::env;
 use nannou::color::chromatic_adaptation::AdaptInto;
 use nannou::event;
+
 use crate::config;
+use crate::renderer::Renderer;
 use crate::config::Config;
 use crate::ppm_interface::PPMInterface;
 use crate::renderer::renderer_common::Transform;
 
+use layout::Layout;
 
 // Model struct for nannou_interface
 
 pub struct Model {
     pub window: WindowId,
+    pub layout: Layout,
     pub config: Config,
     pub base_fast_mode: i64,
     pub last_image: Vec<u8>,
@@ -38,10 +42,11 @@ fn model(app: &App) -> Model {
     let imageBuffer = ".raytracer/imageBuffer.ppm";
     let args: Vec<String> = env::args().collect();
     let mut config = config::Config::from_args(&args);
+    let mut layout = Layout::new(config.clone(), Renderer::get_renderer_from_file(&config).unwrap());
     let window = app
         .new_window()
         .title("Rustracer")
-        .size(config.width as u32 + 360, config.height as u32)
+        .size(config.width as u32 + layout.rect.w() as u32, config.height as u32)
         .view(view)
         .event(event)
         .build()
@@ -52,6 +57,7 @@ fn model(app: &App) -> Model {
     config.width = config.width / if config.fast_mode == 0 { 1 } else { config.fast_mode };
     Model {
         window,
+        layout,
         config: config.clone(),
         base_fast_mode: if config.fast_mode == 0 { 1 } else { config.fast_mode },
         last_image,
@@ -87,9 +93,7 @@ fn merge_camera_transform(renderer: &mut Renderer, camera_transform: &Transform)
     renderer.camera.transform.rotation.x = camera_transform.rotation.x;
     renderer.camera.transform.rotation.y = camera_transform.rotation.y;
     renderer.camera.transform.rotation.z = camera_transform.rotation.z;
-    renderer.camera.transform.scale.x = camera_transform.scale.x;
-    renderer.camera.transform.scale.y = camera_transform.scale.y;
-    renderer.camera.transform.scale.z = camera_transform.scale.z;
+    renderer.camera.transform.scale = camera_transform.scale;
 }
 
 fn update(_app: &App, model: &mut Model, _update: Update) {
@@ -169,7 +173,7 @@ pub fn draw_canvas(draw: &Draw, pixels: &[u8], model: &Model, app: &App) {
 
         // Dessiner l'image sur le canvas
         let mut window_rect = app.window_rect();
-        window_rect.x.end -= 360.0;
+        window_rect.x.end -= model.layout.rect.w();
         draw.texture(&texture)
             .xy(window_rect.xy())
             .wh(window_rect.wh());
@@ -182,12 +186,15 @@ pub fn draw_canvas(draw: &Draw, pixels: &[u8], model: &Model, app: &App) {
 
 fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw();
-    draw.background().color(ORANGE);
+    // create nanncou color
+    let color = nannou::color::rgb_u32(0x302B34);
+    draw.background().color(color);
 
     let window = app.window_rect();
     let view = window.pad(100.0);
 
     draw_canvas(&draw, &model.last_image, &model, &app);
+    model.layout.display(&app, &model, &frame, &draw);
 
     draw.to_frame(app, &frame).unwrap();
 }
