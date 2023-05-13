@@ -24,7 +24,7 @@
         "smooth_shadow": false,
         "smooth_shadow_step": 4,
         "shadow_bias": 1e-13,
-        "recursivity": 5,
+        "recursivity": 10,
         "reflection_samples": 8,
         "diffuse_samples": 50,
         "threads": 20,

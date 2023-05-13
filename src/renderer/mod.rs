@@ -147,18 +147,12 @@ impl Renderer {
         }
     }
 
-    fn refract(&self, incident:Vector, normal:Vector, ratio:f64) -> Vector{
-        let c = - (incident.dot_product(normal));
-        let v = 1.0 - ratio * ratio * (1.0 - c * c);
-        ((incident * ratio) + (normal * (ratio * c - v.sqrt()))).normalize()
-    }
-
     fn transmission(&self, intersect: &Intersection, incident_ray: Vector, recursivity: &mut Recursivity) -> Vector {
         if recursivity.transmission <= 0 {
             return Vector { x: 0.0, y: 0.0, z: 0.0 }; // FIXME remettre 0,0,0
         }
         let mut normal = intersect.normal.normalize();
-        let mut object_ior = 1.333;//intersect.object.unwrap().get_texture().ior;
+        let mut object_ior = 1.125;//intersect.object.unwrap().get_texture().ior;
         let mut other_ior = 1.0; //FIXME - inexact si deux objects transmissifs se touchent / l'un dans l'autre
         let mut dot_product = incident_ray.normalize().dot_product(intersect.normal.normalize());
 
@@ -167,8 +161,9 @@ impl Renderer {
         } else { // inverted condition : inside // FIXME : pour l'instant on bypass si on est dedans, donc la refraction est mauvaise
             recursivity.general -= 1;
             return self.get_color_from_ray(intersect.intersection_point + normal * self.camera.shadow_bias, incident_ray, recursivity);
-            //normal = normal * -1.0;
-            //mem::swap(&mut object_ior, &mut other_ior);
+            // normal = normal * -1.0;
+            // object_ior = 1.0;
+            // other_ior = 1.125;
         }
 
         let ratio = other_ior / object_ior;
@@ -177,8 +172,7 @@ impl Renderer {
             return Vector {x:1.0,y:0.0,z:0.0} // FIXME remettre 0,0,0
         }
 
-        //let new_ray = ((incident_ray + dot_product + normal) * ratio - normal * k.sqrt()).normalize();
-        let new_ray = self.refract(incident_ray.normalize(), normal, ratio);
+        let new_ray = ((incident_ray + normal * dot_product) * ratio - normal * k.sqrt()).normalize();
         let maybe_intersect = self.found_nearest_intersection(intersect.intersection_point - normal * self.camera.shadow_bias, new_ray);
 
         if let Some(new_intersect) = maybe_intersect {
@@ -282,7 +276,7 @@ impl Renderer {
         let mut samples : Vec<Vector> = Vec::new();
         let mut camera_to_pixel_vector = self.camera.get_pixel_vectors(x, y, self.camera.super_sampling);
         for i in 0..camera_to_pixel_vector.len() {
-            let mut recursion = Recursivity{general: self.camera.recursivity, transmission: 5};
+            let mut recursion = Recursivity{general: self.camera.recursivity, transmission: 10};
             samples.push(self.get_color_from_ray(self.camera.transform.pos, camera_to_pixel_vector[i], &mut recursion));
 
             if self.camera.super_sampling > 4 && i == 3 && self.check_pixels_proximity(&samples) {
