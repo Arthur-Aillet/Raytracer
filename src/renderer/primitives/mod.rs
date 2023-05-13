@@ -27,6 +27,7 @@ pub struct Sphere {
     pub transform: Transform,
     pub texture: Texture,
     pub radius: f64,
+    pub(crate) radius_applied: f64,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -34,6 +35,7 @@ pub struct Plane {
     pub transform: Transform,
     pub texture: Texture,
     pub normal: Vector,
+    pub(crate) normal_applied: Vector,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -42,6 +44,11 @@ pub struct Cylinder {
     pub texture: Texture,
     pub height: f64,
     pub radius: f64,
+    pub(crate) axis: Vector,
+    pub(crate) top: Vector,
+    pub(crate) base: Vector,
+    pub(crate) radius_applied: f64,
+    pub(crate) height_applied: f64,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -50,6 +57,11 @@ pub struct Cone {
     pub texture: Texture,
     pub radius: f64,
     pub height: f64,
+    pub(crate) axis: Vector,
+    pub(crate) top: Vector,
+    pub(crate) base: Vector,
+    pub(crate) radius_applied: f64,
+    pub(crate) height_applied: f64,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -58,10 +70,22 @@ pub struct Triangle {
     pub texture: Texture,
     pub point_a: Vector,
     pub point_b: Vector,
-    pub point_c: Vector
+    pub point_c: Vector,
+    pub(crate) point_a_applied: Vector,
+    pub(crate) point_b_applied: Vector,
+    pub(crate) point_c_applied: Vector,
+    pub(crate) normal: Vector
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct Mesh {
+    pub transform: Transform,
+    pub texture: Texture,
+    pub triangles: Vec<Triangle>,
 }
 
 pub trait Object: erased_serde::Serialize {
+    fn apply_transform(&mut self);
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection>;
     fn surface_position(&self, position: Vector) -> Vector;
     fn get_transform(&self) -> Transform;
@@ -72,11 +96,15 @@ pub trait Object: erased_serde::Serialize {
 }
 
 impl Object for Sphere {
+    fn apply_transform(&mut self) {
+        self.radius_applied = self.radius * self.transform.scale;
+    }
+
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
         let diff = origin - self.transform.pos;
         let result = resolve_quadratic_equation(ray.dot_product(ray), // could be 1 if normalized
                                                 2.0 * (ray.dot_product(diff)),
-                                                (diff.dot_product(diff)) - (self.radius * self.transform.scale.x).powi(2));
+                                                (diff.dot_product(diff)) - self.radius_applied.powi(2));
 
         let smallest_result: Option<&f64> = result.iter().filter(|number| **number > 0.0).min_by(|a, b| a.partial_cmp(b).unwrap());
 
@@ -115,14 +143,17 @@ impl Object for Sphere {
 }
 
 impl Object for Plane {
+    fn apply_transform(&mut self) {
+        self.normal_applied = self.normal.normalize();
+        self.normal_applied.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+    }
+
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
-        let mut normal = self.normal.normalize();
-        normal.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
-        let denom = ray.normalize().dot_product(normal);
+        let denom = ray.normalize().dot_product(self.normal_applied);
         if denom == 0.0 {
             return None
         }
-        let progress = (self.transform.pos - origin).dot_product(normal) / denom;
+        let progress = (self.transform.pos - origin).dot_product(self.normal_applied) / denom;
         if progress < 0.0 {
             return None
         }
@@ -132,7 +163,7 @@ impl Object for Plane {
                 y: origin.y + ray.y * progress,
                 z: origin.z + ray.z * progress
             },
-            normal,
+            normal: self.normal_applied,
             object: Some(self),
             light: None,
         })
@@ -156,7 +187,6 @@ impl Object for Plane {
 
 impl Cone {
     fn base_intersection(&self, ray: Vector, origin: Vector, normal: Vector, center: Vector) -> Option<Intersection> {
-        let normal = normal.normalize();
         let denom = ray.normalize().dot_product(normal);
         if denom == 0.0 {
             return None
@@ -171,7 +201,7 @@ impl Cone {
             z: origin.z + ray.z * progress
         };
 
-        if (intersection_point - center).len() > self.radius {
+        if (intersection_point - center).len() > self.radius_applied {
             return None;
         }
         Some ( Intersection {
@@ -185,7 +215,6 @@ impl Cone {
 
 impl Cylinder {
     fn base_intersection(&self, ray: Vector, origin: Vector, normal: Vector, center: Vector) -> Option<Intersection> {
-        let normal = normal.normalize();
         let denom = ray.normalize().dot_product(normal);
         if denom == 0.0 {
             return None
@@ -200,7 +229,7 @@ impl Cylinder {
             z: origin.z + ray.z * progress
         };
 
-        if (intersection_point - center).len() > self.radius {
+        if (intersection_point - center).len() > self.radius_applied {
             return None;
         }
         Some ( Intersection {
@@ -213,22 +242,25 @@ impl Cylinder {
 }
 
 impl Object for Cylinder {
-    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
-        let mut axis = Vector{
+    fn apply_transform(&mut self) {
+        self.axis = Vector{
             x: 0.0,
             y: 0.0,
             z: 1.0,
         };
-        axis.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z); // Ĥ
-        let base = self.transform.pos - axis * (self.height / 2.0);
-        let top = self.transform.pos + axis * (self.height / 2.0);// C
+        self.axis.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        self.base = self.transform.pos - self.axis * (self.height / 2.0);
+        self.top = self.transform.pos + self.axis * (self.height / 2.0);
+        self.radius_applied = self.radius * self.transform.scale;
+        self.height_applied = self.height * self.transform.scale;
+    }
 
-        let distance = origin - base; // W
-        // ray == V
+    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
+        let distance = origin - self.base; // W
 
-        let a = 1.0 /*ray.dot_product(ray) car normalisé */ - (ray.dot_product(axis)).powi(2);
-        let b = 2.0 * (ray.dot_product(distance) - ray.dot_product(axis) * distance.dot_product(axis));
-        let c = distance.dot_product(distance) - distance.dot_product(axis).powi(2) - (self.radius.powi(2));
+        let a = 1.0 /*ray.dot_product(ray) car normalisé */ - (ray.dot_product(self.axis)).powi(2);
+        let b = 2.0 * (ray.dot_product(distance) - ray.dot_product(self.axis) * distance.dot_product(self.axis));
+        let c = distance.dot_product(distance) - distance.dot_product(self.axis).powi(2) - self.radius_applied.powi(2);
 
         let result = resolve_quadratic_equation(a, b, c);
 
@@ -237,8 +269,8 @@ impl Object for Cylinder {
 
         let intersection_point = origin + ray * *smallest_result.unwrap();
 
-        if -self.height / 2.0 <= (intersection_point - self.transform.pos).dot_product(axis) && (intersection_point - self.transform.pos).dot_product(axis) <= self.height / 2.0 { // too far from center
-            let normal = intersection_point - (base + axis * (intersection_point - base).dot_product(axis)); // Cos(teta) = A/H
+        if -self.height_applied / 2.0 <= (intersection_point - self.transform.pos).dot_product(self.axis) && (intersection_point - self.transform.pos).dot_product(self.axis) <= self.height_applied / 2.0 { // too far from center
+            let normal = intersection_point - (self.base + self.axis * (intersection_point - self.base).dot_product(self.axis)); // Cos(teta) = A/H
 
             return Some ( Intersection {
                 intersection_point,
@@ -247,11 +279,11 @@ impl Object for Cylinder {
                 light: None,
             })
         }
-        if (intersection_point - base).dot_product(axis) < 0.0 {
-            return self.base_intersection(ray, origin, axis * -1.0, base);
+        if (intersection_point - self.base).dot_product(self.axis) < 0.0 {
+            return self.base_intersection(ray, origin, self.axis * -1.0, self.base);
         }
-        if (intersection_point - base).dot_product(axis) > self.height {
-            return self.base_intersection(ray, origin,  axis, top);
+        if (intersection_point - self.base).dot_product(self.axis) > self.height_applied {
+            return self.base_intersection(ray, origin,  self.axis, self.top);
         }
         None
     }
@@ -274,25 +306,27 @@ impl Object for Cylinder {
 }
 
 impl Object for Cone {
-    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
-        let mut axis = Vector{
+    fn apply_transform(&mut self) {
+        self.axis = Vector{
             x: 0.0,
             y: 0.0,
             z: 1.0,
         };
+        self.axis.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        self.base = self.transform.pos - self.axis * (self.height / 2.0);
+        self.top = self.transform.pos + self.axis * (self.height / 2.0);
+        self.radius_applied = self.radius * self.transform.scale;
+        self.height_applied = self.height * self.transform.scale;
+    }
 
-        axis.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z); // Ĥ
-        let base = self.transform.pos - axis * (self.height / 2.0);
-        let top = self.transform.pos + axis * (self.height / 2.0);// C
+    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
+        let distance = origin - self.top; // W
 
-        let distance = origin - top; // W
-        // ray == V
+        let radius_constant = self.radius_applied.powi(2) / self.height_applied.powi(2);
 
-        let radius_constant = self.radius.powi(2) / self.height.powi(2);
-
-        let a = 1.0 - radius_constant * (ray.dot_product(axis)).powi(2) - (ray.dot_product(axis)).powi(2);
-        let b = 2.0 * (ray.dot_product(distance) - radius_constant * ray.dot_product(axis) * distance.dot_product(axis) - ray.dot_product(axis) * distance.dot_product(axis));
-        let c = distance.dot_product(distance) - radius_constant * distance.dot_product(axis).powi(2) - distance.dot_product(axis).powi(2);
+        let a = 1.0 - radius_constant * (ray.dot_product(self.axis)).powi(2) - (ray.dot_product(self.axis)).powi(2);
+        let b = 2.0 * (ray.dot_product(distance) - radius_constant * ray.dot_product(self.axis) * distance.dot_product(self.axis) - ray.dot_product(self.axis) * distance.dot_product(self.axis));
+        let c = distance.dot_product(distance) - radius_constant * distance.dot_product(self.axis).powi(2) - distance.dot_product(self.axis).powi(2);
 
         let result = resolve_quadratic_equation(a, b, c);
 
@@ -300,9 +334,9 @@ impl Object for Cone {
         if smallest_result == None { return None; }
 
         let intersection_point = origin + ray * *smallest_result.unwrap();
-        if 0.0 <= (intersection_point - base).dot_product(axis) && (intersection_point - base).dot_product(axis) <= self.height { // too far from center*/
-            let cos_angle = axis.dot_product(top - intersection_point);
-            let normal = (intersection_point - (top - axis * ((top - intersection_point).len2() / cos_angle))).normalize();
+        if 0.0 <= (intersection_point - self.base).dot_product(self.axis) && (intersection_point - self.base).dot_product(self.axis) <= self.height_applied { // too far from center*/
+            let cos_angle = self.axis.dot_product(self.top - intersection_point);
+            let normal = (intersection_point - (self.top - self.axis * ((self.top - intersection_point).len2() / cos_angle))).normalize();
 
             return Some ( Intersection {
                 intersection_point,
@@ -311,8 +345,8 @@ impl Object for Cone {
                 light: None,
             });
         }
-        if (intersection_point - top).dot_product(axis) < 0.0 {
-            return self.base_intersection(ray, origin, axis * -1.0, base);
+        if (intersection_point - self.top).dot_product(self.axis) < 0.0 {
+            return self.base_intersection(ray, origin, self.axis * -1.0, self.base);
         }
         None
     }
@@ -334,24 +368,25 @@ impl Object for Cone {
 }
 
 impl Object for Triangle {
+    fn apply_transform(&mut self) {
+        self.point_a_applied = self.point_a.clone();
+        self.point_a_applied.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        self.point_a_applied = self.point_a_applied + self.transform.pos;
+        self.point_b_applied = self.point_b.clone();
+        self.point_b_applied.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        self.point_b_applied = self.point_b_applied + self.transform.pos;
+        self.point_c_applied = self.point_c.clone();
+        self.point_c_applied.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        self.point_c_applied = self.point_c_applied + self.transform.pos;
+        self.normal = (self.point_b_applied - self.point_a_applied).cross_product(self.point_c_applied - self.point_a_applied).normalize();
+    }
+
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
-        let mut point_a = self.point_a.clone();
-        point_a.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
-        point_a = point_a + self.transform.pos;
-        let mut point_b = self.point_b.clone();
-        point_b.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
-        point_b = point_b + self.transform.pos;
-        let mut point_c = self.point_c.clone();
-        point_c.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
-        point_c = point_c + self.transform.pos;
-
-        let mut normal = (point_b - point_a).cross_product(point_c - point_a).normalize();
-
-        let denom = ray.normalize().dot_product(normal);
+        let denom = ray.normalize().dot_product(self.normal);
         if denom == 0.0 {
             return None
         }
-        let progress = (((point_a + point_b + point_c) / 3.0) - origin).dot_product(normal) / denom;
+        let progress = (((self.point_a_applied + self.point_b_applied + self.point_c_applied) / 3.0) - origin).dot_product(self.normal) / denom;
         if progress < 0.0 {
             return None
         }
@@ -361,28 +396,24 @@ impl Object for Triangle {
             z: origin.z + ray.z * progress
         };
 
-        let cross = (point_b - point_a).cross_product(intersection_point - point_a);
-        if normal.dot_product(cross) < 0.0 {
+        let cross = (self.point_b_applied - self.point_a_applied).cross_product(intersection_point - self.point_a_applied);
+        if self.normal.dot_product(cross) < 0.0 {
             return None;
         }
 
-        let cross = (point_c - point_b).cross_product(intersection_point - point_b);
-        if normal.dot_product(cross) < 0.0 {
+        let cross = (self.point_c_applied - self.point_b_applied).cross_product(intersection_point - self.point_b_applied);
+        if self.normal.dot_product(cross) < 0.0 {
             return None;
         }
 
-        let cross = (point_a - point_c).cross_product(intersection_point - point_c);
-        if normal.dot_product(cross) < 0.0 {
+        let cross = (self.point_a_applied - self.point_c_applied).cross_product(intersection_point - self.point_c_applied);
+        if self.normal.dot_product(cross) < 0.0 {
             return None;
-        }
-
-        if normal.dot_product(origin - intersection_point) < 0.0 {
-            normal = normal * -1.0;
         }
 
         Some ( Intersection {
             intersection_point,
-            normal,
+            normal: if self.normal.dot_product(origin - intersection_point) < 0.0 { self.normal * -1.0 } else { self.normal },
             object: Some(self),
             light: None,
         })

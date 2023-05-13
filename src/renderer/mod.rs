@@ -201,6 +201,10 @@ impl Renderer {
                     + (new_color * intersect.object.unwrap().get_texture().texture(texture_coordinates.x, texture_coordinates.y).as_vector() * metalness))
                     * (1.0/samples_nbr as f64);
             }
+            if intersect.object.unwrap().get_texture().alpha != 1.0 {
+                let new_color = self.get_color_from_ray(intersect.intersection_point + ray * self.camera.shadow_bias, ray, recursivity - 1);
+                return self_color * intersect.object.unwrap().get_texture().alpha + new_color * (1.0 - intersect.object.unwrap().get_texture().alpha);
+            }
             self_color
         } else {
             Vector {
