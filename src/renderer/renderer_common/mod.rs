@@ -6,8 +6,7 @@
 //
 
 use crate::vectors;
-use rand::{Rng,SeedableRng};
-use rand::rngs::StdRng;
+use nannou::image::io::Reader;
 
 use std::ops::{Add, Mul, Sub};
 use vectors::Vector;
@@ -122,6 +121,14 @@ impl Color {
         }
     }
 
+    pub fn normal_map_default()  -> Color {
+        Color {
+            r: 128.0,
+            g: 128.0,
+            b: 0.0,
+        }
+    }
+
     pub fn as_vector(self) -> Vector {
         Vector {
             x: self.r / 255.0,
@@ -134,7 +141,7 @@ impl Color {
 #[derive(Debug, Clone)]
 #[derive(Deserialize, Serialize)]
 pub struct Image {
-    pub vector: Vec<Color>,
+    pub file: String,
     pub width: i64,
     pub height: i64,
 }
@@ -142,7 +149,7 @@ pub struct Image {
 impl Image {
     pub fn default() -> Image {
         Image {
-            vector: Vec::new(),
+            file: "missing_image.ppm".to_string(),
             height: 0,
             width: 0,
         }
@@ -186,6 +193,24 @@ impl Texture {
         }
     }
 
+    pub fn normal_map_default() -> Texture {
+        Texture {
+            texture_type: TexturesTypes::COLOR as u64,
+            color: Color {r: 128.0, g: 128.0, b: 255.0},
+            secondary_color: Color {r: 128.0, g: 128.0, b: 0.0},
+            image: Image::default(),
+            mod1: 2.0,
+            mod2: 2.0,
+            diffuse: 0.7,
+            ambient: 0.1,
+            specular: 0.4,
+            metalness: 0.1,
+            shininess: 4.0,
+            roughness: 0.25,
+            sampling_ponderation: 1.0,
+        }
+    }
+
     fn gradient_color(&self, _u: f64, v: f64) -> Color {
         Color {
             r: self.lerp(v, self.secondary_color.r, self.color.r),
@@ -199,8 +224,8 @@ impl Texture {
     }
 
     fn noise2(&self, x : i64, y: i64, HASH: [i32; 256]) -> i32 {
-        let tmp = HASH[((y + self.mod1 as i64) % 256) as usize];
-        HASH[((tmp + x as i32) % 256) as usize]
+        let tmp = HASH[(y + self.mod1 as i64) as usize % 256];
+        HASH[(tmp + x as i32) as usize % 256]
     }
 
     fn lin_inter(&self, x: f64, y: f64, s: f64) -> f64 {
@@ -267,8 +292,17 @@ impl Texture {
         }
     }
 
-    fn image_color(&self, _u: f64, _v: f64) -> Color {
-        Color::default()
+    fn image_color(&self, u: f64, v: f64) -> Color {
+        let img_x = (((1.0 - u) * self.mod1 % 1.0) * self.image.width as f64) as usize;
+        let img_y = (((1.0 - v) * self.mod2 % 1.0) * self.image.height as f64) as usize;
+        let mut reader = Reader::open(&self.image.file).unwrap_or(Reader::open("missing_texture.ppm").expect("missing missing texture texture\n")).decode().expect("file invalid\n");
+        if let Some(data) = reader.as_mut_rgb8().expect("file invalid").pixels().nth(img_x + img_y * self.image.width as usize) {
+            Color {
+                r: data.0[0] as f64,
+                g: data.0[1] as f64 ,
+                b: data.0[2] as f64 ,
+            }
+        } else {Color::default()}
     }
 
     pub fn texture(&self, x: f64, y: f64) -> Color {

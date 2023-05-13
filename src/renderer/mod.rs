@@ -10,11 +10,10 @@ mod primitives;
 mod lights;
 mod parsing;
 mod renderer_common;
-use serde::{Serialize};
+use nannou::image::io::Reader;
 
 use rand::Rng;
 use crate::renderer::primitives::{Object, Intersection};
-use crate::renderer::lights::Light;
 use std::thread;
 use std::time;
 use std::sync::{Arc, Mutex};
@@ -24,7 +23,6 @@ use parsing::Parser;
 use crate::config::Config;
 use crate::vectors::Vector;
 
-#[derive(Serialize)]
 pub struct Renderer {
     pub camera: Camera,
     pub primitives: Vec<Box<dyn Object + Send + Sync>>,
@@ -235,7 +233,6 @@ impl Renderer {
     }
 
     pub fn naive_thread_renderer(&self, pixel_states:Arc<Mutex<Vec<bool>>>, pixels:Arc<Mutex<Vec<u8>>>, progression:Arc<Mutex<u64>>, config: &Config) {
-        //println!("thread {id:?} started");
         let mut pixel_id: usize;
         let mut line_state_id: usize;
 
@@ -251,6 +248,7 @@ impl Renderer {
 
             let mut local_pixel_line: Vec<u8> = vec![0; (self.camera.lens.width * 3) as usize];
             for j in 0..self.camera.lens.width {
+                //println!("thread {id:?} started");
                 pixel_id = (j * 3) as usize;
                 let calculated_pixel = self.render_pixel(j, i, &config);
 

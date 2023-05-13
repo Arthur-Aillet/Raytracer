@@ -6,6 +6,7 @@
 //
 
 use std::fs;
+use nannou::image::io::Reader;
 
 use crate::vectors;
 use serde_json::Value;
@@ -14,7 +15,7 @@ use super::Renderer;
 use super::camera::{Lens, Camera};
 use super::primitives::{Sphere, Plane, Cylinder, Cone, Object, Triangle, Mesh};
 use super::lights::{Point, Ambient, Light, Lights, Directional};
-use super::renderer_common::{Transform, Color, Texture, Image, TexturesTypes};
+use super::renderer_common::{Transform, Color, Texture, Image};
 
 pub struct Parser {
 }
@@ -80,14 +81,32 @@ impl Parser {
     }
 
     pub fn get_image_from_json(&self, json: &Value) -> Image {
-        let filename = json["file"].as_str().unwrap_or("missing_texture.ppm").to_string();
-        let data = fs::read_to_string(filename).unwrap_or(fs::read_to_string("missing_texture.ppm").expect("missing missing texture texture\n"));
+        let filename = json["image"].as_str().unwrap_or("missing_texture.ppm").to_string();
+        let mut reader = Reader::open(&filename).unwrap_or(Reader::open("missing_texture.ppm").expect("missing missing texture texture\n")).decode().expect("file invalid\n");
+        let data = reader.as_mut_rgb8().expect("file invalid");
 
-        print!("{}\n", data);
         Image {
-            height: 0,
-            width: 0,
-            vector: Vec::new(),
+            height: data.height() as i64,
+            width: data.width() as i64,
+            file: filename,
+        }
+    }
+
+    pub fn get_normal_map_from_json(&self, json: &Value) -> Texture {
+        Texture {
+            texture_type: json["texture_type"].as_u64().unwrap_or(0),
+            color: if json["color"].is_object(){self.get_color_from_json(&json["color"])} else {Color::normal_map_default()},
+            secondary_color: if json["secondary_color"].is_object(){self.get_color_from_json(&json["secondary_color"])} else {Color::normal_map_default()},
+            image: if json["image"].is_string() {self.get_image_from_json(&json)} else {Image::default()},
+            mod1: json["mod1"].as_f64().unwrap_or(2.0),
+            mod2: json["mod2"].as_f64().unwrap_or(2.0),
+            diffuse: 0.0,
+            ambient: 0.0,
+            specular: 0.0,
+            metalness: 0.0,
+            shininess: 0.0,
+            roughness: 0.0,
+            sampling_ponderation: 0.0,
         }
     }
 
@@ -96,7 +115,7 @@ impl Parser {
             texture_type: json["texture_type"].as_u64().unwrap_or(0),
             color: if json["color"].is_object(){self.get_color_from_json(&json["color"])} else {Color::default()},
             secondary_color: if json["secondary_color"].is_object(){self.get_color_from_json(&json["secondary_color"])} else {Color::default()},
-            image: if json["image"].is_object() {self.get_image_from_json(&json["image"])} else {Image::default()},
+            image: if json["image"].is_string() {self.get_image_from_json(&json)} else {Image::default()},
             mod1: json["mod1"].as_f64().unwrap_or(2.0),
             mod2: json["mod2"].as_f64().unwrap_or(2.0),
             diffuse: json["diffuse"].as_f64().unwrap_or(0.7),
@@ -114,6 +133,7 @@ impl Parser {
             Sphere {
                 transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
                 texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
+                normal_map: if json["normal_map"].is_object() {self.get_normal_map_from_json(&json["normal_map"])} else {Texture::normal_map_default()},
                 radius: json["radius"].as_f64().unwrap_or(1.0),
             }
         )
@@ -124,6 +144,7 @@ impl Parser {
             Plane {
                 transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
                 texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
+                normal_map: if json["normal_map"].is_object() {self.get_normal_map_from_json(&json["normal_map"])} else {Texture::normal_map_default()},
                 normal: if json["normal"].is_object(){self.get_vector_from_json(&json["normal"])} else {Vector {x: 0.0, y: 0.0, z: 1.0}},
             }
         )
@@ -134,6 +155,7 @@ impl Parser {
             Cylinder {
                 transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
                 texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
+                normal_map: if json["normal_map"].is_object() {self.get_normal_map_from_json(&json["normal_map"])} else {Texture::normal_map_default()},
                 height: json["height"].as_f64().unwrap_or(2.0),
                 radius: json["radius"].as_f64().unwrap_or(1.0),
             }
@@ -145,6 +167,7 @@ impl Parser {
             Cone {
                 transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
                 texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
+                normal_map: if json["normal_map"].is_object() {self.get_normal_map_from_json(&json["normal_map"])} else {Texture::normal_map_default()},
                 height: json["height"].as_f64().unwrap_or(3.0),
                 radius: json["radius"].as_f64().unwrap_or(1.0),
             }
@@ -156,6 +179,7 @@ impl Parser {
             Triangle {
                 transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
                 texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
+                normal_map: if json["normal_map"].is_object() {self.get_normal_map_from_json(&json["normal_map"])} else {Texture::normal_map_default()},
                 point_a: if json["point_a"].is_object() {self.get_vector_from_json(&json["point_a"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
                 point_b: if json["point_b"].is_object() {self.get_vector_from_json(&json["point_b"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
                 point_c: if json["point_c"].is_object() {self.get_vector_from_json(&json["point_c"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
@@ -167,6 +191,7 @@ impl Parser {
         Box::new(
             Mesh {transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
                 texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
+                normal_map: if json["normal_map"].is_object() {self.get_normal_map_from_json(&json["normal_map"])} else {Texture::normal_map_default()},
                 triangles: Vec::new(),
             }
         )
