@@ -16,15 +16,18 @@ use nannou::event;
 use crate::config;
 use crate::config::Config;
 use crate::ppm_interface::PPMInterface;
+use crate::renderer::renderer_common::Transform;
+
 
 // Model struct for nannou_interface
 
 pub struct Model {
-    window: WindowId,
-    config: Config,
-    last_image: Vec<u8>,
-    image_nbr: u64,
-    img_buf: String,
+    pub window: WindowId,
+    pub config: Config,
+    pub last_image: Vec<u8>,
+    pub image_nbr: u64,
+    pub img_buf: String,
+    pub camera_transform: Transform
 }
 
 // model function for nannou_interface
@@ -51,13 +54,15 @@ fn model(app: &App) -> Model {
         last_image,
         image_nbr: 0,
         img_buf: imageBuffer.to_string(),
+        camera_transform: Transform::default()
     }
 }
 
 // Update function for nannou_interface
 
 fn update(_app: &App, model: &mut Model, _update: Update) {
-    let renderer = Renderer::get_renderer_from_file(&model.config);
+    let renderer = Renderer::nannou_get_renderer_from_file(&model);
+
     if let Some(render) = renderer {
         model.image_nbr += 1;
         if model.config.fast_mode == 0 {
@@ -77,8 +82,9 @@ fn event(_app: &App, model: &mut Model, event: WindowEvent) {
         // Gérer les événements de la fenêtre comme la souris, le clavier, le redimensionnement, etc. ici.
         KeyPressed(key) => {
             if key == Key::G {
-                if model.config.fast_mode == 1 {
+                if model.config.fast_mode >= 1 {
                     model.config.fast_mode = 0;
+                    model.image_nbr = 0;
                 } else {
                     model.config.fast_mode += 1;
                 }
@@ -87,28 +93,28 @@ fn event(_app: &App, model: &mut Model, event: WindowEvent) {
                 std::process::exit(0);
             }
             if key == Key::Space {
-                println!("Space!");
-            }
-            if key == Key::S {
-                println!("Back!");
-            }
-            if key == Key::D {
-                println!("Right!");
-            }
-            if key == Key::Q {
-                println!("Left!");
-            }
-            if key == Key::Z {
-                println!("Forward!");
-            }
-            if key == Key::A {
-                println!("Rotate Left!");
-            }
-            if key == Key::E {
-                println!("Rotate Right!");
+                model.camera_transform.pos.z += 1.0;
             }
             if key == Key::LControl {
-                println!("Down!");
+                model.camera_transform.pos.z -= 1.0;
+            }
+            if key == Key::Z {
+                model.camera_transform.pos.y += 1.0;
+            }
+            if key == Key::S {
+                model.camera_transform.pos.y -= 1.0;
+            }
+            if key == Key::D {
+                model.camera_transform.pos.x += 1.0;
+            }
+            if key == Key::Q {
+                model.camera_transform.pos.x -= 1.0;
+            }
+            if key == Key::A {
+                model.camera_transform.rotation.y += 1.0;
+            }
+            if key == Key::E {
+                model.camera_transform.rotation.y -= 1.0;
             }
             if key == Key::P {
                 PPMInterface::new(&model.config.save_file).write(model.config.width, model.config.height, model.last_image.clone());

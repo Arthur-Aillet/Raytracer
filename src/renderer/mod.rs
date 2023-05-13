@@ -9,7 +9,7 @@ mod camera;
 mod primitives;
 mod lights;
 mod parsing;
-mod renderer_common;
+pub mod renderer_common;
 
 use serde::{Serialize};
 
@@ -26,6 +26,7 @@ use crate::config::Config;
 use crate::ppm_interface::PPMInterface;
 use crate::vectors::Vector;
 use sfml::graphics::{RenderWindow};
+use crate::nannou_interface::Model;
 use crate::sfml_interface::draw_buffer;
 use crate::sfml_interface::poll_event;
 
@@ -418,6 +419,16 @@ impl Renderer {
         let parser = Parser{};
         if parser.get_json(&config.config_file).is_some() {
             _result = Some(parser.get_renderer_from_json(&parser.get_json(&config.config_file).unwrap(), config.height, config.width));
+            return _result
+        }
+        None
+    }
+
+    pub fn nannou_get_renderer_from_file(model: &Model) -> Option<Renderer> {
+        let mut _result: Option<Renderer> = None;
+        let parser = Parser{};
+        if parser.get_json(&model.config.config_file).is_some() {
+            _result = Some(parser.get_renderer_from_json(&parser.get_json(&model.config.config_file).unwrap(), model.config.height, model.config.width));
             return _result
         }
         None
