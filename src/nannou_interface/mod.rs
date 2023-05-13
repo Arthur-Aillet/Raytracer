@@ -118,9 +118,9 @@ fn event(_app: &App, model: &mut Model, event: WindowEvent) {
         KeyPressed(key) => {
             if key == Key::G {
                 if model.config.fast_mode >= 1 {
-                    fancy_to_fast(model);
-                } else {
                     fast_to_fancy(model);
+                } else {
+                    fancy_to_fast(model);
                 }
             }
             if key == Key::Escape {
