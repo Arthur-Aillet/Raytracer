@@ -62,6 +62,22 @@ fn model(app: &App) -> Model {
     }
 }
 
+pub fn fancy_to_fast(model: &mut Model) {
+    model.config.fast_mode = model.base_fast_mode;
+    model.image_nbr = 0;
+    model.config.width = model.config.width / model.base_fast_mode;
+    model.config.height = model.config.height / model.base_fast_mode;
+    model.last_image = vec![0; (model.config.height * model.config.width * 3) as usize];
+}
+
+pub fn fast_to_fancy(model: &mut Model) {
+    model.config.fast_mode = 0;
+    model.image_nbr = 0;
+    model.config.width = model.config.width * model.base_fast_mode;
+    model.config.height = model.config.height * model.base_fast_mode;
+    model.last_image = vec![0; (model.config.height * model.config.width * 3) as usize];
+}
+
 // Update function for nannou_interface
 
 fn merge_camera_transform(renderer: &mut Renderer, camera_transform: &Transform) {
@@ -102,17 +118,11 @@ fn event(_app: &App, model: &mut Model, event: WindowEvent) {
         KeyPressed(key) => {
             if key == Key::G {
                 if model.config.fast_mode >= 1 {
-                    model.config.fast_mode = 0;
-                    model.image_nbr = 0;
-                    model.config.width = model.config.width * model.base_fast_mode;
-                    model.config.height = model.config.height * model.base_fast_mode;
-                    model.last_image = vec![0; (model.config.height * model.config.width * 3) as usize];
+                    fancy_to_fast(model);
                 } else {
-                    model.config.fast_mode = model.base_fast_mode;
-                    model.image_nbr = 0;
-                    model.config.width = model.config.width / model.base_fast_mode;
-                    model.config.height = model.config.height / model.base_fast_mode;
-                    model.last_image = vec![0; (model.config.height * model.config.width * 3) as usize];
+                    fast_to_fancy(model);
+                } else {
+
                 }
             }
             if key == Key::Escape {
@@ -120,27 +130,35 @@ fn event(_app: &App, model: &mut Model, event: WindowEvent) {
             }
             if key == Key::Space {
                 model.camera_transform.pos.z += 1.0;
+                fancy_to_fast(model);
             }
             if key == Key::LControl {
                 model.camera_transform.pos.z -= 1.0;
+                fancy_to_fast(model);
             }
             if key == Key::Z {
                 model.camera_transform.pos.y += 1.0;
+                fancy_to_fast(model);
             }
             if key == Key::S {
                 model.camera_transform.pos.y -= 1.0;
+                fancy_to_fast(model);
             }
             if key == Key::D {
                 model.camera_transform.pos.x += 1.0;
+                fancy_to_fast(model);
             }
             if key == Key::Q {
                 model.camera_transform.pos.x -= 1.0;
+                fancy_to_fast(model);
             }
             if key == Key::A {
                 model.camera_transform.rotation.z += 2.0;
+                fancy_to_fast(model);
             }
             if key == Key::E {
                 model.camera_transform.rotation.z -= 2.0;
+                fancy_to_fast(model);
             }
             if key == Key::P {
                 PPMInterface::new(&model.config.save_file).write(model.config.width, model.config.height, model.last_image.clone());
@@ -148,6 +166,7 @@ fn event(_app: &App, model: &mut Model, event: WindowEvent) {
         },
         _ => {}
     }
+
 }
 
 pub fn draw_canvas(draw: &Draw, pixels: &[u8], model: &Model, app: &App) {
