@@ -161,6 +161,7 @@ pub struct Texture {
     pub shininess: f64,
     pub roughness: f64,
     pub sampling_ponderation: f64,
+    pub alpha: f64,
 }
 
 impl Texture {
@@ -179,6 +180,7 @@ impl Texture {
             shininess: 4.0,
             roughness: 0.25,
             sampling_ponderation: 1.0,
+            alpha: 1.0,
         }
     }
 

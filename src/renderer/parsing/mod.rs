@@ -15,7 +15,7 @@ use super::camera::{Lens, Camera};
 use super::primitives::{Sphere, Plane, Cylinder, Cone, Object, Triangle};
 use super::primitives::mesh::Mesh;
 use super::lights::{Point, Ambient, Light, Lights, Directional};
-use super::renderer_common::{Transform, Color, Texture, Image, Textures_types};
+use super::renderer_common::{Transform, Color, Texture, Image};
 
 pub struct Parser {
 }
@@ -107,6 +107,7 @@ impl Parser {
             shininess: json["shininess"].as_f64().unwrap_or(4.0),
             roughness: json["roughness"].as_f64().unwrap_or(0.25),
             sampling_ponderation: json["sampling_ponderation"].as_f64().unwrap_or(1.0),
+            alpha: json["alpha"].as_f64().unwrap_or(1.0),
         }
     }
 
