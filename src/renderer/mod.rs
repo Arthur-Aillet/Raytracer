@@ -423,14 +423,4 @@ impl Renderer {
         }
         None
     }
-
-    pub fn nannou_get_renderer_from_file(model: &Model) -> Option<Renderer> {
-        let mut _result: Option<Renderer> = None;
-        let parser = Parser{};
-        if parser.get_json(&model.config.config_file).is_some() {
-            _result = Some(parser.get_renderer_from_json(&parser.get_json(&model.config.config_file).unwrap(), model.config.height, model.config.width));
-            return _result
-        }
-        None
-    }
 }

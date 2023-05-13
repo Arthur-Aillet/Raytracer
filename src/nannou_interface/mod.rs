@@ -24,9 +24,11 @@ use crate::renderer::renderer_common::Transform;
 pub struct Model {
     pub window: WindowId,
     pub config: Config,
+    pub base_fast_mode: i64,
     pub last_image: Vec<u8>,
     pub image_nbr: u64,
     pub img_buf: String,
+    pub last_camera_transform: Transform,
     pub camera_transform: Transform
 }
 
@@ -50,20 +52,35 @@ fn model(app: &App) -> Model {
     config.width = config.width / if config.fast_mode == 0 { 1 } else { config.fast_mode };
     Model {
         window,
-        config,
+        config: config.clone(),
+        base_fast_mode: if config.fast_mode == 0 { 1 } else { config.fast_mode },
         last_image,
         image_nbr: 0,
         img_buf: imageBuffer.to_string(),
+        last_camera_transform: Transform::default(),
         camera_transform: Transform::default()
     }
 }
 
 // Update function for nannou_interface
 
-fn update(_app: &App, model: &mut Model, _update: Update) {
-    let renderer = Renderer::nannou_get_renderer_from_file(&model);
+fn merge_camera_transform(renderer: &mut Renderer, camera_transform: &Transform) {
+    renderer.camera.transform.pos.x = camera_transform.pos.x;
+    renderer.camera.transform.pos.y = camera_transform.pos.y;
+    renderer.camera.transform.pos.z = camera_transform.pos.z;
+    renderer.camera.transform.rotation.x = camera_transform.rotation.x;
+    renderer.camera.transform.rotation.y = camera_transform.rotation.y;
+    renderer.camera.transform.rotation.z = camera_transform.rotation.z;
+    renderer.camera.transform.scale.x = camera_transform.scale.x;
+    renderer.camera.transform.scale.y = camera_transform.scale.y;
+    renderer.camera.transform.scale.z = camera_transform.scale.z;
+}
 
-    if let Some(render) = renderer {
+fn update(_app: &App, model: &mut Model, _update: Update) {
+    let renderer = Renderer::get_renderer_from_file(&model.config);
+
+    if let Some(mut render) = renderer {
+        merge_camera_transform(&mut render, &model.camera_transform);
         model.image_nbr += 1;
         if model.config.fast_mode == 0 {
             let new_image = render.pull_new_image(&model.config);
@@ -77,6 +94,8 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
     }
 }
 
+// Event function for nannou_interface
+
 fn event(_app: &App, model: &mut Model, event: WindowEvent) {
     match event {
         // Gérer les événements de la fenêtre comme la souris, le clavier, le redimensionnement, etc. ici.
@@ -85,8 +104,15 @@ fn event(_app: &App, model: &mut Model, event: WindowEvent) {
                 if model.config.fast_mode >= 1 {
                     model.config.fast_mode = 0;
                     model.image_nbr = 0;
+                    model.config.width = model.config.width * model.base_fast_mode;
+                    model.config.height = model.config.height * model.base_fast_mode;
+                    model.last_image = vec![0; (model.config.height * model.config.width * 3) as usize];
                 } else {
-                    model.config.fast_mode += 1;
+                    model.config.fast_mode = model.base_fast_mode;
+                    model.image_nbr = 0;
+                    model.config.width = model.config.width / model.base_fast_mode;
+                    model.config.height = model.config.height / model.base_fast_mode;
+                    model.last_image = vec![0; (model.config.height * model.config.width * 3) as usize];
                 }
             }
             if key == Key::Escape {
@@ -111,10 +137,10 @@ fn event(_app: &App, model: &mut Model, event: WindowEvent) {
                 model.camera_transform.pos.x -= 1.0;
             }
             if key == Key::A {
-                model.camera_transform.rotation.y += 1.0;
+                model.camera_transform.rotation.z += 2.0;
             }
             if key == Key::E {
-                model.camera_transform.rotation.y -= 1.0;
+                model.camera_transform.rotation.z -= 2.0;
             }
             if key == Key::P {
                 PPMInterface::new(&model.config.save_file).write(model.config.width, model.config.height, model.last_image.clone());
