@@ -1,7 +1,7 @@
 // EPITECH PROJECT, 2023
 // Rustracer Major
 // File description:
-// ppm interface module
+// nannou interface module
 
 use nannou::prelude::*;
 use nannou::Frame;
@@ -41,7 +41,7 @@ fn model(app: &App) -> Model {
     let window = app
         .new_window()
         .title("Rustracer")
-        .size(config.width as u32, config.height as u32)
+        .size(config.width as u32 + 360, config.height as u32)
         .view(view)
         .event(event)
         .build()
@@ -168,9 +168,11 @@ pub fn draw_canvas(draw: &Draw, pixels: &[u8], model: &Model, app: &App) {
         let texture = wgpu::Texture::from_path(app, img_path).unwrap();
 
         // Dessiner l'image sur le canvas
+        let mut window_rect = app.window_rect();
+        window_rect.x.end -= 360.0;
         draw.texture(&texture)
-            .xy(app.window_rect().xy())
-            .wh(app.window_rect().wh());
+            .xy(window_rect.xy())
+            .wh(window_rect.wh());
     } else {
         eprintln!("Failed to open image: {}", img_path);
     }
@@ -180,7 +182,7 @@ pub fn draw_canvas(draw: &Draw, pixels: &[u8], model: &Model, app: &App) {
 
 fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw();
-    draw.background().color(BLACK);
+    draw.background().color(ORANGE);
 
     let window = app.window_rect();
     let view = window.pad(100.0);

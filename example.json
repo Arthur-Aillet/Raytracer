@@ -189,7 +189,7 @@
           "metalness": 0.5,
           "roughness": 0
         },
-        "radius": 0.5
+        "radius": 1
       },
       {
         "type": "plane",
