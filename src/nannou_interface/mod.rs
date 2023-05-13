@@ -121,8 +121,6 @@ fn event(_app: &App, model: &mut Model, event: WindowEvent) {
                     fancy_to_fast(model);
                 } else {
                     fast_to_fancy(model);
-                } else {
-
                 }
             }
             if key == Key::Escape {
