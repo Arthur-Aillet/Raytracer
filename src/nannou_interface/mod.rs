@@ -77,7 +77,11 @@ fn event(_app: &App, model: &mut Model, event: WindowEvent) {
         // Gérer les événements de la fenêtre comme la souris, le clavier, le redimensionnement, etc. ici.
         KeyPressed(key) => {
             if key == Key::G {
-                println!("Switch!");
+                if model.config.fast_mode == 1 {
+                    model.config.fast_mode = 0;
+                } else {
+                    model.config.fast_mode += 1;
+                }
             }
             if key == Key::Escape {
                 std::process::exit(0);
