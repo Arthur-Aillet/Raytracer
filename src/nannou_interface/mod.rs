@@ -128,35 +128,27 @@ fn event(_app: &App, model: &mut Model, event: WindowEvent) {
             }
             if key == Key::Space {
                 model.camera_transform.pos.z += 1.0;
-                fancy_to_fast(model);
             }
             if key == Key::LControl {
                 model.camera_transform.pos.z -= 1.0;
-                fancy_to_fast(model);
             }
             if key == Key::Z {
                 model.camera_transform.pos.y += 1.0;
-                fancy_to_fast(model);
             }
             if key == Key::S {
                 model.camera_transform.pos.y -= 1.0;
-                fancy_to_fast(model);
             }
             if key == Key::D {
                 model.camera_transform.pos.x += 1.0;
-                fancy_to_fast(model);
             }
             if key == Key::Q {
                 model.camera_transform.pos.x -= 1.0;
-                fancy_to_fast(model);
             }
             if key == Key::A {
                 model.camera_transform.rotation.z += 2.0;
-                fancy_to_fast(model);
             }
             if key == Key::E {
                 model.camera_transform.rotation.z -= 2.0;
-                fancy_to_fast(model);
             }
             if key == Key::P {
                 PPMInterface::new(&model.config.save_file).write(model.config.width, model.config.height, model.last_image.clone());
