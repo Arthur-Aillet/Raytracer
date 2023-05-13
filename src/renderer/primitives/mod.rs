@@ -124,7 +124,7 @@ impl Object for Sphere {
     }
 
     fn surface_position(&self, position: Vector) -> Vector {
-        let mut rotated_position = position;
+        let mut rotated_position = position.normalize();
 
         rotated_position.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
         Vector {

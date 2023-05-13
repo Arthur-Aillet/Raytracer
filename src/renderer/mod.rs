@@ -23,10 +23,13 @@ use parsing::Parser;
 use crate::config::Config;
 use crate::vectors::Vector;
 
+use self::renderer_common::Texture;
+
 pub struct Renderer {
     pub camera: Camera,
     pub primitives: Vec<Box<dyn Object + Send + Sync>>,
     pub lights: Lights,
+    pub skybox: Texture,
 }
 
 impl Renderer {
@@ -38,6 +41,7 @@ impl Renderer {
                 lights: Vec::new(),
                 ambient: Vec::new(),
             },
+            skybox: Texture::default(),
         }
     }
 
@@ -117,6 +121,15 @@ impl Renderer {
         result
     }
 
+    fn skybox_position(&self, position: Vector) -> Vector {
+        let vec = Vector {
+            x: (2.0 * (1.0 - (position.x.atan2(position.y)/ (2.0 * std::f64::consts::PI) + 0.5))) % 1.0,
+            y: 1.0 - (position.z / (position.x.powi(2) + position.y.powi(2) + position.z.powi(2)).sqrt()).acos() / std::f64::consts::PI,
+            z: 0.0
+        };
+        vec
+    }
+
     fn get_color_from_ray_fast(&self, origin: Vector, ray: Vector) -> Vector {
         let maybe_intersect = self.found_nearest_intersection_fast(origin, ray);
 
@@ -131,11 +144,8 @@ impl Renderer {
 
             ambient + intersect.object.unwrap().get_texture().texture(texture_coordinates.x, texture_coordinates.y).as_vector() * diffuse
         } else {
-            Vector {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            }
+            let skybox_position = self.skybox_position(ray);
+            self.skybox.texture(skybox_position.x, skybox_position.y).as_vector()
         }
     }
 
@@ -194,11 +204,8 @@ impl Renderer {
             }
             self_color
         } else {
-            Vector {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            }
+            let skybox_pos = self.skybox_position(ray);
+            self.skybox.texture(skybox_pos.x, skybox_pos.y).as_vector()
         }
     }
 

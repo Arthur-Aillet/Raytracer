@@ -355,6 +355,7 @@ impl Parser {
             camera: if json["camera"].is_object() {self.get_camera_from_json(&json["camera"], height, width)} else {Camera::default(1920, 1080)},
             primitives: if json["primitives"].is_array() {self.get_objects_from_json(&json["primitives"])} else {Vec::new()},
             lights: if json["lights"].is_object() {self.get_lights_from_json(&json["lights"])} else {Lights::default()},
+            skybox: if json["skybox"].is_object() {self.get_texture_from_json(&json["skybox"]["texture"])} else {Texture::default()},
         };
         self.get_scenes_from_json(&mut renderer, json, &mut Vec::new());
         renderer
