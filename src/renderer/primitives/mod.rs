@@ -134,8 +134,8 @@ impl Object for Parent {
     fn move_obj(&mut self, offset: Transform) {
         self.transform = self.transform + offset;
         for child in self.children.iter() {
-            // let mut child_box = Box::new(child);
-            child.move_obj(offset);
+            let mut child_box = Box::new(child);
+            // child_box = Vec::new();
         }
     }
     fn set_texture(&mut self, new: Texture) {}

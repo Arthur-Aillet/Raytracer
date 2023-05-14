@@ -120,6 +120,7 @@ impl Parser {
             children: if json["children"].is_object() {self.get_objects_from_json(&json["children"])} else {Vec::new()},
         };
         sphere.apply_transform();
+        print!("{}\n", sphere.radius);
         Box::new(sphere)
     }
 
@@ -202,12 +203,15 @@ impl Parser {
     }
 
     pub fn get_parent_from_json(&self, json: &Value) -> Box<Parent> {
-        Box::new(
-            Parent {
-                transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
-                children: if json["children"].is_object() {self.get_objects_from_json(&json["children"])} else {Vec::new()},
-            }
-        )
+    let parent = Parent {
+        transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
+        children: if json["children"].is_array() {self.get_objects_from_json(&json["children"])} else {Vec::new()},
+    };
+
+    for mut child in parent.children {
+        child.move_obj(parent.transform);
+    }
+    Box::new(parent)
     }
 
     pub fn get_object_from_json(&self, json: &Value) -> Option<Box::<dyn Object + Send + Sync>> {
@@ -219,10 +223,10 @@ impl Parser {
                 "cone" => Some(self.get_cone_from_json(json)),
                 "triangle" => Some(self.get_triangle_from_json(json)),
                 "mesh" => Some(self.get_mesh_from_json(json)),
-                _ => Some(self.get_parent_from_json(json)),
+                _ => None,
             }
         } else {
-            None
+            Some(self.get_parent_from_json(json))
         }
     }
 
