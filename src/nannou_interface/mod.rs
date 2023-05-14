@@ -27,14 +27,15 @@ use crate::nannou_interface::layout::ComponentType;
 
 pub struct Model {
     pub window: WindowId,
+    pub draw: Draw,
     pub layout: Layout,
     pub config: Config,
     pub base_fast_mode: i64,
     pub last_image: Vec<u8>,
     pub image_nbr: u64,
     pub img_buf: String,
-    pub last_camera_transform: Transform,
-    pub camera_transform: Transform
+    pub camera_transform: Transform,
+    pub fov: i64,
 }
 
 // model function for nannou_interface
@@ -43,7 +44,8 @@ fn model(app: &App) -> Model {
     let imageBuffer = ".raytracer/imageBuffer.ppm";
     let args: Vec<String> = env::args().collect();
     let mut config = config::Config::from_args(&args);
-    let mut layout = Layout::new(config.clone(), Renderer::get_renderer_from_file(&config).unwrap());
+    let renderer = Renderer::get_renderer_from_file(&config).unwrap();
+    let mut layout = Layout::new(config.clone());
     let window = app
         .new_window()
         .title("Rustracer")
@@ -58,14 +60,15 @@ fn model(app: &App) -> Model {
     config.width = config.width / if config.fast_mode == 0 { 1 } else { config.fast_mode };
     Model {
         window,
+        draw: app.draw(),
         layout,
         config: config.clone(),
         base_fast_mode: if config.fast_mode == 0 { 1 } else { config.fast_mode },
         last_image,
         image_nbr: 0,
         img_buf: imageBuffer.to_string(),
-        last_camera_transform: Transform::default(),
-        camera_transform: Transform::default()
+        camera_transform: Transform::default(),
+        fov: renderer.camera.fov,
     }
 }
 
@@ -87,26 +90,30 @@ pub fn fast_to_fancy(model: &mut Model) {
 
 // Update function for nannou_interface
 
-fn merge_camera_transform(renderer: &mut Renderer, camera_transform: &Transform) {
-    renderer.camera.transform.pos.x = camera_transform.pos.x;
-    renderer.camera.transform.pos.y = camera_transform.pos.y;
-    renderer.camera.transform.pos.z = camera_transform.pos.z;
-    renderer.camera.transform.rotation.x = camera_transform.rotation.x;
-    renderer.camera.transform.rotation.y = camera_transform.rotation.y;
-    renderer.camera.transform.rotation.z = camera_transform.rotation.z;
-    renderer.camera.transform.scale = camera_transform.scale;
+fn merge_camera_transform(renderer: &mut Renderer, model: &Model) {
+    renderer.camera.transform.pos.x = model.camera_transform.pos.x;
+    renderer.camera.transform.pos.y = model.camera_transform.pos.y;
+    renderer.camera.transform.pos.z = model.camera_transform.pos.z;
+    renderer.camera.transform.rotation.x = model.camera_transform.rotation.x;
+    renderer.camera.transform.rotation.y = model.camera_transform.rotation.y;
+    renderer.camera.transform.rotation.z = model.camera_transform.rotation.z;
+    renderer.camera.transform.scale = model.camera_transform.scale;
+    renderer.camera.fov = model.fov;
 }
 
 fn merge_interactions_layout(app: &App, model: &mut Model) {
-    if model.layout.get_interactions(app, "fast".to_string(), ComponentType::Button) == true {
+    if model.layout.get_buttons_interactions(app, "fast".to_string()) == true {
         if model.config.fast_mode == 0 {
             fancy_to_fast(model);
         }
     }
-    if model.layout.get_interactions(app, "fancy".to_string(), ComponentType::Button) == true {
+    if model.layout.get_buttons_interactions(app, "fancy".to_string()) == true {
         if model.config.fast_mode > 0 {
             fast_to_fancy(model);
         }
+    }
+    if model.layout.get_sliders_interactions(app, "fov".to_string()) != -1 {
+        model.fov = model.layout.get_sliders_interactions(app, "fov".to_string());
     }
 }
 
@@ -114,11 +121,10 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
     let renderer = Renderer::get_renderer_from_file(&model.config);
 
     if let Some(mut render) = renderer {
-        merge_camera_transform(&mut render, &model.camera_transform);
+        merge_camera_transform(&mut render, &model);
         model.image_nbr += 1;
         if model.config.fast_mode == 0 {
             let new_image = render.pull_new_image(&model.config);
-
             render.merge_image(&model.config, &mut model.last_image, &new_image, model.image_nbr);
         } else {
             model.last_image = render.pull_new_image(&model.config);
@@ -126,6 +132,7 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
     } else {
         println!("Invalid Config!")
     }
+    model.layout.display(&_app, &model.draw);
 }
 
 // Event function for nannou_interface
@@ -196,17 +203,15 @@ pub fn draw_canvas(draw: &Draw, pixels: &[u8], model: &Model, app: &App) {
 // Main view function for nannou_interface
 
 fn view(app: &App, model: &Model, frame: Frame) {
-    let draw = app.draw();
     let color = nannou::color::rgb_u32(0x302B34);
-    draw.background().color(color);
+    model.draw.background().color(color);
 
     let window = app.window_rect();
     let view = window.pad(100.0);
 
-    draw_canvas(&draw, &model.last_image, &model, &app);
-    model.layout.display(&app, &model, &frame, &draw);
+    draw_canvas(&model.draw, &model.last_image, &model, &app);
 
-    draw.to_frame(app, &frame).unwrap();
+    model.draw.to_frame(app, &frame).unwrap();
 }
 
 // Nannou interface struct
