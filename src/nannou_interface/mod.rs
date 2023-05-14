@@ -142,7 +142,7 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
             model.layout.display(&_app, &model.draw, &render);
         }
     } else {
-        println!("Invalid Config!")
+        println!("Error: Renderer not found");
     }
 }
 
@@ -180,11 +180,23 @@ fn event(_app: &App, model: &mut Model, event: WindowEvent) {
             if key == Key::Q {
                 model.camera_transform.pos.x -= 1.0;
             }
-            if key == Key::A {
+            if key == Key::Right {
+                model.camera_transform.rotation.z -= 2.0;
+            }
+            if key == Key::Left {
                 model.camera_transform.rotation.z += 2.0;
             }
+            if key == Key::Down {
+                model.camera_transform.rotation.x -= 2.0;
+            }
+            if key == Key::Up {
+                model.camera_transform.rotation.x += 2.0;
+            }
+            if key == Key::A {
+                model.camera_transform.rotation.y -= 2.0;
+            }
             if key == Key::E {
-                model.camera_transform.rotation.z -= 2.0;
+                model.camera_transform.rotation.y += 2.0;
             }
             if key == Key::P {
                 PPMInterface::new(&model.config.save_file).write(model.config.width, model.config.height, model.last_image.clone());
