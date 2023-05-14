@@ -19,9 +19,10 @@ use crate::renderer::Renderer;
 use crate::config::Config;
 use crate::ppm_interface::PPMInterface;
 use crate::renderer::renderer_common::Transform;
+use crate::vectors::Vector;
+use crate::nannou_interface::layout::ComponentType;
 
 use layout::Layout;
-use crate::nannou_interface::layout::ComponentType;
 
 // Model struct for nannou_interface
 
@@ -91,6 +92,10 @@ pub fn fast_to_fancy(model: &mut Model) {
 // Update function for nannou_interface
 
 fn merge_camera_transform(renderer: &mut Renderer, model: &Model) {
+    renderer.camera.fov = model.fov;
+    renderer.camera.calculate_lens_distance();
+    renderer.camera.calculate_lens_size();
+
     renderer.camera.transform.pos.x = model.camera_transform.pos.x;
     renderer.camera.transform.pos.y = model.camera_transform.pos.y;
     renderer.camera.transform.pos.z = model.camera_transform.pos.z;
@@ -98,7 +103,6 @@ fn merge_camera_transform(renderer: &mut Renderer, model: &Model) {
     renderer.camera.transform.rotation.y = model.camera_transform.rotation.y;
     renderer.camera.transform.rotation.z = model.camera_transform.rotation.z;
     renderer.camera.transform.scale = model.camera_transform.scale;
-    renderer.camera.fov = model.fov;
 }
 
 fn merge_interactions_layout(app: &App, model: &mut Model) {
