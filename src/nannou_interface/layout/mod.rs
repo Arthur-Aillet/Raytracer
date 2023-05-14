@@ -79,7 +79,6 @@ impl Layout {
             let mut y = (self.config.height as f32 / 2.0) - 175.0;
 
             self.texts.clear();
-            println!("{}", self.config.width as f32);
             self.texts.push(Text::new("object infos".to_string(), ((self.config.width as f32 + 360.0) / 2.0)  - 310.0, y + 25.0, 280.0, 50.0, String::from("OBJECTS :")));
             for object in &renderer.primitives {
                 if (count == nb_objects_futur) {
