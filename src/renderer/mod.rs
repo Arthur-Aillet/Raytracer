@@ -10,9 +10,12 @@ mod primitives;
 mod lights;
 mod parsing;
 mod renderer_common;
+use nannou::draw::background::new;
+use nannou::prelude::Float;
 use serde::{Serialize};
 
 use std::mem;
+use std::cmp;
 use rand::Rng;
 use crate::renderer::primitives::{Object, Intersection};
 use crate::renderer::lights::Light;
@@ -147,44 +150,57 @@ impl Renderer {
         }
     }
 
+    fn refract(&self, normal: Vector, incident: Vector, ior1: f64, ior2: f64) -> Option<Vector> {
+        let ratio = ior1 / ior2;
+        let cosI = normal.normalize().dot_product(incident.normalize()) * -1.0;
+        let sinT2 = ratio * ratio * (1.0 - cosI * cosI);
+        if sinT2 > 1.0 {
+            return None;
+        }
+        let cosT = (1.0 - sinT2).sqrt();
+        let final_vect = (incident.normalize() * ratio + normal.normalize() * (ratio * cosI - cosT)).normalize();
+        return Some(final_vect);
+    }
+
+    fn refract2(&self, normal: Vector, incident: Vector, ior1: f64, ior2: f64) -> Option<Vector> {
+        let ratio = ior1 / ior2;
+        let c = - (incident.dot_product(normal));
+        let v = 1.0 - ratio * ratio * (1.0 - c * c);
+        Some(((incident * ratio) + (normal * (ratio * c - v.sqrt()))).normalize())
+    }
+
+
     fn transmission(&self, intersect: &Intersection, incident_ray: Vector, recursivity: &mut Recursivity) -> Vector {
-        if recursivity.transmission <= 0 {
-            return Vector { x: 0.0, y: 0.0, z: 0.0 }; // FIXME remettre 0,0,0
+        let normal = intersect.normal.normalize();
+        let object_ior = 1.0;//intersect.object.unwrap().get_texture().ior;
+        let other_ior = 1.45; //FIXME - inexact si deux objects transmissifs se touchent / l'un dans l'autre
+
+        let maybe_new_ray;
+        if recursivity.transmission <= 1 {
+            maybe_new_ray = self.refract(normal.normalize() * -1.0, incident_ray.normalize(), other_ior, object_ior);
+        } else {
+            maybe_new_ray = self.refract(normal.normalize(), incident_ray.normalize(), object_ior, other_ior);
         }
-        let mut normal = intersect.normal.normalize();
-        let mut object_ior = 1.125;//intersect.object.unwrap().get_texture().ior;
-        let mut other_ior = 1.0; //FIXME - inexact si deux objects transmissifs se touchent / l'un dans l'autre
-        let mut dot_product = incident_ray.normalize().dot_product(intersect.normal.normalize());
-
-        if dot_product < 0.0 { // normal condition : outside
-            dot_product = -dot_product;
-        } else { // inverted condition : inside // FIXME : pour l'instant on bypass si on est dedans, donc la refraction est mauvaise
-            recursivity.general -= 1;
-            return self.get_color_from_ray(intersect.intersection_point + normal * self.camera.shadow_bias, incident_ray, recursivity);
-            // normal = normal * -1.0;
-            // object_ior = 1.0;
-            // other_ior = 1.125;
-        }
-
-        let ratio = other_ior / object_ior;
-        let k = 1.0 - (ratio * ratio) * (1.0 - dot_product * dot_product);
-        if k < 0.0 { //reflet
-            return Vector {x:1.0,y:0.0,z:0.0} // FIXME remettre 0,0,0
-        }
-
-        let new_ray = ((incident_ray + normal * dot_product) * ratio - normal * k.sqrt()).normalize();
-        let maybe_intersect = self.found_nearest_intersection(intersect.intersection_point - normal * self.camera.shadow_bias, new_ray);
-
-        if let Some(new_intersect) = maybe_intersect {
-            if new_intersect.object.unwrap().get_texture().transmission > 0.0 {
-                recursivity.transmission -= 1;
-                return self.transmission(&new_intersect, new_ray, recursivity);
-            } else {
-                recursivity.general -= 1;
-                return self.get_color_from_ray(intersect.intersection_point + normal * self.camera.shadow_bias, new_ray, recursivity);
+        if let Some(new_ray) = maybe_new_ray {
+            let maybe_intersect = self.found_nearest_intersection(intersect.intersection_point + new_ray * self.camera.shadow_bias, new_ray);
+            if let Some(new_intersect) = maybe_intersect {
+                if recursivity.transmission == 2 && new_intersect.object.unwrap().get_texture().transmission > 0.0 {
+                    recursivity.transmission = 1;
+                    return self.transmission(&new_intersect, new_ray, recursivity);
+                } else if recursivity.transmission == 2 {
+                    recursivity.general -= 1;
+                    return self.get_color_from_ray(intersect.intersection_point + new_ray * self.camera.shadow_bias, new_ray, recursivity);
+                } else {
+                    recursivity.general -= 1;
+                    return self.get_color_from_ray(intersect.intersection_point + new_ray * self.camera.shadow_bias, new_ray, recursivity);
+                }
             }
+        } else {
+            //recursivity.general -= 1;
+            //return self.get_color_from_ray(intersect.intersection_point + incident_ray * self.camera.shadow_bias, incident_ray, recursivity)
+            return Vector { x: 1.0, y: 0.0, z: 0.0 };
         }
-        Vector { x: 0.0, y: 0.0, z: 0.0 } // FIXME remettre 0,0,0
+        Vector { x: 0.0, y: 1.0, z: 1.0 } // FIXME remettre 0,0,0
     }
 
     fn get_color_from_ray(&self, origin: Vector, ray: Vector, recursivity: &mut Recursivity) -> Vector {
@@ -192,12 +208,17 @@ impl Renderer {
            return Vector {
                x: 0.0,
                y: 0.0,
-               z: 0.0,
+               z: 1.0,
            }
         }
         let maybe_intersect = self.found_nearest_intersection(origin, ray);
 
         if let Some(intersect) = maybe_intersect {
+            //return intersect.normal.normalize() * 0.5 + 0.5; // afficher les normales
+            //return intersect.intersection_point * 2.0;
+            //return Vector { x: intersect.normal.normalize().dot_product(ray.normalize()) * 0.5 + 0.5,
+            //                y: intersect.normal.normalize().dot_product(ray.normalize()) * 0.5 + 0.5,
+            //                z: intersect.normal.normalize().dot_product(ray.normalize()) * 0.5 + 0.5};
             // case of direct intersection with light object
             if let Some(light_touched) = intersect.light {
                 return light_touched.get_color().as_vector();
@@ -226,7 +247,13 @@ impl Renderer {
                     y: random_a.sin() * random_b.cos(),
                     z: random_b.sin()
                 };
-                let mut reflection_ray = (ray.normalize() - intersect.normal.normalize() * 2.0 * intersect.normal.dot_product(ray.normalize())).normalize();
+                let mut reflection_ray = (ray.normalize() - (intersect.normal.normalize() * 2.0 * intersect.normal.normalize().dot_product(ray.normalize()))).normalize();
+                //let mut reflection_ray = intersect.normal.normalize().dot_product(ray.normalize());
+                // return Vector {
+                //     x: reflection_ray * 0.5 + 0.5,
+                //     y: reflection_ray * 0.5 + 0.5,
+                //     z: reflection_ray * 0.5 + 0.5,
+                // };
                 if intersect.object.unwrap().get_texture().roughness != 0.0 {
                     reflection_ray.lerp(&random_vect, intersect.object.unwrap().get_texture().roughness);
                 }
@@ -242,15 +269,16 @@ impl Renderer {
                         + (new_color * intersect.object.unwrap().get_texture().color.as_vector() * metalness))
                         * (1.0/samples_nbr as f64);
                 } else {
+                    recursivity.transmission = 2;
                     self_color = self.transmission(&intersect, ray, recursivity);
                 }
             }
             self_color
         } else {
             Vector {
-                x: 0.0,
+                x: 1.0,
                 y: 0.0,
-                z: 0.0,
+                z: 1.0,
             }
         }
     }
