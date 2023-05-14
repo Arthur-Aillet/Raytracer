@@ -238,7 +238,7 @@ impl Renderer {
             let surface_point = intersect.intersection_point + intersect.normal * self.camera.shadow_bias;
 
             self_color = self_color * (1.0 - intersect.object.unwrap().get_texture().metalness);
-            if recursivity.general == 1 {
+            if recursivity.general <= 1 {
                 return self_color;
             }
             let samples_nbr = (1.0 + self.camera.reflection_samples as f64 * intersect.object.unwrap().get_texture().roughness).powf(intersect.object.unwrap().get_texture().sampling_ponderation);
