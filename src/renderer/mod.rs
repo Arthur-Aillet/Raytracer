@@ -283,11 +283,15 @@ impl Renderer {
         }
     }
 
-    pub fn print_progression(&self, progression:Arc<Mutex<u64>>, buf_step: u64, buf_size: u64) {
+    pub fn print_progression(&self, progression:Arc<Mutex<u64>>, buf_step: u64, buf_size: u64, config: &Config) {
         let mut last_progression:u64 = 0;
 
         while last_progression as u64 != self.camera.lens.height as u64 {
-            thread::sleep(time::Duration::from_millis(250));
+            if config.fast_mode == 0 {
+                thread::sleep(time::Duration::from_millis(250));
+            } else {
+                thread::sleep(time::Duration::from_millis(50));
+            }
             let locked_progression = progression.lock().unwrap();
             print!("rendered [");
             for _i in 0..(((*locked_progression + (self.camera.lens.height as u64 * buf_step)) * 100) / (self.camera.lens.height as u64 * buf_size)) {
@@ -325,7 +329,7 @@ impl Renderer {
             }
 
             if self.camera.progression == true {
-                self.print_progression(progression, 0, 1);
+                self.print_progression(progression, 0, 1, &config);
             }
         });
         let final_pixels = pixels.lock().unwrap().to_vec();
@@ -352,7 +356,7 @@ impl Renderer {
                 }
 
                 if self.camera.progression == true {
-                    self.print_progression(progression, 0, buf_size);
+                    self.print_progression(progression, 0, buf_size, &config);
                 }
             });
 
@@ -393,7 +397,7 @@ impl Renderer {
                 }
 
                 if self.camera.progression {
-                    self.print_progression(progression, n, buf_size);
+                    self.print_progression(progression, n, buf_size, config);
                 }
             });
 

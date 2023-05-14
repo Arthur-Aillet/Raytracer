@@ -21,7 +21,7 @@
     "smooth_shadow_step": 32,
     "shadow_bias": 1e-13,
     "threads": 10,
-    "progression": true,
+    "progression": false,
     "image_buffer_size": 1,
     "super_sampling": 1,
     "recursivity": 5,
