@@ -189,7 +189,7 @@ impl Texture {
             shininess: 4.0,
             roughness: 0.25,
             transmission: 0.0,
-            ior: 1.333,
+            ior: 1.45,
             sampling_ponderation: 1.0,
             alpha: 1.0,
         }
@@ -211,6 +211,8 @@ impl Texture {
             roughness: 0.25,
             sampling_ponderation: 1.0,
             alpha: 255.0,
+            transmission: 0.0,
+            ior: 1.45
         }
     }
 
