@@ -7,14 +7,12 @@
 
 pub mod mesh;
 
-use std::process::Child;
-
 use crate::vectors;
 use vectors::Vector;
 use vectors::resolve_quadratic_equation;
 use crate::renderer::lights::Light;
 use super::renderer_common::{Transform, Texture};
-use serde::{Deserialize, Serialize};
+use serde::{Serialize};
 use erased_serde::serialize_trait_object;
 
 pub struct Intersection<'a> {
@@ -133,26 +131,38 @@ impl Object for Parent {
     }
     fn move_obj(&mut self, offset: Transform) {
         self.transform = self.transform + offset;
-        for child in self.children.iter() {
-            let mut child_box = Box::new(child);
-            // child_box = Vec::new();
+        for child in self.children.iter_mut() {
+            child.move_obj(offset);
         }
     }
-    fn set_texture(&mut self, new: Texture) {}
+    fn set_texture(&mut self, _new: Texture) {}
     fn set_transform(&mut self, new: Transform) {
         self.transform = new
     }
-    fn surface_position(&self, position: Vector) -> Vector {
+    fn surface_position(&self, _position: Vector) -> Vector {
         Vector { x: 0.0, y: 0.0, z: 0.0}
     }
 }
 
 impl Object for Sphere {
-    fn apply_transform(&mut self) {
-        self.radius_applied = self.radius * self.transform.scale;
-    }
+    fn apply_transform(&mut self) {self.radius_applied = self.radius * self.transform.scale;}
 
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
+        let mut found_intersection: Option<Intersection> = None;
+        let mut smallest_distance: f64 = f64::INFINITY;
+
+         for object in self.children.iter() {
+            let intersect = object.intersection(ray, origin);
+
+            if intersect.is_some() {
+                let inters = intersect.unwrap();
+                let distance_found = (inters.intersection_point - origin).len();
+                if distance_found < smallest_distance {
+                    smallest_distance = distance_found;
+                    found_intersection = Some(inters);
+                }
+            }
+        }
         let diff = origin - self.transform.pos;
         let result = resolve_quadratic_equation(ray.dot_product(ray), // could be 1 if normalized
                                                 2.0 * (ray.dot_product(diff)),
@@ -161,19 +171,23 @@ impl Object for Sphere {
         let smallest_result: Option<&f64> = result.iter().filter(|number| **number > 0.0).min_by(|a, b| a.partial_cmp(b).unwrap());
 
         if smallest_result == None {
-            None
+            found_intersection
         } else {
             let point = Vector {
                 x: origin.x + ray.x * smallest_result.unwrap(),
                 y: origin.y + ray.y * smallest_result.unwrap(),
                 z: origin.z + ray.z * smallest_result.unwrap(),
             };
-            Some ( Intersection {
-                normal: point - self.transform.pos,
-                intersection_point: point,
-                object: Some(self),
-                light: None
-            })
+            if (point - origin).len() < smallest_distance {
+                Some ( Intersection {
+                    normal: point - self.transform.pos,
+                    intersection_point: point,
+                    object: Some(self),
+                    light: None
+                })
+            } else {
+                found_intersection
+            }
         }
     }
 
@@ -188,7 +202,12 @@ impl Object for Sphere {
         }
     }
     fn get_transform(&self) -> Transform {self.transform}
-    fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
+    fn move_obj(&mut self, offset: Transform) {
+        self.transform = self.transform + offset;
+        for child in self.children.iter_mut() {
+            child.move_obj(offset);
+        };
+    }
     fn set_transform(&mut self, new: Transform) {self.transform = new}
     fn get_texture(&self) -> Texture {self.texture.clone()}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
@@ -201,24 +220,43 @@ impl Object for Plane {
     }
 
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
+        let mut found_intersection: Option<Intersection> = None;
+        let mut smallest_distance: f64 = f64::INFINITY;
+
+         for object in self.children.iter() {
+            let intersect = object.intersection(ray, origin);
+
+            if intersect.is_some() {
+                let inters = intersect.unwrap();
+                let distance_found = (inters.intersection_point - origin).len();
+                if distance_found < smallest_distance {
+                    smallest_distance = distance_found;
+                    found_intersection = Some(inters);
+                }
+            }
+        }
         let denom = ray.normalize().dot_product(self.normal_applied);
         if denom == 0.0 {
-            return None
+            return found_intersection
         }
         let progress = (self.transform.pos - origin).dot_product(self.normal_applied) / denom;
         if progress < 0.0 {
-            return None
+            return found_intersection
         }
-        Some ( Intersection {
-            intersection_point: Vector{
-                x: origin.x + ray.x * progress,
-                y: origin.y + ray.y * progress,
-                z: origin.z + ray.z * progress
-            },
-            normal: self.normal_applied,
-            object: Some(self),
-            light: None,
-        })
+        let intersection_point = Vector{
+            x: origin.x + ray.x * progress,
+            y: origin.y + ray.y * progress,
+            z: origin.z + ray.z * progress
+        };
+        if (intersection_point - origin).len() < smallest_distance {
+            found_intersection = Some ( Intersection {
+                intersection_point,
+                normal: self.normal_applied,
+                object: Some(self),
+                light: None,
+            })
+        }
+        found_intersection
     }
     fn surface_position(&self, position: Vector) -> Vector {
         let mut rotated_position = position;
@@ -231,7 +269,12 @@ impl Object for Plane {
         }
     }
     fn get_transform(&self) -> Transform {self.transform}
-    fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
+    fn move_obj(&mut self, offset: Transform) {
+        self.transform = self.transform + offset;
+        for child in self.children.iter_mut() {
+            child.move_obj(offset);
+        }
+    }
     fn set_transform(&mut self, new: Transform) {self.transform = new}
     fn get_texture(&self) -> Texture {self.texture.clone()}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
@@ -308,6 +351,21 @@ impl Object for Cylinder {
     }
 
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
+        let mut found_intersection: Option<Intersection> = None;
+        let mut smallest_distance: f64 = f64::INFINITY;
+
+         for object in self.children.iter() {
+            let intersect = object.intersection(ray, origin);
+
+            if intersect.is_some() {
+                let inters = intersect.unwrap();
+                let distance_found = (inters.intersection_point - origin).len();
+                if distance_found < smallest_distance {
+                    smallest_distance = distance_found;
+                    found_intersection = Some(inters);
+                }
+            }
+        }
         let distance = origin - self.base; // W
 
         let a = 1.0 /*ray.dot_product(ray) car normalisé */ - (ray.dot_product(self.axis)).powi(2);
@@ -317,27 +375,40 @@ impl Object for Cylinder {
         let result = resolve_quadratic_equation(a, b, c);
 
         let smallest_result: Option<&f64> = result.iter().filter(|number| **number > 0.0).min_by(|fst, snd| fst.partial_cmp(snd).unwrap());
-        if smallest_result == None { return None; }
+        if smallest_result == None { return found_intersection; }
 
         let intersection_point = origin + ray * *smallest_result.unwrap();
 
         if -self.height_applied / 2.0 <= (intersection_point - self.transform.pos).dot_product(self.axis) && (intersection_point - self.transform.pos).dot_product(self.axis) <= self.height_applied / 2.0 { // too far from center
             let normal = intersection_point - (self.base + self.axis * (intersection_point - self.base).dot_product(self.axis)); // Cos(teta) = A/H
 
+            if (intersection_point - origin).len() < smallest_distance {
             return Some ( Intersection {
                 intersection_point,
                 normal,
                 object: Some(self),
                 light: None,
-            })
+            })} else {
+                return found_intersection
+            }
         }
+        let basea = self.base_intersection(ray, origin, self.axis * -1.0, self.base);
         if (intersection_point - self.base).dot_product(self.axis) < 0.0 {
-            return self.base_intersection(ray, origin, self.axis * -1.0, self.base);
+            if basea.is_some() && (basea.as_ref().unwrap().intersection_point - origin).len() < smallest_distance {
+                return basea;
+            } else {
+                return found_intersection
+            }
         }
+        let baseb = self.base_intersection(ray, origin,  self.axis, self.top);
         if (intersection_point - self.base).dot_product(self.axis) > self.height_applied {
-            return self.base_intersection(ray, origin,  self.axis, self.top);
+            if baseb.is_some() && (baseb.as_ref().unwrap().intersection_point - origin).len() < smallest_distance {
+                return baseb;
+            } else {
+                return found_intersection
+            }
         }
-        None
+        found_intersection
     }
     fn surface_position(&self, position: Vector) -> Vector {
         let mut rotated_position = position;
@@ -350,7 +421,12 @@ impl Object for Cylinder {
         }
     }
     fn get_transform(&self) -> Transform {self.transform}
-    fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
+    fn move_obj(&mut self, offset: Transform) {
+        self.transform = self.transform + offset;
+        for child in self.children.iter_mut() {
+            child.move_obj(offset);
+        };
+    }
     fn set_transform(&mut self, new: Transform) {self.transform = new}
     fn get_texture(&self) -> Texture {self.texture.clone()}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
@@ -372,6 +448,22 @@ impl Object for Cone {
     }
 
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
+        let mut found_intersection: Option<Intersection> = None;
+        let mut smallest_distance: f64 = f64::INFINITY;
+
+         for object in self.children.iter() {
+            let intersect = object.intersection(ray, origin);
+
+            if intersect.is_some() {
+                let inters = intersect.unwrap();
+                let distance_found = (inters.intersection_point - origin).len();
+                if distance_found < smallest_distance {
+                    smallest_distance = distance_found;
+                    found_intersection = Some(inters);
+                }
+            }
+        }
+
         let distance = origin - self.top; // W
 
         let radius_constant = self.radius_applied.powi(2) / self.height_applied.powi(2);
@@ -390,17 +482,26 @@ impl Object for Cone {
             let cos_angle = self.axis.dot_product(self.top - intersection_point);
             let normal = (intersection_point - (self.top - self.axis * ((self.top - intersection_point).len2() / cos_angle))).normalize();
 
-            return Some ( Intersection {
-                intersection_point,
-                normal,
-                object: Some(self),
-                light: None,
-            });
+            if (intersection_point - origin).len() < smallest_distance {
+                return Some ( Intersection {
+                    intersection_point,
+                    normal,
+                    object: Some(self),
+                    light: None,
+                });
+            } else {
+                return found_intersection;
+            }
         }
+        let base = self.base_intersection(ray, origin, self.axis * -1.0, self.base);
         if (intersection_point - self.top).dot_product(self.axis) < 0.0 {
-            return self.base_intersection(ray, origin, self.axis * -1.0, self.base);
+            if base.is_some() && (base.as_ref().unwrap().intersection_point - origin).len() < smallest_distance {
+                return base;
+            } else {
+                return found_intersection
+            }
         }
-        None
+        found_intersection
     }
     fn surface_position(&self, position: Vector) -> Vector {
         let mut rotated_position = position;
@@ -413,7 +514,12 @@ impl Object for Cone {
         }
     }
     fn get_transform(&self) -> Transform {self.transform}
-    fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
+    fn move_obj(&mut self, offset: Transform) {
+        self.transform = self.transform + offset;
+        for child in self.children.iter_mut() {
+            child.move_obj(offset);
+        };
+}
     fn set_transform(&mut self, new: Transform) {self.transform = new}
     fn get_texture(&self) -> Texture {self.texture.clone()}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
@@ -434,13 +540,29 @@ impl Object for Triangle {
     }
 
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
+        let mut found_intersection: Option<Intersection> = None;
+        let mut smallest_distance: f64 = f64::INFINITY;
+
+         for object in self.children.iter() {
+            let intersect = object.intersection(ray, origin);
+
+            if intersect.is_some() {
+                let inters = intersect.unwrap();
+                let distance_found = (inters.intersection_point - origin).len();
+                if distance_found < smallest_distance {
+                    smallest_distance = distance_found;
+                    found_intersection = Some(inters);
+                }
+            }
+        }
+
         let denom = ray.normalize().dot_product(self.normal);
         if denom == 0.0 {
-            return None
+            return found_intersection
         }
         let progress = (((self.point_a_applied + self.point_b_applied + self.point_c_applied) / 3.0) - origin).dot_product(self.normal) / denom;
         if progress < 0.0 {
-            return None
+            return found_intersection
         }
         let intersection_point = Vector{
             x: origin.x + ray.x * progress,
@@ -450,29 +572,37 @@ impl Object for Triangle {
 
         let cross = (self.point_b_applied - self.point_a_applied).cross_product(intersection_point - self.point_a_applied);
         if self.normal.dot_product(cross) < 0.0 {
-            return None;
+            return found_intersection;
         }
 
         let cross = (self.point_c_applied - self.point_b_applied).cross_product(intersection_point - self.point_b_applied);
         if self.normal.dot_product(cross) < 0.0 {
-            return None;
+            return found_intersection;
         }
 
         let cross = (self.point_a_applied - self.point_c_applied).cross_product(intersection_point - self.point_c_applied);
         if self.normal.dot_product(cross) < 0.0 {
-            return None;
+            return found_intersection;
         }
 
-        Some ( Intersection {
-            intersection_point,
-            normal: if self.normal.dot_product(origin - intersection_point) < 0.0 { self.normal * -1.0 } else { self.normal },
-            object: Some(self),
-            light: None,
-        })
+        if (intersection_point - origin).len() < smallest_distance {
+            found_intersection = Some ( Intersection {
+                intersection_point,
+                normal: if self.normal.dot_product(origin - intersection_point) < 0.0 { self.normal * -1.0 } else { self.normal },
+                object: Some(self),
+                light: None,
+            })
+        }
+        found_intersection
     }
     fn surface_position(&self, position: Vector) -> Vector {Vector { x: 0.5, y: 0.5, z: 0.0}}
     fn get_transform(&self) -> Transform {self.transform}
-    fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
+    fn move_obj(&mut self, offset: Transform) {
+        self.transform = self.transform + offset;
+        for child in self.children.iter_mut() {
+            child.move_obj(offset);
+        };
+    }
     fn set_transform(&mut self, new: Transform) {self.transform = new}
     fn get_texture(&self) -> Texture {self.texture.clone()}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
