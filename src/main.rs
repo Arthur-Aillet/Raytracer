@@ -5,7 +5,7 @@
 // main
 //
 
-use raytracer::{config, sfml_interface};
+use raytracer::{config};
 use renderer::Renderer;
 
 mod ppm_interface;
@@ -26,7 +26,7 @@ fn print_help() {
     println!("\t-s <PPM_FILE>\t\tSpecify the save file");
     println!("\t-w <WIDTH>\t\tSpecify the width of the image");
     println!("\t-h <HEIGHT>\t\tSpecify the height of the image");
-    println!("\t-g <GRAPHIC MODE>\tDisplay the image in a window");
+    println!("\t--graphic\t\tDisplay the image in a live graphic mode");
     println!("\t--layout \t\tDisplay the layout");
     println!("\t-f <FAST MODE>\t\tDisplay the image with reduce quality");
 
@@ -36,10 +36,6 @@ fn print_help() {
     println!("<PPM_FILE>: The file must be a valid PPM file");
     println!("<WIDTH>: The width must be a positive integer");
     println!("<HEIGHT>: The height must be a positive integer");
-    println!("<GRAPHIC MODE>: The graphic mode must be a positive integer:");
-    println!("\t- 0: PPM");
-    println!("\t- 1: Nannou");
-    println!("\t- 2: SFML");
     println!("<FAST MODE>: The fast mode must be a positive integer");
 
     println!("\n\n\t\t+----------------+");
@@ -62,11 +58,10 @@ fn main() -> std::io::Result<()> {
         std::process::exit(84);
     }
 
-    match config.graphic {
-        0 => ppm_interface::PPMInterface::new(&config.save_file).write(config.width, config.height, renderer.unwrap().render(&config)),
-        1 => nannou_interface::NannouInterface::new(config.width, config.height).run(),
-        2 => sfml_interface::SfmlInterface::new(config).run(),
-        _ => println!("Error: Invalid graphic mode"),
+    if config.graphic == true {
+        nannou_interface::NannouInterface::new(config.width, config.height).run()
+    } else {
+        ppm_interface::PPMInterface::new(&config.save_file).write(config.width, config.height, renderer.unwrap().render(&config))
     }
 
     Ok(())
