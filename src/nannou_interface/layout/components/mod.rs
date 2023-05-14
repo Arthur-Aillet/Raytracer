@@ -7,116 +7,108 @@ use nannou::color;
 use nannou::prelude::*;
 
 pub struct Button {
+    pub name: String,
     pub rect: Rect,
     pub state: u8,
     pub text: String,
-    pub color: LinSrgba<f32>,
-    pub text_color: LinSrgba<f32>,
 }
 
 pub struct Slider {
+    pub name: String,
     pub rect: Rect,
     pub text: String,
-    pub color: LinSrgba<f32>,
-    pub text_color: LinSrgba<f32>,
-    pub value: f32,
+    pub min: i64,
+    pub max: i64,
+    pub value: i64,
 }
 
 pub struct Input {
+    pub name: String,
     pub rect: Rect,
     pub text: String,
-    pub color: LinSrgba<f32>,
-    pub text_color: LinSrgba<f32>,
     pub value: String,
 }
 
 pub struct Checkbox {
+    pub name: String,
     pub rect: Rect,
     pub text: String,
-    pub color: LinSrgba<f32>,
-    pub text_color: LinSrgba<f32>,
     pub value: bool,
 }
 
 pub struct Text {
+    pub name: String,
     pub rect: Rect,
     pub text: String,
-    pub color: LinSrgba<f32>,
-    pub text_color: LinSrgba<f32>,
 }
 
 pub struct Image {
+    pub name: String,
     pub rect: Rect,
-    pub color: LinSrgba<f32>,
-    pub text_color: LinSrgba<f32>,
     pub path: String,
 }
 
 impl Button {
-    pub fn new(x: f32, y: f32, w: f32, h: f32, text: String, color: LinSrgba<f32>, text_color: LinSrgba<f32>) -> Button {
+    pub fn new(name: String, x: f32, y: f32, w: f32, h: f32, text: String) -> Button {
         Button {
+            name,
             rect: Rect::from_x_y_w_h(x, y, w, h),
             state: 0,
             text,
-            color,
-            text_color,
         }
     }
 }
 
 impl Slider {
-    pub fn new(x: f32, y: f32, w: f32, h: f32, text: String, color: LinSrgba<f32>, text_color: LinSrgba<f32>, value: f32) -> Slider {
+    pub fn new(name: String, x: f32, y: f32, w: f32, h: f32, text: String, value: i64, min: i64, max: i64) -> Slider {
         Slider {
+            name,
             rect: Rect::from_x_y_w_h(x, y, w, h),
             text,
-            color,
-            text_color,
+            min,
+            max,
             value,
         }
     }
 }
 
 impl Input {
-    pub fn new(x: f32, y: f32, w: f32, h: f32, text: String, color: LinSrgba<f32>, text_color: LinSrgba<f32>, value: String) -> Input {
+    pub fn new(name: String, x: f32, y: f32, w: f32, h: f32, text: String, value: String) -> Input {
         Input {
+            name,
             rect: Rect::from_x_y_w_h(x, y, w, h),
             text,
-            color,
-            text_color,
             value,
         }
     }
 }
 
 impl Checkbox {
-    pub fn new(x: f32, y: f32, w: f32, h: f32, text: String, color: LinSrgba<f32>, text_color: LinSrgba<f32>, value: bool) -> Checkbox {
+    pub fn new(name: String, x: f32, y: f32, w: f32, h: f32, text: String, value: bool) -> Checkbox {
         Checkbox {
+            name,
             rect: Rect::from_x_y_w_h(x, y, w, h),
             text,
-            color,
-            text_color,
             value,
         }
     }
 }
 
 impl Text {
-    pub fn new(x: f32, y: f32, w: f32, h: f32, text: String, color: LinSrgba<f32>, text_color: LinSrgba<f32>) -> Text {
+    pub fn new(name: String, x: f32, y: f32, w: f32, h: f32, text: String) -> Text {
         Text {
+            name,
             rect: Rect::from_x_y_w_h(x, y, w, h),
             text,
-            color,
-            text_color,
         }
     }
 }
 
 impl Image {
-    pub fn new(x: f32, y: f32, w: f32, h: f32, color: LinSrgba<f32>, text_color: LinSrgba<f32>, path: String) -> Image {
+    pub fn new(name: String, x: f32, y: f32, w: f32, h: f32, path: String) -> Image {
         Image {
+            name,
             rect: Rect::from_x_y_w_h(x, y, w, h),
-            color,
-            text_color,
             path,
         }
     }

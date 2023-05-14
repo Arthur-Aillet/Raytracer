@@ -26,6 +26,7 @@ fn print_help() {
     println!("\t-w <WIDTH>\t\tSpecify the width of the image");
     println!("\t-h <HEIGHT>\t\tSpecify the height of the image");
     println!("\t-g <GRAPHIC MODE>\tDisplay the image in a window");
+    println!("\t--layout \t\tDisplay the layout");
     println!("\t-f <FAST MODE>\t\tDisplay the image with reduce quality");
 
     println!("\n\n\t\t+----------------+\n");
