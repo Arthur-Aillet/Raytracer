@@ -286,7 +286,7 @@ impl Renderer {
         let mut last_progression:u64 = 0;
 
         while last_progression as u64 != self.camera.lens.height as u64 {
-            thread::sleep(time::Duration::from_millis(50));
+            thread::sleep(time::Duration::from_millis(250));
             let locked_progression = progression.lock().unwrap();
             print!("rendered [");
             for _i in 0..(((*locked_progression + (self.camera.lens.height as u64 * buf_step)) * 100) / (self.camera.lens.height as u64 * buf_size)) {

@@ -50,12 +50,13 @@ fn print_help() {
 fn main() -> std::io::Result<()> {
     let args: Vec<String> = env::args().collect();
     let config = config::Config::from_args(&args);
-    let renderer: Option<Renderer> = Renderer::get_renderer_from_file(&config);
 
     if config.help {
         print_help();
         return Ok(());
     }
+
+    let renderer: Option<Renderer> = Renderer::get_renderer_from_file(&config);
 
     match config.graphic {
         0 => ppm_interface::PPMInterface::new(&config.save_file).write(config.width, config.height, renderer.unwrap().render(&config)),
@@ -63,7 +64,6 @@ fn main() -> std::io::Result<()> {
         2 => sfml_interface::SfmlInterface::new(config).run(),
         _ => println!("Error: Invalid graphic mode"),
     }
-
 
     Ok(())
 }
