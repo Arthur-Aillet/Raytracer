@@ -30,6 +30,7 @@
   },
   "primitives": [
       {
+        "name": "sphere 1",
         "type": "sphere",
         "transform": {
           "pos": {
@@ -66,6 +67,8 @@
         "radius": 20
       },
       {
+        "name": "sphere 2",
+        "type": "sphere",
         "transform": {
           "pos": {
             "x": 0,
@@ -101,6 +104,7 @@
         "radius": 100
       },
       {
+        "name": "sphere 3",
         "type": "sphere",
         "transform": {
           "pos": {
@@ -134,6 +138,7 @@
         "radius": 4
       },
       {
+        "name": "cylinder 1",
         "type": "cylinder",
         "transform": {
           "pos": {
@@ -168,6 +173,7 @@
         "height": 1
       },
       {
+        "name": "cone 1",
         "type": "cone",
         "transform": {
           "pos": {
@@ -202,6 +208,7 @@
         "height": 1
       },
       {
+        "name": "sphere 5",
         "type":"sphere",
         "transform": {
           "pos": {
@@ -240,6 +247,7 @@
         "radius": 1
       },
       {
+        "name": "plan 1",
         "type": "plane",
         "transform": {
           "pos": {
@@ -284,6 +292,7 @@
         "vector": -1.5
       },
       {
+        "name": "mesh 1",
         "type": "mesh",
         "transform": {
           "pos": {

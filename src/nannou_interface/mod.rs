@@ -138,11 +138,11 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
         } else {
             model.last_image = render.pull_new_image(&model.config);
         }
+        if model.config.layout == true {
+            model.layout.display(&_app, &model.draw, &render);
+        }
     } else {
         println!("Invalid Config!")
-    }
-    if model.config.layout == true {
-        model.layout.display(&_app, &model.draw);
     }
 }
 

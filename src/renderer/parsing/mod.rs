@@ -109,6 +109,8 @@ impl Parser {
 
     pub fn get_sphere_from_json(&self, json: &Value) -> Box::<Sphere> {
         let mut sphere = Sphere {
+            name: json["name"].as_str().unwrap_or("Nan").to_string(),
+            obj_type: "sphere".to_string(),
             transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
             texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
             radius: json["radius"].as_f64().unwrap_or(1.0),
@@ -120,6 +122,8 @@ impl Parser {
 
     pub fn get_plane_from_json(&self, json: &Value) -> Box::<Plane> {
         let mut plane = Plane {
+            name: json["name"].as_str().unwrap_or("Nan").to_string(),
+            obj_type: "plane".to_string(),
             transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
             texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
             normal: if json["normal"].is_object(){self.get_vector_from_json(&json["normal"])} else {Vector {x: 0.0, y: 0.0, z: 1.0}},
@@ -131,6 +135,8 @@ impl Parser {
 
     pub fn get_cylinder_from_json(&self, json: &Value) -> Box::<Cylinder> {
         let mut cylinder = Cylinder {
+            name: json["name"].as_str().unwrap_or("Nan").to_string(),
+            obj_type: "cylinder".to_string(),
             transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
             texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
             height: json["height"].as_f64().unwrap_or(2.0),
@@ -147,6 +153,8 @@ impl Parser {
 
     pub fn get_cone_from_json(&self, json: &Value) -> Box::<Cone> {
         let mut cone = Cone {
+            name: json["name"].as_str().unwrap_or("Nan").to_string(),
+            obj_type: "cone".to_string(),
             transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
             texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
             height: json["height"].as_f64().unwrap_or(3.0),
@@ -163,6 +171,8 @@ impl Parser {
 
     pub fn get_triangle_from_json(&self, json: &Value) -> Box<Triangle> {
         let mut triangle = Triangle {
+            name: json["name"].as_str().unwrap_or("Nan").to_string(),
+            obj_type: "triangle".to_string(),
             transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
             texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
             point_a: if json["point_a"].is_object() {self.get_vector_from_json(&json["point_a"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
@@ -179,6 +189,8 @@ impl Parser {
 
     pub fn get_mesh_from_json(&self, json: &Value) -> Box<Mesh> {
         let mut mesh = Mesh {
+            name: json["name"].as_str().unwrap_or("Nan").to_string(),
+            obj_type: "mesh".to_string(),
             transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
             texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
             triangles: Vec::new(),

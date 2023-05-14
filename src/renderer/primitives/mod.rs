@@ -24,6 +24,8 @@ pub struct Intersection<'a> {
 
 #[derive(Deserialize, Serialize)]
 pub struct Sphere {
+    pub name: String,
+    pub obj_type: String,
     pub transform: Transform,
     pub texture: Texture,
     pub radius: f64,
@@ -32,6 +34,8 @@ pub struct Sphere {
 
 #[derive(Deserialize, Serialize)]
 pub struct Plane {
+    pub name: String,
+    pub obj_type: String,
     pub transform: Transform,
     pub texture: Texture,
     pub normal: Vector,
@@ -40,6 +44,8 @@ pub struct Plane {
 
 #[derive(Deserialize, Serialize)]
 pub struct Cylinder {
+    pub name: String,
+    pub obj_type: String,
     pub transform: Transform,
     pub texture: Texture,
     pub height: f64,
@@ -53,6 +59,8 @@ pub struct Cylinder {
 
 #[derive(Deserialize, Serialize)]
 pub struct Cone {
+    pub name: String,
+    pub obj_type: String,
     pub transform: Transform,
     pub texture: Texture,
     pub radius: f64,
@@ -66,6 +74,8 @@ pub struct Cone {
 
 #[derive(Deserialize, Serialize)]
 pub struct Triangle {
+    pub name: String,
+    pub obj_type: String,
     pub transform : Transform,
     pub texture: Texture,
     pub point_a: Vector,
@@ -79,6 +89,8 @@ pub struct Triangle {
 
 #[derive(Deserialize, Serialize)]
 pub struct Mesh {
+    pub name: String,
+    pub obj_type: String,
     pub transform: Transform,
     pub texture: Texture,
     pub triangles: Vec<Triangle>,
@@ -91,6 +103,8 @@ pub trait Object: erased_serde::Serialize {
     fn get_transform(&self) -> Transform;
     fn move_obj(&mut self, offset: Transform);
     fn set_transform(&mut self, new: Transform);
+    fn get_name(&self) -> String;
+    fn get_type(&self) -> String;
     fn get_texture(&self) -> Texture;
     fn set_texture(&mut self, new: Texture);
 }
@@ -138,6 +152,8 @@ impl Object for Sphere {
     fn get_transform(&self) -> Transform {self.transform}
     fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
     fn set_transform(&mut self, new: Transform) {self.transform = new}
+    fn get_name(&self) -> String {self.name.clone()}
+    fn get_type(&self) -> String {self.obj_type.clone()}
     fn get_texture(&self) -> Texture {self.texture.clone()}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
 }
@@ -181,6 +197,8 @@ impl Object for Plane {
     fn get_transform(&self) -> Transform {self.transform}
     fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
     fn set_transform(&mut self, new: Transform) {self.transform = new}
+    fn get_name(&self) -> String {self.name.clone()}
+    fn get_type(&self) -> String {self.obj_type.clone()}
     fn get_texture(&self) -> Texture {self.texture.clone()}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
 }
@@ -300,6 +318,8 @@ impl Object for Cylinder {
     fn get_transform(&self) -> Transform {self.transform}
     fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
     fn set_transform(&mut self, new: Transform) {self.transform = new}
+    fn get_name(&self) -> String {self.name.clone()}
+    fn get_type(&self) -> String {self.obj_type.clone()}
     fn get_texture(&self) -> Texture {self.texture.clone()}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
 
@@ -363,6 +383,8 @@ impl Object for Cone {
     fn get_transform(&self) -> Transform {self.transform}
     fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
     fn set_transform(&mut self, new: Transform) {self.transform = new}
+    fn get_name(&self) -> String {self.name.clone()}
+    fn get_type(&self) -> String {self.obj_type.clone()}
     fn get_texture(&self) -> Texture {self.texture.clone()}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
 }
@@ -422,6 +444,8 @@ impl Object for Triangle {
     fn get_transform(&self) -> Transform {self.transform}
     fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
     fn set_transform(&mut self, new: Transform) {self.transform = new}
+    fn get_name(&self) -> String {self.name.clone()}
+    fn get_type(&self) -> String {self.obj_type.clone()}
     fn get_texture(&self) -> Texture {self.texture.clone()}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
 }

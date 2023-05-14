@@ -111,7 +111,6 @@ impl Slider {
                 cursor_rect.x.start = mouse_position.x - (cursor_rect.w() / 2.0);
                 cursor_rect.x.end = mouse_position.x + (cursor_rect.w() / 2.0);
             }
-            // limit cursor to self
             if cursor_rect.x.start < self.rect.x() - (self.rect.w() / 2.0) {
                 cursor_rect.x.start = self.rect.x() - (self.rect.w() / 2.0);
                 cursor_rect.x.end = cursor_rect.x.start + cursor_rect.w();
@@ -158,6 +157,10 @@ impl Input {
             value,
         }
     }
+
+    pub fn display(&mut self, app: &App, draw: &Draw) {
+
+    }
 }
 
 impl Checkbox {
@@ -169,13 +172,19 @@ impl Checkbox {
             value,
         }
     }
+
+    pub fn display(&mut self, app: &App, draw: &Draw) {
+
+    }
 }
 
 impl Text {
     pub fn new(name: String, x: f32, y: f32, w: f32, h: f32, text: String) -> Text {
+        let rect = Rect::from_x_y_w_h(x, y, w, h);
+
         Text {
             name,
-            rect: Rect::from_x_y_w_h(x, y, w, h),
+            rect,
             text,
         }
     }
@@ -195,5 +204,9 @@ impl Image {
             rect: Rect::from_x_y_w_h(x, y, w, h),
             path,
         }
+    }
+
+    pub fn display(&mut self, app: &App, draw: &Draw) {
+
     }
 }
