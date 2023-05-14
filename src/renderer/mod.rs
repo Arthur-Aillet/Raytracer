@@ -152,34 +152,26 @@ impl Renderer {
 
     fn refract(&self, normal: Vector, incident: Vector, ior1: f64, ior2: f64) -> Option<Vector> {
         let ratio = ior1 / ior2;
-        let cosI = normal.normalize().dot_product(incident.normalize()) * -1.0;
-        let sinT2 = ratio * ratio * (1.0 - cosI * cosI);
-        if sinT2 > 1.0 {
+        let cos_i = normal.normalize().dot_product(incident.normalize()) * -1.0;
+        let sin_t2 = ratio * ratio * (1.0 - cos_i * cos_i);
+        if sin_t2 > 1.0 {
             return None;
         }
-        let cosT = (1.0 - sinT2).sqrt();
-        let final_vect = (incident.normalize() * ratio + normal.normalize() * (ratio * cosI - cosT)).normalize();
+        let cos_t = (1.0 - sin_t2).sqrt();
+        let final_vect = (incident.normalize() * ratio + normal.normalize() * (ratio * cos_i - cos_t)).normalize();
         return Some(final_vect);
     }
 
-    fn refract2(&self, normal: Vector, incident: Vector, ior1: f64, ior2: f64) -> Option<Vector> {
-        let ratio = ior1 / ior2;
-        let c = - (incident.dot_product(normal));
-        let v = 1.0 - ratio * ratio * (1.0 - c * c);
-        Some(((incident * ratio) + (normal * (ratio * c - v.sqrt()))).normalize())
-    }
-
-
     fn transmission(&self, intersect: &Intersection, incident_ray: Vector, recursivity: &mut Recursivity) -> Vector {
         let normal = intersect.normal.normalize();
-        let object_ior = 1.0;//intersect.object.unwrap().get_texture().ior;
-        let other_ior = 1.45; //FIXME - inexact si deux objects transmissifs se touchent / l'un dans l'autre
+        let other_ior = 1.0;
+        let object_ior = intersect.object.unwrap().get_texture().ior;
 
         let maybe_new_ray;
         if recursivity.transmission <= 1 {
-            maybe_new_ray = self.refract(normal.normalize() * -1.0, incident_ray.normalize(), other_ior, object_ior);
+            maybe_new_ray = self.refract(normal.normalize() * -1.0, incident_ray.normalize(), object_ior, other_ior);
         } else {
-            maybe_new_ray = self.refract(normal.normalize(), incident_ray.normalize(), object_ior, other_ior);
+            maybe_new_ray = self.refract(normal.normalize(), incident_ray.normalize(), other_ior, object_ior);
         }
         if let Some(new_ray) = maybe_new_ray {
             let maybe_intersect = self.found_nearest_intersection(intersect.intersection_point + new_ray * self.camera.shadow_bias, new_ray);
@@ -196,11 +188,9 @@ impl Renderer {
                 }
             }
         } else {
-            //recursivity.general -= 1;
-            //return self.get_color_from_ray(intersect.intersection_point + incident_ray * self.camera.shadow_bias, incident_ray, recursivity)
-            return Vector { x: 1.0, y: 0.0, z: 0.0 };
+            return Vector { x: 0.0, y: 0.0, z: 0.0 };
         }
-        Vector { x: 0.0, y: 1.0, z: 1.0 } // FIXME remettre 0,0,0
+        Vector { x: 0.0, y: 0.0, z: 0.0 }
     }
 
     fn get_color_from_ray(&self, origin: Vector, ray: Vector, recursivity: &mut Recursivity) -> Vector {
@@ -208,7 +198,7 @@ impl Renderer {
            return Vector {
                x: 0.0,
                y: 0.0,
-               z: 1.0,
+               z: 0.0,
            }
         }
         let maybe_intersect = self.found_nearest_intersection(origin, ray);
@@ -248,12 +238,6 @@ impl Renderer {
                     z: random_b.sin()
                 };
                 let mut reflection_ray = (ray.normalize() - (intersect.normal.normalize() * 2.0 * intersect.normal.normalize().dot_product(ray.normalize()))).normalize();
-                //let mut reflection_ray = intersect.normal.normalize().dot_product(ray.normalize());
-                // return Vector {
-                //     x: reflection_ray * 0.5 + 0.5,
-                //     y: reflection_ray * 0.5 + 0.5,
-                //     z: reflection_ray * 0.5 + 0.5,
-                // };
                 if intersect.object.unwrap().get_texture().roughness != 0.0 {
                     reflection_ray.lerp(&random_vect, intersect.object.unwrap().get_texture().roughness);
                 }
@@ -276,9 +260,9 @@ impl Renderer {
             self_color
         } else {
             Vector {
-                x: 1.0,
+                x: 0.0,
                 y: 0.0,
-                z: 1.0,
+                z: 0.0,
             }
         }
     }
