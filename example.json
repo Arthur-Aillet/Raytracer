@@ -66,7 +66,44 @@
           "metalness": 0.5,
           "roughness": 0
         },
-        "radius": 1.5
+        "radius": 1.5,
+        "children": [
+          {
+            "type": "sphere",
+            "transform": {
+              "pos": {
+                "x": -1,
+                "y": 0,
+                "z": 0
+              },
+              "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            },
+            "texture": {
+              "texture_type": 3,
+              "color": {
+                "r": 0,
+                "g": 0,
+                "b": 0
+              },
+              "diffuse": 0.7,
+              "ambient": 0.5,
+              "specular": 0.2,
+              "shininess": 4.0,
+              "metalness": 0.5,
+              "roughness": 0
+            },
+            "radius": 1.5
+          }
+        ]
       },
       {
         "type": "sphere",
