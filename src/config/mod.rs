@@ -41,7 +41,7 @@ impl Config {
             width: 960,
             height: 540,
             save_file: String::from("scene_example.ppm"),
-            config_file: String::from("config_files/example.json"),
+            config_file: String::from("example.json"),
             graphic: 0,
             layout: false,
             fast_mode: 0,
@@ -52,10 +52,10 @@ impl Config {
     fn get_flag_content(args: &[String], flag: &str) -> Option<String> {
         for (i, arg) in args.iter().enumerate() {
             if arg == flag {
-                if i + 1 < args.len() {
-                    return Some(args[i + 1].clone());
+                return if i + 1 < args.len() {
+                    Some(args[i + 1].clone())
                 } else {
-                    return None;
+                    None
                 }
             }
         }

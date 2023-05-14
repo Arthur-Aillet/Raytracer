@@ -15,6 +15,7 @@ mod renderer;
 mod nannou_interface;
 
 use std::env;
+use std::fmt::Error;
 
 fn print_help() {
     let config = config::Config::new();
@@ -57,6 +58,9 @@ fn main() -> std::io::Result<()> {
     }
 
     let renderer: Option<Renderer> = Renderer::get_renderer_from_file(&config);
+    if renderer.is_none() {
+        std::process::exit(84);
+    }
 
     match config.graphic {
         0 => ppm_interface::PPMInterface::new(&config.save_file).write(config.width, config.height, renderer.unwrap().render(&config)),

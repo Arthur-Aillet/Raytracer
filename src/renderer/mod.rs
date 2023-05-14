@@ -10,13 +10,8 @@ mod primitives;
 mod lights;
 mod parsing;
 pub mod renderer_common;
-use nannou::draw::background::new;
-use nannou::prelude::Float;
 
-use serde::{Serialize};
 
-use std::mem;
-use std::cmp;
 use rand::Rng;
 use crate::renderer::primitives::{Object, Intersection};
 use std::thread;
@@ -25,20 +20,20 @@ use std::sync::{Arc, Mutex};
 use camera::{Camera};
 use lights::Lights;
 use parsing::Parser;
-use crate::sfml_interface::SfmlInterface;
 use crate::config::Config;
 use crate::ppm_interface::PPMInterface;
 use crate::vectors::Vector;
 use sfml::graphics::{RenderWindow};
-use crate::nannou_interface::Model;
 use crate::sfml_interface::draw_buffer;
 use crate::sfml_interface::poll_event;
 
-#[derive(Serialize)]
+use self::renderer_common::Texture;
+
 pub struct Renderer {
     pub camera: Camera,
     pub primitives: Vec<Box<dyn Object + Send + Sync>>,
     pub lights: Lights,
+    pub skybox: Texture,
 }
 
 struct Recursivity {
@@ -55,6 +50,7 @@ impl Renderer {
                 lights: Vec::new(),
                 ambient: Vec::new(),
             },
+            skybox: Texture::default(),
         }
     }
 
@@ -136,6 +132,15 @@ impl Renderer {
         result
     }
 
+    fn skybox_position(&self, position: Vector) -> Vector {
+        let vec = Vector {
+            x: (2.0 * (1.0 - (position.x.atan2(position.y)/ (2.0 * std::f64::consts::PI) + 0.5))) % 1.0,
+            y: 1.0 - (position.z / (position.x.powi(2) + position.y.powi(2) + position.z.powi(2)).sqrt()).acos() / std::f64::consts::PI,
+            z: 0.0
+        };
+        vec
+    }
+
     fn get_color_from_ray_fast(&self, origin: Vector, ray: Vector) -> Vector {
         let maybe_intersect = self.found_nearest_intersection_fast(origin, ray);
 
@@ -150,11 +155,8 @@ impl Renderer {
 
             ambient + intersect.object.unwrap().get_texture().texture(texture_coordinates.x, texture_coordinates.y).as_vector() * diffuse
         } else {
-            Vector {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            }
+            let skybox_position = self.skybox_position(ray);
+            self.skybox.texture(skybox_position.x, skybox_position.y).as_vector()
         }
     }
 
@@ -266,11 +268,8 @@ impl Renderer {
             }
             self_color
         } else {
-            Vector {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            }
+            let skybox_pos = self.skybox_position(ray);
+            self.skybox.texture(skybox_pos.x, skybox_pos.y).as_vector()
         }
     }
 
@@ -306,7 +305,6 @@ impl Renderer {
     }
 
     pub fn naive_thread_renderer(&self, pixel_states:Arc<Mutex<Vec<bool>>>, pixels:Arc<Mutex<Vec<u8>>>, progression:Arc<Mutex<u64>>, config: &Config) {
-        //println!("thread {id:?} started");
         let mut pixel_id: usize;
         let mut line_state_id: usize;
 
@@ -342,11 +340,15 @@ impl Renderer {
         }
     }
 
-    pub fn print_progression(&self, progression:Arc<Mutex<u64>>, buf_step: u64, buf_size: u64) {
+    pub fn print_progression(&self, progression:Arc<Mutex<u64>>, buf_step: u64, buf_size: u64, config: &Config) {
         let mut last_progression:u64 = 0;
 
         while last_progression as u64 != self.camera.lens.height as u64 {
-            thread::sleep(time::Duration::from_millis(250));
+            if config.fast_mode == 0 {
+                thread::sleep(time::Duration::from_millis(250));
+            } else {
+                thread::sleep(time::Duration::from_millis(50));
+            }
             let locked_progression = progression.lock().unwrap();
             print!("rendered [");
             for _i in 0..(((*locked_progression + (self.camera.lens.height as u64 * buf_step)) * 100) / (self.camera.lens.height as u64 * buf_size)) {
@@ -384,7 +386,7 @@ impl Renderer {
             }
 
             if self.camera.progression == true {
-                self.print_progression(progression, 0, 1);
+                self.print_progression(progression, 0, 1, &config);
             }
         });
         let final_pixels = pixels.lock().unwrap().to_vec();
@@ -411,7 +413,7 @@ impl Renderer {
                 }
 
                 if self.camera.progression == true {
-                    self.print_progression(progression, 0, buf_size);
+                    self.print_progression(progression, 0, buf_size, &config);
                 }
             });
 
@@ -452,7 +454,7 @@ impl Renderer {
                 }
 
                 if self.camera.progression {
-                    self.print_progression(progression, n, buf_size);
+                    self.print_progression(progression, n, buf_size, config);
                 }
             });
 
