@@ -22,9 +22,6 @@ use parsing::Parser;
 use crate::config::Config;
 use crate::ppm_interface::PPMInterface;
 use crate::vectors::Vector;
-use sfml::graphics::{RenderWindow};
-use crate::sfml_interface::draw_buffer;
-use crate::sfml_interface::poll_event;
 
 use self::renderer_common::Texture;
 
@@ -373,54 +370,6 @@ impl Renderer {
             }
         }
         result
-    }
-
-    pub fn grender(&self, config: &Config, window: &mut RenderWindow) -> Vec<u8> {
-        let mut results: Vec<Vec<u8>> = vec![vec![0; (config.width * config.height) as usize]; (config.width * config.height) as usize];
-        let buf_size = if config.fast_mode != 0 { 1 } else { self.camera.image_buffer_size };
-
-        for n in 0..buf_size {
-            let pixels: Arc<Mutex<Vec<u8>>> =
-                Arc::new(Mutex::new(vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize]));
-            let pixels_state: Arc<Mutex<Vec<bool>>> =
-                Arc::new(Mutex::new(vec![false; self.camera.lens.height as usize]));
-            let progression: Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
-
-            thread::scope(|scope| {
-                for _ in 0..self.camera.threads {
-                    let clone_pixels = Arc::clone(&pixels);
-                    let clone_pixels_state = Arc::clone(&pixels_state);
-                    let clone_progression = Arc::clone(&progression);
-                    scope.spawn(move || {
-                        self.naive_thread_renderer(clone_pixels_state, clone_pixels, clone_progression, &config);
-                    });
-                }
-
-                if self.camera.progression {
-                    self.print_progression(progression, n, buf_size, config);
-                }
-            });
-
-            let final_pixels = pixels.lock().unwrap().to_vec();
-
-            if results.is_empty() {
-                results.push(final_pixels);
-            } else {
-                let result = &mut results[0];
-                if result.len() != final_pixels.len() {
-                    result.extend_from_slice(&final_pixels);
-                } else {
-                    for i in 0..result.len() {
-                        result[i] = (((result[i] as u64 * (n - 1)) + final_pixels[i] as u64) / n) as u8;
-                    }
-                }
-            }
-            poll_event(window);
-            PPMInterface::new(&config.save_file).write(config.width, config.height, results[0].clone());
-            draw_buffer(&config, window);
-            window.display();
-        }
-        results.into_iter().flatten().collect()
     }
 
     pub fn get_renderer_from_file(config: &Config) -> Option<Renderer> {
