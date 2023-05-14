@@ -96,6 +96,7 @@ impl Parser {
                 transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
                 texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
                 radius: json["radius"].as_f64().unwrap_or(1.0),
+                children: if json["children"].is_object() {self.get_objects_from_json(&json["children"])} else {Vec::new()},
             }
         )
     }
@@ -106,6 +107,7 @@ impl Parser {
                 transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
                 texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
                 normal: if json["normal"].is_object(){self.get_vector_from_json(&json["normal"])} else {Vector {x: 0.0, y: 0.0, z: 1.0}},
+                children: if json["children"].is_object() {self.get_objects_from_json(&json["children"])} else {Vec::new()},
             }
         )
     }
@@ -117,6 +119,7 @@ impl Parser {
                 texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
                 height: json["height"].as_f64().unwrap_or(2.0),
                 radius: json["radius"].as_f64().unwrap_or(1.0),
+                children: if json["children"].is_object() {self.get_objects_from_json(&json["children"])} else {Vec::new()},
             }
         )
     }
@@ -128,6 +131,7 @@ impl Parser {
                 texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
                 height: json["height"].as_f64().unwrap_or(3.0),
                 radius: json["radius"].as_f64().unwrap_or(1.0),
+                children: if json["children"].is_object() {self.get_objects_from_json(&json["children"])} else {Vec::new()},
             }
         )
     }

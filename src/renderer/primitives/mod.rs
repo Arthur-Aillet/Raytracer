@@ -21,34 +21,38 @@ pub struct Intersection<'a> {
     pub light: Option<&'a dyn Light>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Serialize)]
 pub struct Sphere {
     pub transform: Transform,
     pub texture: Texture,
     pub radius: f64,
+    pub children: Vec<Box<dyn Object + Send + Sync>>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Serialize)]
 pub struct Plane {
     pub transform: Transform,
     pub texture: Texture,
     pub normal: Vector,
+    pub children: Vec<Box<dyn Object + Send + Sync>>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Serialize)]
 pub struct Cylinder {
     pub transform: Transform,
     pub texture: Texture,
     pub height: f64,
     pub radius: f64,
+    pub children: Vec<Box<dyn Object + Send + Sync>>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Serialize)]
 pub struct Cone {
     pub transform: Transform,
     pub texture: Texture,
     pub radius: f64,
     pub height: f64,
+    pub children: Vec<Box<dyn Object + Send + Sync>>,
 }
 
 pub trait Object: erased_serde::Serialize {
