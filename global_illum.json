@@ -55,7 +55,8 @@
                 "shininess": 64.0,
                 "metalness": 1.0,
                 "roughness": 0,
-                "transmission": 1.0
+                "transmission": 1.0,
+                "ior": 1.45
             },
             "radius": 0.5
         },

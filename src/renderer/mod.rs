@@ -9,7 +9,7 @@ mod camera;
 mod primitives;
 mod lights;
 mod parsing;
-mod renderer_common;
+pub mod renderer_common;
 use nannou::draw::background::new;
 use nannou::prelude::Float;
 
@@ -263,7 +263,8 @@ impl Renderer {
                 }
             }
             if intersect.object.unwrap().get_texture().alpha != 1.0 {
-                let new_color = self.get_color_from_ray(intersect.intersection_point + ray * self.camera.shadow_bias, ray, recursivity - 1);
+                recursivity.general -= 1;
+                let new_color = self.get_color_from_ray(intersect.intersection_point + ray * self.camera.shadow_bias, ray, recursivity);
                 return self_color * intersect.object.unwrap().get_texture().alpha + new_color * (1.0 - intersect.object.unwrap().get_texture().alpha);
             }
             self_color
