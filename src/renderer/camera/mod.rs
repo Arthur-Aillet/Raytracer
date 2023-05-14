@@ -57,6 +57,9 @@ pub struct Camera {
     pub super_sampling: u64,
     pub super_sampling_precision: u64,
     pub reflecion_samples: f64,
+    pub display_normals: bool,
+    pub display_location: bool,
+    pub display_dot_product: bool,
 }
 
 impl Camera {
@@ -80,6 +83,9 @@ impl Camera {
             super_sampling: 5,
             super_sampling_precision: 10,
             reflecion_samples: 16.0,
+            display_normals: false,
+            display_location: false,
+            display_dot_product: false,
         };
         camera.calculate_lens_distance();
         camera.calculate_lens_size();
