@@ -13,7 +13,7 @@ use crate::vectors::Vector;
 use serde::{Deserialize, Serialize};
 use erased_serde::serialize_trait_object;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Serialize)]
 pub struct Mesh  {
     pub name: String,
     pub obj_type: String,
@@ -21,6 +21,7 @@ pub struct Mesh  {
     pub texture: Texture,
     pub normal_map: Texture,
     pub triangles: Vec<Triangle>,
+    pub children: Vec<Box<dyn Object + Send + Sync>>,
 }
 
 impl Mesh {
@@ -76,6 +77,7 @@ impl Mesh {
             point_c_applied: Vector { x: 0.0, y: 0.0, z: 0.0 },
             texture: self.texture.clone(),
             normal: Vector { x: 0.0, y: 0.0, z: 0.0 },
+            children: Vec::new(),
             normal_map: self.normal_map.clone(),
         };
         fst_triangle.apply_transform();
@@ -95,6 +97,7 @@ impl Mesh {
             point_c_applied: Vector { x: 0.0, y: 0.0, z: 0.0 },
             texture: self.texture.clone(),
             normal: Vector { x: 0.0, y: 0.0, z: 0.0 },
+            children: Vec::new(),
             normal_map: Texture::normal_map_default(),
         };
         snd_triangle.apply_transform();
@@ -190,6 +193,22 @@ impl Object for Mesh {
 
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
         let mut first_intersection: Option<Intersection> = None;
+        let mut found_intersection: Option<Intersection> = None;
+        let mut smallest_distance: f64 = f64::INFINITY;
+
+         for object in self.children.iter() {
+            let intersect = object.intersection(ray, origin);
+
+            if intersect.is_some() {
+                let inters = intersect.unwrap();
+                let distance_found = (inters.intersection_point - origin).len();
+                if distance_found < smallest_distance {
+                    smallest_distance = distance_found;
+                    found_intersection = Some(inters);
+                }
+            }
+        }
+
 
         for face in &self.triangles {
             if let Some(intersection) = face.intersection(ray, origin) {
@@ -202,7 +221,10 @@ impl Object for Mesh {
                 }
             }
         }
-        first_intersection
+        if first_intersection.is_some() && (first_intersection.as_ref().unwrap().intersection_point - origin).len() < smallest_distance {
+            found_intersection = first_intersection
+        }
+        found_intersection
     }
     fn surface_position(&self, position: Vector) -> Vector {Vector { x: 0.5, y: 0.5, z: 0.0}}
     fn get_transform(&self) -> Transform {self.transform}

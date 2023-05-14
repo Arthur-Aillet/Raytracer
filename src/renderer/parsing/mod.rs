@@ -13,7 +13,7 @@ use serde_json::Value;
 use vectors::Vector;
 use super::Renderer;
 use super::camera::{Lens, Camera};
-use super::primitives::{Sphere, Plane, Cylinder, Cone, Object, Triangle};
+use super::primitives::{Sphere, Plane, Cylinder, Cone, Object, Triangle, Parent};
 use super::primitives::mesh::Mesh;
 use super::lights::{Point, Ambient, Light, Lights, Directional};
 use super::renderer_common::{Transform, Color, Texture, Image};
@@ -136,8 +136,12 @@ impl Parser {
             normal_map: if json["normal_map"].is_object() {self.get_normal_map_from_json(&json["normal_map"])} else {Texture::normal_map_default()},
             radius: json["radius"].as_f64().unwrap_or(1.0),
             radius_applied: 0.0,
+            children: if json["children"].is_array() {self.get_objects_from_json(&json["children"])} else {Vec::new()},
         };
         sphere.apply_transform();
+        for i in 0..sphere.children.len() {
+            sphere.children[i].move_obj(sphere.transform);
+        }
         Box::new(sphere)
     }
 
@@ -150,8 +154,12 @@ impl Parser {
             normal_map: if json["normal_map"].is_object() {self.get_normal_map_from_json(&json["normal_map"])} else {Texture::normal_map_default()},
             normal: if json["normal"].is_object(){self.get_vector_from_json(&json["normal"])} else {Vector {x: 0.0, y: 0.0, z: 1.0}},
             normal_applied: Vector { x: 0.0, y: 0.0, z: 0.0, },
+            children: if json["children"].is_array() {self.get_objects_from_json(&json["children"])} else {Vec::new()},
         };
         plane.apply_transform();
+        for i in 0..plane.children.len() {
+            plane.children[i].move_obj(plane.transform);
+        }
         Box::new(plane)
     }
 
@@ -169,8 +177,12 @@ impl Parser {
             base: Vector { x: 0.0, y: 0.0, z: 0.0, },
             radius_applied: 0.0,
             height_applied: 0.0,
+            children: if json["children"].is_array() {self.get_objects_from_json(&json["children"])} else {Vec::new()},
         };
         cylinder.apply_transform();
+        for i in 0..cylinder.children.len() {
+            cylinder.children[i].move_obj(cylinder.transform);
+        }
         Box::new(cylinder)
     }
 
@@ -188,7 +200,11 @@ impl Parser {
             base: Vector { x: 0.0, y: 0.0, z: 0.0, },
             radius_applied: 0.0,
             height_applied: 0.0,
+            children: if json["children"].is_array() {self.get_objects_from_json(&json["children"])} else {Vec::new()},
         };
+        for i in 0..cone.children.len() {
+            cone.children[i].move_obj(cone.transform);
+        }
         cone.apply_transform();
         Box::new(cone)
     }
@@ -207,8 +223,12 @@ impl Parser {
             point_b_applied: Vector { x: 0.0, y: 0.0, z: 0.0, },
             point_c_applied: Vector { x: 0.0, y: 0.0, z: 0.0, },
             normal: Vector { x: 0.0, y: 0.0, z: 0.0, },
+            children: if json["children"].is_array() {self.get_objects_from_json(&json["children"])} else {Vec::new()},
         };
         triangle.apply_transform();
+        for i in 0..triangle.children.len() {
+            triangle.children[i].move_obj(triangle.transform);
+        }
         Box::new(triangle)
     }
 
@@ -220,13 +240,32 @@ impl Parser {
             texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
             normal_map: if json["normal_map"].is_object() {self.get_normal_map_from_json(&json["normal_map"])} else {Texture::normal_map_default()},
             triangles: Vec::new(),
+            children: if json["children"].is_array() {self.get_objects_from_json(&json["children"])} else {Vec::new()},
         };
         if json["file"].is_string() {
             let filename = json["file"].as_str().unwrap();
             mesh.parse_obj(filename);
         }
         mesh.apply_transform();
+        for i in 0..mesh.children.len() {
+            mesh.children[i].move_obj(mesh.transform);
+        }
         Box::new(mesh)
+    }
+
+    pub fn get_parent_from_json(&self, json: &Value) -> Box<Parent> {
+    let mut parent = Box::new(
+            Parent {
+                name: json["name"].as_str().unwrap_or("Nan").to_string(),
+                obj_type: "parent".to_string(),
+                transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
+                children: if json["children"].is_array() {self.get_objects_from_json(&json["children"])} else {Vec::new()},
+            }
+        );
+        for i in 0..parent.children.len() {
+            parent.children[i].move_obj(parent.transform);
+        }
+        parent
     }
 
     pub fn get_object_from_json(&self, json: &Value) -> Option<Box::<dyn Object + Send + Sync>> {
@@ -238,10 +277,10 @@ impl Parser {
                 "cone" => Some(self.get_cone_from_json(json)),
                 "triangle" => Some(self.get_triangle_from_json(json)),
                 "mesh" => Some(self.get_mesh_from_json(json)),
-                _ => None
+                _ => None,
             }
         } else {
-            None
+            Some(self.get_parent_from_json(json))
         }
     }
 
