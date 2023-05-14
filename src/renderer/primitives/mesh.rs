@@ -19,6 +19,7 @@ pub struct Mesh  {
     pub obj_type: String,
     pub transform: Transform,
     pub texture: Texture,
+    pub normal_map: Texture,
     pub triangles: Vec<Triangle>,
 }
 
@@ -64,7 +65,7 @@ impl Mesh {
         points_res[1].rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
         points_res[2].rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
         let mut fst_triangle: Triangle = Triangle {
-            name: "NaN Mesh".to_string(),
+            name: "Triangle From Mesh".to_string(),
             obj_type: "mesh".to_string(),
             transform: self.transform,
             point_a: points_res[0],
@@ -75,6 +76,7 @@ impl Mesh {
             point_c_applied: Vector { x: 0.0, y: 0.0, z: 0.0 },
             texture: self.texture.clone(),
             normal: Vector { x: 0.0, y: 0.0, z: 0.0 },
+            normal_map: self.normal_map.clone(),
         };
         fst_triangle.apply_transform();
         if len == 3 {
@@ -82,7 +84,7 @@ impl Mesh {
         }
         points_res[3].rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
         let mut snd_triangle: Triangle = Triangle {
-            name: "NaN Mesh".to_string(),
+            name: "Triangle From Mesh".to_string(),
             obj_type: "mesh".to_string(),
             transform: self.transform,
             point_a: points_res[2],
@@ -93,6 +95,7 @@ impl Mesh {
             point_c_applied: Vector { x: 0.0, y: 0.0, z: 0.0 },
             texture: self.texture.clone(),
             normal: Vector { x: 0.0, y: 0.0, z: 0.0 },
+            normal_map: Texture::normal_map_default(),
         };
         snd_triangle.apply_transform();
         return (Some(fst_triangle), Some(snd_triangle));
@@ -203,10 +206,19 @@ impl Object for Mesh {
     }
     fn surface_position(&self, position: Vector) -> Vector {Vector { x: 0.5, y: 0.5, z: 0.0}}
     fn get_transform(&self) -> Transform {self.transform}
-    fn move_obj(&mut self, offset: Transform) {self.transform = self.transform + offset;}
-    fn set_transform(&mut self, new: Transform) {self.transform = new}
     fn get_name(&self) -> String {self.name.clone()}
     fn get_type(&self) -> String {self.obj_type.clone()}
+    fn move_obj(&mut self, offset: Transform) {
+        self.transform = self.transform + offset;
+        self.apply_transform();
+    }
+    fn set_transform(&mut self, new: Transform) {
+        self.transform = new;
+        self.apply_transform();
+    }
     fn get_texture(&self) -> Texture {self.texture.clone()}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
+
+    fn get_normal_map(&self) -> Texture { self.normal_map.clone() }
+    fn set_normal_map(&mut self, new: Texture) { self.normal_map = new }
 }
