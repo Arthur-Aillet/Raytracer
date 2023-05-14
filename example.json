@@ -21,7 +21,7 @@
     "smooth_shadow_step": 32,
     "shadow_bias": 1e-13,
     "threads": 10,
-    "progression": true,
+    "progression": false,
     "image_buffer_size": 1,
     "super_sampling": 1,
     "recursivity": 5,
@@ -101,7 +101,7 @@
           "metalness": 0.5,
           "roughness": 0
         },
-        "radius": 100
+        "radius": 200
       },
       {
         "name": "sphere 3",
