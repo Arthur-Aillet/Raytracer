@@ -11,11 +11,7 @@
         "y": 0,
         "z": 0
       },
-      "scale": {
-        "x": 1,
-        "y": 1,
-        "z": 1
-      }
+      "scale": 1.0
     },
     "fov": 90,
     "diffuse": 0.8,
@@ -32,61 +28,21 @@
     "reflection_samples": 30,
     "aces_tone_mapping": true
   },
-  "primitives": {
-    "spheres": [
-      {
-        "transform": {
-          "pos": {
-            "x": -1,
-            "y": 16,
-            "z": 3
-          },
-          "rotation": {
-            "x": 0,
-            "y": 0,
-            "z": 0
-          },
-          "scale": {
-            "x": 1,
-            "y": 1,
-            "z": 1
-          }
-        },
-        "texture": {
-          "texture_type": 1,
-          "color": {
-            "r": 255,
-            "g": 255,
-            "b": 255
-          },
-          "diffuse": 0.7,
-          "ambient": 0.5,
-          "specular": 0.2,
-          "shininess": 4.0,
-          "metalness": 0.5,
-          "roughness": 0
-        },
-        "radius": 1.5
-      }
-    ],
-    "cylinders": [
-      {
-        "transform": {
+  "primitives": [
+    {
+      "type": "cylinder",
+    "transform": {
           "pos": {
             "x": 0,
-            "y": 5,
+            "y": 9,
             "z": 0
           },
           "rotation": {
-            "x": 30,
-            "y": 70,
+            "x": -30,
+            "y": -70,
             "z": 80
           },
-          "scale": {
-            "x": 1,
-            "y": 1,
-            "z": 1
-          }
+          "scale": 1.0
         },
         "texture": {
           "texture_type": 1,
@@ -102,11 +58,10 @@
           "metalness": 0.5,
           "roughness": 0
         },
-        "radius": 1,
-        "height": 3
-      }
-    ]
-  },
+        "radius": 4,
+        "height": 6
+    }
+  ],
   "lights": {
     "objects": {
       "point": [
@@ -122,11 +77,7 @@
               "y": 0,
               "z": 0
             },
-            "scale": {
-              "x": 1,
-              "y": 1,
-              "z": 1
-            }
+            "scale": 1.0
           },
           "color": {
             "r": 255,
@@ -150,11 +101,7 @@
               "y": 0,
               "z": 0
             },
-            "scale": {
-              "x": 1,
-              "y": 1,
-              "z": 1
-            }
+            "scale": 1.0
           },
           "color": {
             "r": 255,
@@ -178,11 +125,7 @@
               "y": 0,
               "z": 0
             },
-            "scale": {
-              "x": 1,
-              "y": 1,
-              "z": 1
-            }
+            "scale": 1.0
           },
           "color": {
             "r": 100,

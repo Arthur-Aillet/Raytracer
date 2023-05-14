@@ -13,9 +13,26 @@ pub struct Config {
     pub height: i64,
     pub save_file: String,
     pub config_file: String,
-    pub graphic: bool,
+    pub graphic: i64,
+    pub layout: bool,
     pub fast_mode: i64,
     pub help: bool,
+}
+
+fn config_is_correct(mut config: &mut Config) -> bool {
+    if config.width <= 0 || config.height <= 0 {
+        config.help = true;
+    }
+    if config.save_file == "" || config.config_file == "" {
+        config.help = true;
+    }
+    if config.graphic < 0 || config.graphic > 2 {
+        config.help = true;
+    }
+    if config.fast_mode < 0 {
+        config.help = true;
+    }
+    true
 }
 
 impl Config {
@@ -24,8 +41,9 @@ impl Config {
             width: 960,
             height: 540,
             save_file: String::from("scene_example.ppm"),
-            config_file: String::from("example.json"),
-            graphic: false,
+            config_file: String::from("config_files/example.json"),
+            graphic: 0,
+            layout: false,
             fast_mode: 0,
             help: false,
         }
@@ -71,12 +89,16 @@ impl Config {
         if let Some(fast) = Config::get_flag_content(args, "-f") {
             config.fast_mode = fast.parse().unwrap_or(config.fast_mode);
         }
-        if Config::is_flag(args, "-g") {
-            config.graphic = true;
+        if let Some(graphic) = Config::get_flag_content(args, "-g") {
+            config.graphic = graphic.parse().unwrap_or(config.graphic);
+        }
+        if Config::is_flag(args, "--layout") {
+            config.layout = true;
         }
         if Config::is_flag(args, "--help") {
             config.help = true;
         }
+        config_is_correct(&mut config);
         return config;
     }
 
@@ -88,6 +110,7 @@ impl Config {
         println!("|\tsave_file:\t{}", self.save_file);
         println!("|\tconfig_file:\t{}\n|", self.config_file);
         println!("|\tgraphic:\t{}", self.graphic);
+        println!("|\tlayout:\t\t{}", self.layout);
         println!("|\tfast_mode:\t{}", self.fast_mode);
         println!("+----------------------------------------------]");
     }
