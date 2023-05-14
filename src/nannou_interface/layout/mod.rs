@@ -76,7 +76,6 @@ impl Layout {
                         .x_y(button.rect.x(), button.rect.y())
                         .w_h(button.rect.w(), button.rect.h())
                         .color(nannou::color::IntoLinSrgba::<f32>::into_lin_srgba(nannou::color::rgb_u32(0xA68F6D)));
-                    button.state = 1;
                 } else {
                     draw.rect()
                         .x_y(button.rect.x(), button.rect.y())
@@ -155,10 +154,10 @@ impl Layout {
     pub fn get_buttons_interactions(&self, app: &App, name: String) -> bool {
         for button in &self.buttons {
             if button.name == name {
-                if button.state == 1 {
-                    return true;
-                } else {
-                    return false;
+                if button.rect.contains(app.mouse.position()) {
+                    if app.mouse.buttons.left().is_down() {
+                        return true;
+                    }
                 }
             }
         }

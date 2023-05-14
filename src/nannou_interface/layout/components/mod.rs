@@ -9,7 +9,6 @@ use nannou::prelude::*;
 pub struct Button {
     pub name: String,
     pub rect: Rect,
-    pub state: u8,
     pub text: String,
 }
 
@@ -53,7 +52,6 @@ impl Button {
         Button {
             name,
             rect: Rect::from_x_y_w_h(x, y, w, h),
-            state: 0,
             text,
         }
     }
