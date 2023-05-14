@@ -117,7 +117,7 @@ impl Object for Sphere {
                 z: origin.z + ray.z * smallest_result.unwrap(),
             };
             Some ( Intersection {
-                normal: point - self.transform.pos,
+                normal: (point - self.transform.pos).normalize(),
                 intersection_point: point,
                 object: Some(self),
                 light: None
