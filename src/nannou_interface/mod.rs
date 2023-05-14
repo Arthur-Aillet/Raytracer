@@ -40,10 +40,13 @@ pub struct Model {
 // model function for nannou_interface
 
 fn model(app: &App) -> Model {
-    let imageBuffer = ".raytracer/imageBuffer.ppm";
+    let image_buffer = ".raytracer/imageBuffer.ppm";
     let args: Vec<String> = env::args().collect();
     let mut config = config::Config::from_args(&args);
-    let renderer = Renderer::get_renderer_from_file(&config).unwrap();
+    let renderer = Renderer::get_renderer_from_file(&config);
+    if renderer.is_none() {
+        std::process::exit(84);
+    }
     let mut layout = Layout::new(config.clone());
     let window = app
         .new_window()
@@ -65,9 +68,9 @@ fn model(app: &App) -> Model {
         base_fast_mode: if config.fast_mode == 0 { 1 } else { config.fast_mode },
         last_image,
         image_nbr: 0,
-        img_buf: imageBuffer.to_string(),
+        img_buf: image_buffer.to_string(),
         camera_transform: Transform::default(),
-        fov: renderer.camera.fov,
+        fov: renderer.unwrap().camera.fov,
         exit: false,
     }
 }

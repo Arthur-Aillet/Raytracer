@@ -65,7 +65,7 @@ impl Mesh {
         points_res[1].rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
         points_res[2].rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
         let mut fst_triangle: Triangle = Triangle {
-            name: "NaN Mesh".to_string(),
+            name: "Triangle From Mesh".to_string(),
             obj_type: "mesh".to_string(),
             transform: self.transform,
             point_a: points_res[0],
@@ -84,7 +84,7 @@ impl Mesh {
         }
         points_res[3].rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
         let mut snd_triangle: Triangle = Triangle {
-            name: "NaN Mesh".to_string(),
+            name: "Triangle From Mesh".to_string(),
             obj_type: "mesh".to_string(),
             transform: self.transform,
             point_a: points_res[2],
@@ -206,6 +206,8 @@ impl Object for Mesh {
     }
     fn surface_position(&self, position: Vector) -> Vector {Vector { x: 0.5, y: 0.5, z: 0.0}}
     fn get_transform(&self) -> Transform {self.transform}
+    fn get_name(&self) -> String {self.name.clone()}
+    fn get_type(&self) -> String {self.obj_type.clone()}
     fn move_obj(&mut self, offset: Transform) {
         self.transform = self.transform + offset;
         self.apply_transform();
@@ -214,10 +216,9 @@ impl Object for Mesh {
         self.transform = new;
         self.apply_transform();
     }
-    fn get_name(&self) -> String {self.name.clone()}
-    fn get_type(&self) -> String {self.obj_type.clone()}
     fn get_texture(&self) -> Texture {self.texture.clone()}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
-    fn get_normal_map(&self) -> Texture {self.normal_map.clone()}
-    fn set_normal_map(&mut self, new: Texture) {self.normal_map = new}
+
+    fn get_normal_map(&self) -> Texture { self.normal_map.clone() }
+    fn set_normal_map(&mut self, new: Texture) { self.normal_map = new }
 }
