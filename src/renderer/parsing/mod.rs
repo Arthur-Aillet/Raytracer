@@ -105,6 +105,8 @@ impl Parser {
             roughness: 0.0,
             sampling_ponderation: 0.0,
             alpha: 0.0,
+            transmission: 0.0,
+            ior: 0.0
         }
     }
 
@@ -122,6 +124,8 @@ impl Parser {
             metalness: json["metalness"].as_f64().unwrap_or(0.1),
             shininess: json["shininess"].as_f64().unwrap_or(4.0),
             roughness: json["roughness"].as_f64().unwrap_or(0.25),
+            transmission: json["transmission"].as_f64().unwrap_or(0.0),
+            ior: json["ior"].as_f64().unwrap_or(1.45),
             sampling_ponderation: json["sampling_ponderation"].as_f64().unwrap_or(1.0),
             alpha: json["alpha"].as_f64().unwrap_or(1.0),
         }

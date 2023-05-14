@@ -37,6 +37,17 @@ impl Add<Vector> for Vector {
     }
 }
 
+impl Add<f64> for Vector {
+    type Output = Vector;
+    fn add(self, other: f64) -> Vector {
+        Vector {
+            x: self.x + other,
+            y: self.y + other,
+            z: self.z + other,
+        }
+    }
+}
+
 impl Sub<Vector> for Vector {
     type Output = Vector;
     fn sub(self, other: Vector) -> Vector {

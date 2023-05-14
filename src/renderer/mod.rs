@@ -10,7 +10,13 @@ mod primitives;
 mod lights;
 mod parsing;
 pub mod renderer_common;
+use nannou::draw::background::new;
+use nannou::prelude::Float;
 
+use serde::{Serialize};
+
+use std::mem;
+use std::cmp;
 use rand::Rng;
 use crate::renderer::primitives::{Object, Intersection};
 use std::thread;
@@ -33,6 +39,11 @@ pub struct Renderer {
     pub primitives: Vec<Box<dyn Object + Send + Sync>>,
     pub lights: Lights,
     pub skybox: Texture,
+}
+
+struct Recursivity {
+    general: i64,
+    transmission: i64,
 }
 
 impl Renderer {
@@ -152,8 +163,51 @@ impl Renderer {
         }
     }
 
-    fn get_color_from_ray(&self, origin: Vector, ray: Vector, recursivity: i64) -> Vector {
-        if recursivity == 0 {
+    fn refract(&self, normal: Vector, incident: Vector, ior1: f64, ior2: f64) -> Option<Vector> {
+        let ratio = ior1 / ior2;
+        let cos_i = normal.normalize().dot_product(incident.normalize()) * -1.0;
+        let sin_t2 = ratio * ratio * (1.0 - cos_i * cos_i);
+        if sin_t2 > 1.0 {
+            return None;
+        }
+        let cos_t = (1.0 - sin_t2).sqrt();
+        let final_vect = (incident.normalize() * ratio + normal.normalize() * (ratio * cos_i - cos_t)).normalize();
+        return Some(final_vect);
+    }
+
+    fn transmission(&self, intersect: &Intersection, incident_ray: Vector, recursivity: &mut Recursivity) -> Vector {
+        let normal = intersect.normal.normalize();
+        let other_ior = 1.0;
+        let object_ior = intersect.object.unwrap().get_texture().ior;
+
+        let maybe_new_ray;
+        if recursivity.transmission <= 1 {
+            maybe_new_ray = self.refract(normal.normalize() * -1.0, incident_ray.normalize(), object_ior, other_ior);
+        } else {
+            maybe_new_ray = self.refract(normal.normalize(), incident_ray.normalize(), other_ior, object_ior);
+        }
+        if let Some(new_ray) = maybe_new_ray {
+            let maybe_intersect = self.found_nearest_intersection(intersect.intersection_point + new_ray * self.camera.shadow_bias, new_ray);
+            if let Some(new_intersect) = maybe_intersect {
+                if recursivity.transmission == 2 && new_intersect.object.unwrap().get_texture().transmission > 0.0 {
+                    recursivity.transmission = 1;
+                    return self.transmission(&new_intersect, new_ray, recursivity);
+                } else if recursivity.transmission == 2 {
+                    recursivity.general -= 1;
+                    return self.get_color_from_ray(intersect.intersection_point + new_ray * self.camera.shadow_bias, new_ray, recursivity);
+                } else {
+                    recursivity.general -= 1;
+                    return self.get_color_from_ray(intersect.intersection_point + new_ray * self.camera.shadow_bias, new_ray, recursivity);
+                }
+            }
+        } else {
+            return Vector { x: 0.0, y: 0.0, z: 0.0 };
+        }
+        Vector { x: 0.0, y: 0.0, z: 0.0 }
+    }
+
+    fn get_color_from_ray(&self, origin: Vector, ray: Vector, recursivity: &mut Recursivity) -> Vector {
+        if recursivity.general == 0 {
            return Vector {
                x: 0.0,
                y: 0.0,
@@ -163,6 +217,11 @@ impl Renderer {
         let maybe_intersect = self.found_nearest_intersection(origin, ray);
 
         if let Some(intersect) = maybe_intersect {
+            //return intersect.normal.normalize() * 0.5 + 0.5; // afficher les normales
+            //return intersect.intersection_point * 2.0;
+            //return Vector { x: intersect.normal.normalize().dot_product(ray.normalize()) * 0.5 + 0.5,
+            //                y: intersect.normal.normalize().dot_product(ray.normalize()) * 0.5 + 0.5,
+            //                z: intersect.normal.normalize().dot_product(ray.normalize()) * 0.5 + 0.5};
             // case of direct intersection with light object
             if let Some(light_touched) = intersect.light {
                 return light_touched.get_color().as_vector();
@@ -177,7 +236,7 @@ impl Renderer {
             let surface_point = intersect.intersection_point + intersect.normal * self.camera.shadow_bias;
 
             self_color = self_color * (1.0 - intersect.object.unwrap().get_texture().metalness);
-            if recursivity == 1 {
+            if recursivity.general == 1 {
                 return self_color;
             }
             let samples_nbr = (1.0 + self.camera.reflection_samples as f64 * intersect.object.unwrap().get_texture().roughness).powf(intersect.object.unwrap().get_texture().sampling_ponderation);
@@ -191,23 +250,28 @@ impl Renderer {
                     y: random_a.sin() * random_b.cos(),
                     z: random_b.sin()
                 };
-                let mut reflection_ray = (ray.normalize() - intersect.normal.normalize() * 2.0 * intersect.normal.dot_product(ray.normalize())).normalize();
+                let mut reflection_ray = (ray.normalize() - (intersect.normal.normalize() * 2.0 * intersect.normal.normalize().dot_product(ray.normalize()))).normalize();
                 if intersect.object.unwrap().get_texture().roughness != 0.0 {
                     reflection_ray.lerp(&random_vect, intersect.object.unwrap().get_texture().roughness);
                 }
                 let metalness = intersect.object.unwrap().get_texture().metalness;
-
-                let new_color = self.get_color_from_ray(surface_point, reflection_ray, recursivity - 1);
-
-                let texture_coordinates = intersect.object.unwrap().surface_position(intersect.intersection_point - intersect.object.unwrap().get_transform().pos);
-                self_color =
-                    self_color
-                    + (((new_color * (1.0 - metalness) * intersect.object.unwrap().get_texture().specular))
-                    + (new_color * intersect.object.unwrap().get_texture().texture(texture_coordinates.x, texture_coordinates.y).as_vector() * metalness))
-                    * (1.0/samples_nbr as f64);
+                let new_color;
+                if intersect.object.unwrap().get_texture().transmission == 0.0 {
+                    recursivity.general -= 1;
+                    new_color = self.get_color_from_ray(surface_point, reflection_ray, recursivity);
+                    self_color =
+                        self_color
+                        + (((new_color * (1.0 - metalness) * intersect.object.unwrap().get_texture().specular))
+                        + (new_color * intersect.object.unwrap().get_texture().color.as_vector() * metalness))
+                        * (1.0/samples_nbr as f64);
+                } else {
+                    recursivity.transmission = 2;
+                    self_color = self.transmission(&intersect, ray, recursivity);
+                }
             }
             if intersect.object.unwrap().get_texture().alpha != 1.0 {
-                let new_color = self.get_color_from_ray(intersect.intersection_point + ray * self.camera.shadow_bias, ray, recursivity - 1);
+                recursivity.general -= 1;
+                let new_color = self.get_color_from_ray(intersect.intersection_point + ray * self.camera.shadow_bias, ray, recursivity);
                 return self_color * intersect.object.unwrap().get_texture().alpha + new_color * (1.0 - intersect.object.unwrap().get_texture().alpha);
             }
             self_color
@@ -238,7 +302,8 @@ impl Renderer {
         let mut samples : Vec<Vector> = Vec::new();
         let mut camera_to_pixel_vector = self.camera.get_pixel_vectors(x, y, self.camera.super_sampling);
         for i in 0..camera_to_pixel_vector.len() {
-            samples.push(self.get_color_from_ray(self.camera.transform.pos, camera_to_pixel_vector[i], self.camera.recursivity));
+            let mut recursion = Recursivity{general: self.camera.recursivity, transmission: 10};
+            samples.push(self.get_color_from_ray(self.camera.transform.pos, camera_to_pixel_vector[i], &mut recursion));
 
             if self.camera.super_sampling > 4 && i == 3 && self.check_pixels_proximity(&samples) {
                 for _ in 4..self.camera.super_sampling {camera_to_pixel_vector.push(self.camera.get_random_pixel_vector(x, y))}
