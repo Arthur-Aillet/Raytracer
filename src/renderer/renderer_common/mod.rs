@@ -212,7 +212,7 @@ impl Texture {
             sampling_ponderation: 1.0,
             alpha: 255.0,
             transmission: 0.0,
-            ior: 1.45,
+            ior: 1.45
         }
     }
 
