@@ -36,6 +36,9 @@ pub struct Layout {
 
 impl Layout {
     pub fn new(config: Config, renderer: Renderer) -> Layout {
+        let height = config.height as f32 / 2.0;
+        let width = (config.width as f32 + 360.0) / 2.0;
+
         let mut buttons = Vec::new();
         let mut sliders = Vec::new();
         let mut inputs = Vec::new();
@@ -45,34 +48,30 @@ impl Layout {
 
         buttons.push(Button::new(
             "fast".to_string(),
-            465.0,
-            450.0,
-            130.0,
+            width - 260.0,
+            height - 75.0,
+            120.0,
             50.0,
             String::from("FAST"),
-            nannou::color::IntoLinSrgba::<f32>::into_lin_srgba(nannou::color::rgb_u32(0xEB9E2C)),
-            nannou::color::IntoLinSrgba::<f32>::into_lin_srgba(nannou::color::WHITE),
         ));
         buttons.push(Button::new(
             "fancy".to_string(),
-            615.0,
-            450.0,
-            130.0,
+            width - 100.0,
+            height - 75.0,
+            120.0,
             50.0,
             String::from("FANCY"),
-            nannou::color::IntoLinSrgba::<f32>::into_lin_srgba(nannou::color::rgb_u32(0xEB9E2C)),
-            nannou::color::IntoLinSrgba::<f32>::into_lin_srgba(nannou::color::WHITE),
         ));
         sliders.push(Slider::new(
             "fov".to_string(),
-            400.0,
-            300.0,
+            width - 180.0,
+            height - 150.0,
             280.0,
             50.0,
             String::from("FOV"),
-            nannou::color::IntoLinSrgba::<f32>::into_lin_srgba(nannou::color::rgb_u32(0x3F3944)),
-            nannou::color::IntoLinSrgba::<f32>::into_lin_srgba(nannou::color::WHITE),
-            0.0,
+            renderer.camera.fov,
+            0,
+            180,
         ));
 
         Layout {
@@ -89,10 +88,8 @@ impl Layout {
     }
 
     fn display_buttons(&self, app: &App, model: &Model, frame: &Frame, draw: &Draw) {
-        // get the mouse position
         let mouse_position = app.mouse.position();
 
-        // change the color of the button if the mouse is on it or it is clicked
         for button in &self.buttons {
             if button.rect.contains(mouse_position) {
                 if app.mouse.buttons.left().is_down() {
@@ -115,12 +112,22 @@ impl Layout {
             draw.text(&button.text)
                 .x_y(button.rect.x(), button.rect.y())
                 .w_h(button.rect.w(), button.rect.h())
-                .color(button.text_color);
+                .color(nannou::color::IntoLinSrgba::<f32>::into_lin_srgba(nannou::color::rgb_u32(0xFFFFFF)));
+        }
+    }
+
+    pub fn display_sliders(&self, app: &App, model: &Model, frame: &Frame, draw: &Draw) {
+        for slider in &self.sliders {
+            draw.rect()
+                .x_y(slider.rect.x(), slider.rect.y())
+                .w_h(slider.rect.w(), slider.rect.h())
+                .color(nannou::color::IntoLinSrgba::<f32>::into_lin_srgba(nannou::color::rgb_u32(0x23A5F9)));
         }
     }
 
     pub fn display(&self, app: &App, model: &Model, frame: &Frame, draw: &Draw) {
         self.display_buttons(app, model, frame, draw);
+        self.display_sliders(app, model, frame, draw);
     }
 
     pub fn get_buttons_interactions(&self, app: &App, name: String) -> bool {

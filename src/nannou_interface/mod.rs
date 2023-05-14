@@ -182,10 +182,7 @@ pub fn draw_canvas(draw: &Draw, pixels: &[u8], model: &Model, app: &App) {
     PPMInterface::new(img_path).write(model.config.width, model.config.height, pixels.to_vec());
 
     if let Ok(img) = image::open(img_path) {
-        // Convertir l'image en une texture utilisable par Nannou
         let texture = wgpu::Texture::from_path(app, img_path).unwrap();
-
-        // Dessiner l'image sur le canvas
         let mut window_rect = app.window_rect();
         window_rect.x.end -= model.layout.rect.w();
         draw.texture(&texture)
