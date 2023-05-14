@@ -16,6 +16,8 @@ use crate::renderer::Renderer;
 use crate::config::Config;
 use crate::ppm_interface::PPMInterface;
 use crate::renderer::renderer_common::Transform;
+use crate::vectors::Vector;
+use crate::nannou_interface::layout::ComponentType;
 
 use layout::Layout;
 
@@ -32,15 +34,19 @@ pub struct Model {
     pub img_buf: String,
     pub camera_transform: Transform,
     pub fov: i64,
+    pub exit: bool,
 }
 
 // model function for nannou_interface
 
 fn model(app: &App) -> Model {
-    let imageBuffer = ".raytracer/imageBuffer.ppm";
+    let image_buffer = ".raytracer/imageBuffer.ppm";
     let args: Vec<String> = env::args().collect();
     let mut config = config::Config::from_args(&args);
-    let renderer = Renderer::get_renderer_from_file(&config).unwrap();
+    let renderer = Renderer::get_renderer_from_file(&config);
+    if renderer.is_none() {
+        std::process::exit(84);
+    }
     let mut layout = Layout::new(config.clone());
     let window = app
         .new_window()
@@ -62,9 +68,10 @@ fn model(app: &App) -> Model {
         base_fast_mode: if config.fast_mode == 0 { 1 } else { config.fast_mode },
         last_image,
         image_nbr: 0,
-        img_buf: imageBuffer.to_string(),
+        img_buf: image_buffer.to_string(),
         camera_transform: Transform::default(),
-        fov: renderer.camera.fov,
+        fov: renderer.unwrap().camera.fov,
+        exit: false,
     }
 }
 
@@ -87,6 +94,10 @@ pub fn fast_to_fancy(model: &mut Model) {
 // Update function for nannou_interface
 
 fn merge_camera_transform(renderer: &mut Renderer, model: &Model) {
+    renderer.camera.fov = model.fov;
+    renderer.camera.calculate_lens_distance();
+    renderer.camera.calculate_lens_size();
+
     renderer.camera.transform.pos.x = model.camera_transform.pos.x;
     renderer.camera.transform.pos.y = model.camera_transform.pos.y;
     renderer.camera.transform.pos.z = model.camera_transform.pos.z;
@@ -94,7 +105,6 @@ fn merge_camera_transform(renderer: &mut Renderer, model: &Model) {
     renderer.camera.transform.rotation.y = model.camera_transform.rotation.y;
     renderer.camera.transform.rotation.z = model.camera_transform.rotation.z;
     renderer.camera.transform.scale = model.camera_transform.scale;
-    renderer.camera.fov = model.fov;
 }
 
 fn merge_interactions_layout(app: &App, model: &mut Model) {
@@ -107,6 +117,9 @@ fn merge_interactions_layout(app: &App, model: &mut Model) {
         if model.config.fast_mode > 0 {
             fast_to_fancy(model);
         }
+    }
+    if model.layout.get_buttons_interactions(app, "exit".to_string()) == true {
+        std::process::exit(0);
     }
     if model.layout.get_sliders_interactions(app, "fov".to_string()) != -1 {
         model.fov = model.layout.get_sliders_interactions(app, "fov".to_string());
@@ -125,11 +138,11 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
         } else {
             model.last_image = render.pull_new_image(&model.config);
         }
+        if model.config.layout == true {
+            model.layout.display(&_app, &model.draw, &render);
+        }
     } else {
         println!("Invalid Config!")
-    }
-    if model.config.layout == true {
-        model.layout.display(&_app, &model.draw);
     }
 }
 

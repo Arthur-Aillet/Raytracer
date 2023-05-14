@@ -31,6 +31,7 @@
         "smooth_shadow_step": 4,
         "shadow_bias": 1e-13,
         "recursivity": 2,
+        "reflection_samples": 16,
         "reflection_samples": 64,
         "diffuse_samples": 50,
         "threads": 20,
@@ -38,6 +39,7 @@
     },
     "primitives": [
         {
+            "name": "sphere 1"
             "type": "sphere",
             "transform": {
                 "pos": {
@@ -53,6 +55,7 @@
                 "scale": 1.0
             },
             "texture": {
+                "texture_type": 1,
                 "texture_type": 0,
                 "color": {
                     "r": 255,
@@ -90,6 +93,7 @@
                 "z": 1.0
             },
             "texture": {
+                "texture_type": 1,
                 "texture_type": 0,
                 "color": {
                     "r": 255,

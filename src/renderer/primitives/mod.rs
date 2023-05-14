@@ -24,6 +24,8 @@ pub struct Intersection<'a> {
 
 #[derive(Deserialize, Serialize)]
 pub struct Sphere {
+    pub name: String,
+    pub obj_type: String,
     pub transform: Transform,
     pub texture: Texture,
     pub normal_map : Texture,
@@ -33,6 +35,8 @@ pub struct Sphere {
 
 #[derive(Deserialize, Serialize)]
 pub struct Plane {
+    pub name: String,
+    pub obj_type: String,
     pub transform: Transform,
     pub texture: Texture,
     pub normal_map : Texture,
@@ -42,6 +46,8 @@ pub struct Plane {
 
 #[derive(Deserialize, Serialize)]
 pub struct Cylinder {
+    pub name: String,
+    pub obj_type: String,
     pub transform: Transform,
     pub texture: Texture,
     pub normal_map : Texture,
@@ -56,6 +62,8 @@ pub struct Cylinder {
 
 #[derive(Deserialize, Serialize)]
 pub struct Cone {
+    pub name: String,
+    pub obj_type: String,
     pub transform: Transform,
     pub texture: Texture,
     pub normal_map : Texture,
@@ -70,6 +78,8 @@ pub struct Cone {
 
 #[derive(Deserialize, Serialize)]
 pub struct Triangle {
+    pub name: String,
+    pub obj_type: String,
     pub transform : Transform,
     pub texture: Texture,
     pub normal_map : Texture,
@@ -84,6 +94,8 @@ pub struct Triangle {
 
 #[derive(Deserialize, Serialize)]
 pub struct Mesh {
+    pub name: String,
+    pub obj_type: String,
     pub transform: Transform,
     pub texture: Texture,
     pub normal_map : Texture,
@@ -97,6 +109,8 @@ pub trait Object: erased_serde::Serialize {
     fn get_transform(&self) -> Transform;
     fn move_obj(&mut self, offset: Transform);
     fn set_transform(&mut self, new: Transform);
+    fn get_name(&self) -> String;
+    fn get_type(&self) -> String;
     fn get_texture(&self) -> Texture;
     fn set_texture(&mut self, new: Texture);
     fn get_normal_map(&self) -> Texture;
@@ -159,6 +173,8 @@ impl Object for Sphere {
         self.transform = new;
         self.apply_transform();
     }
+    fn get_name(&self) -> String {self.name.clone()}
+    fn get_type(&self) -> String {self.obj_type.clone()}
     fn get_texture(&self) -> Texture {self.texture.clone()}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
     fn get_normal_map(&self) -> Texture {self.normal_map.clone()}
@@ -223,6 +239,8 @@ impl Object for Plane {
         self.transform = new;
         self.apply_transform();
     }
+    fn get_name(&self) -> String {self.name.clone()}
+    fn get_type(&self) -> String {self.obj_type.clone()}
     fn get_texture(&self) -> Texture {self.texture.clone()}
     fn set_texture(&mut self, new: Texture) {self.texture = new}
     fn get_normal_map(&self) -> Texture {self.normal_map.clone()}
@@ -349,6 +367,8 @@ impl Object for Cylinder {
         }
     }
     fn get_transform(&self) -> Transform {self.transform}
+    fn get_name(&self) -> String {self.name.clone()}
+    fn get_type(&self) -> String {self.obj_type.clone()}
     fn move_obj(&mut self, offset: Transform) {
         self.transform = self.transform + offset;
         self.apply_transform();
@@ -426,6 +446,8 @@ impl Object for Cone {
         }
     }
     fn get_transform(&self) -> Transform {self.transform}
+    fn get_name(&self) -> String {self.name.clone()}
+    fn get_type(&self) -> String {self.obj_type.clone()}
     fn move_obj(&mut self, offset: Transform) {
         self.transform = self.transform + offset;
         self.apply_transform();
@@ -492,7 +514,7 @@ impl Object for Triangle {
         };
         Some ( Intersection {
             intersection_point,
-            normal: normal,
+            normal,
             object: Some(self),
             light: None,
         })
@@ -508,6 +530,8 @@ impl Object for Triangle {
         }
     }
     fn get_transform(&self) -> Transform {self.transform}
+    fn get_name(&self) -> String {self.name.clone()}
+    fn get_type(&self) -> String {self.obj_type.clone()}
     fn move_obj(&mut self, offset: Transform) {
         self.transform = self.transform + offset;
         self.apply_transform();

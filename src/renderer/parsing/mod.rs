@@ -60,11 +60,7 @@ impl Parser {
             reflecion_samples: json["reflection_samples"].as_f64().unwrap_or(16.0),
         };
         camera.calculate_lens_distance();
-        let vector_director = Vector {x: 0.0, y: camera.lens.distance, z: 0.0};
-        camera.lens.vector_to_first_pixel = Vector {x: camera.transform.pos.x, y: camera.transform.pos.y, z: camera.transform.pos.z};
-        camera.lens.vector_to_first_pixel = camera.lens.vector_to_first_pixel + Vector {x:0.0, y:0.0, z:1.0} * (camera.lens.height as f64 / 2.0);
-        camera.lens.vector_to_first_pixel = camera.lens.vector_to_first_pixel + vector_director;
-        camera.lens.vector_to_first_pixel = camera.lens.vector_to_first_pixel + Vector {x: -1.0, y: 0.0, z: 0.0} * (camera.lens.width as f64 / 2.0);
+        camera.calculate_lens_size();
 
         if camera.threads < 1 {
             camera.threads = 1;
@@ -133,6 +129,8 @@ impl Parser {
 
     pub fn get_sphere_from_json(&self, json: &Value) -> Box<Sphere> {
         let mut sphere = Sphere {
+            name: json["name"].as_str().unwrap_or("Nan").to_string(),
+            obj_type: "sphere".to_string(),
             transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
             texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
             normal_map: if json["normal_map"].is_object() {self.get_normal_map_from_json(&json["normal_map"])} else {Texture::normal_map_default()},
@@ -145,6 +143,8 @@ impl Parser {
 
     pub fn get_plane_from_json(&self, json: &Value) -> Box::<Plane> {
         let mut plane = Plane {
+            name: json["name"].as_str().unwrap_or("Nan").to_string(),
+            obj_type: "plane".to_string(),
             transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
             texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
             normal_map: if json["normal_map"].is_object() {self.get_normal_map_from_json(&json["normal_map"])} else {Texture::normal_map_default()},
@@ -157,6 +157,8 @@ impl Parser {
 
     pub fn get_cylinder_from_json(&self, json: &Value) -> Box::<Cylinder> {
         let mut cylinder = Cylinder {
+            name: json["name"].as_str().unwrap_or("Nan").to_string(),
+            obj_type: "cylinder".to_string(),
             transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
             texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
             normal_map: if json["normal_map"].is_object() {self.get_normal_map_from_json(&json["normal_map"])} else {Texture::normal_map_default()},
@@ -174,6 +176,8 @@ impl Parser {
 
     pub fn get_cone_from_json(&self, json: &Value) -> Box::<Cone> {
         let mut cone = Cone {
+            name: json["name"].as_str().unwrap_or("Nan").to_string(),
+            obj_type: "cone".to_string(),
             transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
             texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
             normal_map: if json["normal_map"].is_object() {self.get_normal_map_from_json(&json["normal_map"])} else {Texture::normal_map_default()},
@@ -191,6 +195,8 @@ impl Parser {
 
     pub fn get_triangle_from_json(&self, json: &Value) -> Box<Triangle> {
         let mut triangle = Triangle {
+            name: json["name"].as_str().unwrap_or("Nan").to_string(),
+            obj_type: "triangle".to_string(),
             transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
             texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
             normal_map: if json["normal_map"].is_object() {self.get_normal_map_from_json(&json["normal_map"])} else {Texture::normal_map_default()},
@@ -208,6 +214,8 @@ impl Parser {
 
     pub fn get_mesh_from_json(&self, json: &Value) -> Box<Mesh> {
         let mut mesh = Mesh {
+            name: json["name"].as_str().unwrap_or("Nan").to_string(),
+            obj_type: "mesh".to_string(),
             transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
             texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
             normal_map: if json["normal_map"].is_object() {self.get_normal_map_from_json(&json["normal_map"])} else {Texture::normal_map_default()},
@@ -386,8 +394,12 @@ impl Parser {
     }
 
     pub fn get_json(&self, file: &String) -> Option<Value> {
-        print!("{}\n", file);
-        let data = fs::read_to_string(file).expect("Unable to read file");
-        serde_json::from_str(&data.to_string()).unwrap_or(None)
+        let data = fs::read_to_string(file);
+
+        if let Ok(text) = data {
+            serde_json::from_str(&text).unwrap_or(None)
+        } else {
+            None
+        }
     }
 }

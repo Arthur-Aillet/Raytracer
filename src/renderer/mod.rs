@@ -263,7 +263,6 @@ impl Renderer {
 
             let mut local_pixel_line: Vec<u8> = vec![0; (self.camera.lens.width * 3) as usize];
             for j in 0..self.camera.lens.width {
-                //println!("thread {id:?} started");
                 pixel_id = (j * 3) as usize;
                 let calculated_pixel = self.render_pixel(j, i, &config);
 
