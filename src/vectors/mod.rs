@@ -112,6 +112,14 @@ impl Vector {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
 
+    pub fn cross_product(&self, other: Vector) -> Vector {
+        Vector {
+            x: self.y * other.z - self.z * other.y,
+            y: self.z * other.x - self.x * other.z,
+            z: self.x * other.y - self.y * other.x
+        }
+    }
+
     pub fn reflect(&self, reference: Vector) -> Self {
         let reflected = reference * 2.0 * (self.dot_product(reference));
         Vector {
@@ -134,8 +142,18 @@ impl Vector {
         ((self.x - other.x).powi(2) + (self.y - other.y).powi(2) + (self.z - other.z).powi(2)).sqrt()
     }
 
+    pub fn len2(self) -> f64 {
+        self.x.powi(2) + self.y.powi(2) + self.z.powi(2)
+    }
+
     pub fn len(self) -> f64 {
         (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
+    }
+
+    pub fn lerp(&mut self, other: &Vector, t:f64) {
+        self.x = self.x + t * (other.x - self.x);
+        self.y = self.y + t * (other.y - self.y);
+        self.z = self.z + t * (other.z - self.z);
     }
 }
 

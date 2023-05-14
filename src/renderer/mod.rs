@@ -9,19 +9,26 @@ mod camera;
 mod primitives;
 mod lights;
 mod parsing;
-mod renderer_common;
+pub mod renderer_common;
+
 use serde::{Serialize};
 
 use rand::Rng;
 use crate::renderer::primitives::{Object, Intersection};
-use crate::renderer::lights::Light;
 use std::thread;
 use std::time;
 use std::sync::{Arc, Mutex};
 use camera::{Camera};
 use lights::Lights;
 use parsing::Parser;
+use crate::sfml_interface::SfmlInterface;
+use crate::config::Config;
+use crate::ppm_interface::PPMInterface;
 use crate::vectors::Vector;
+use sfml::graphics::{RenderWindow};
+use crate::nannou_interface::Model;
+use crate::sfml_interface::draw_buffer;
+use crate::sfml_interface::poll_event;
 
 #[derive(Serialize)]
 pub struct Renderer {
@@ -40,53 +47,6 @@ impl Renderer {
                 ambient: Vec::new(),
             },
         }
-    }
-
-    fn light_is_intersected(&self, light_vector: Vector, intersect: &Intersection, light: &Box<dyn Light  + Send + Sync>, normal_vector: Vector) -> bool {
-        for object_current in self.primitives.iter() {
-            match object_current.intersection(light_vector, intersect.intersection_point + (normal_vector * self.camera.shadow_bias)) {
-                None => { continue }
-                Some(shadow_intersect) => {
-                    if (shadow_intersect.intersection_point - intersect.intersection_point).len() < (light.get_transform().pos - intersect.intersection_point).len() {
-                        return true
-                    }
-                }
-            }
-        }
-        false
-    }
-
-    fn calculate_light(&self, light: &Box<dyn Light  + Send + Sync>, intersect: &Intersection, ray: Vector) -> Vector {
-        let normal_vector = intersect.normal.normalize();
-        let light_vector = (light.get_transform().pos - intersect.intersection_point).normalize();
-        let mut light_uncovered = 1.0;
-
-        if self.camera.smooth_shadow == false {
-            if self.light_is_intersected(light_vector, intersect, light, normal_vector) {
-                return Vector {
-                    x: 0.0,
-                    y: 0.0,
-                    z: 0.0,
-                }
-            }
-        } else {
-            let mut light_reached: i16 = 0;
-            for _ in 0..self.camera.smooth_shadow_step {
-                let inter_to_light = light.get_transform().pos + Vector::get_random_point_in_sphere(light.get_radius()) - intersect.intersection_point;
-                if self.light_is_intersected(inter_to_light.normalize(), intersect, light, normal_vector) == false {
-                    light_reached += 1;
-                }
-            }
-            light_uncovered = light_reached as f64 / self.camera.smooth_shadow_step as f64;
-        }
-        let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * intersect.object.unwrap().get_texture().diffuse;
-
-        let reflected = light_vector.reflect(normal_vector).normalize();
-        let view = (ray * -1.0).normalize();
-        let specular = self.camera.specular * intersect.object.unwrap().get_texture().specular * reflected.dot_product(view).max(0.0).powf(intersect.object.unwrap().get_texture().shininess);
-        let distance = intersect.intersection_point.distance(light.get_transform().pos);
-        let light_falloff = (light.get_strength() / distance.powi(light.get_falloff())).max(0.0);
-        intersect.object.unwrap().get_texture().color.as_vector() * light.get_color().as_vector() * diffuse * light_falloff * light_uncovered + light.get_color().as_vector() * specular * light_falloff * light_uncovered
     }
 
     fn found_nearest_intersection_fast(&self, origin: Vector, ray: Vector) -> Option<Intersection> {
@@ -142,7 +102,7 @@ impl Renderer {
         found_intersection
     }
 
-    fn get_ambient<'a>(&self, object :&'a dyn Object) -> Vector {
+    fn get_ambient<'a>(&self, object :&'a dyn Object, position: Vector) -> Vector {
         let mut self_color = Vector{
             x: 0.0,
             y: 0.0,
@@ -150,7 +110,8 @@ impl Renderer {
         };
 
         for ambient in self.lights.ambient.iter() {
-            self_color = self_color + object.get_texture().color.as_vector() * object.get_texture().ambient * ambient.color.as_vector() * ambient.strength * self.camera.ambient;
+            let texture_coordinates = object.surface_position(position - object.get_transform().pos);
+            self_color = self_color + object.get_texture().texture(texture_coordinates.x, texture_coordinates.y).as_vector() * object.get_texture().ambient * ambient.color.as_vector() * ambient.strength * self.camera.ambient;
         }
         self_color
     }
@@ -171,11 +132,12 @@ impl Renderer {
             let normal_vector = intersect.normal.normalize();
             let light_vector = (self.camera.transform.pos - intersect.intersection_point).normalize();
 
-            let ambient = intersect.object.unwrap().get_texture().color.as_vector() * intersect.object.unwrap().get_texture().ambient * self.camera.ambient;
+            let texture_coordinates = intersect.object.unwrap().surface_position(intersect.intersection_point - intersect.object.unwrap().get_transform().pos);
+            let ambient = intersect.object.unwrap().get_texture().texture(texture_coordinates.x, texture_coordinates.y).as_vector() * intersect.object.unwrap().get_texture().ambient * self.camera.ambient;
 
             let diffuse = light_vector.dot_product(normal_vector).max(0.0) * self.camera.diffuse * intersect.object.unwrap().get_texture().diffuse;
 
-            ambient + intersect.object.unwrap().get_texture().color.as_vector() * diffuse
+            ambient + intersect.object.unwrap().get_texture().texture(texture_coordinates.x, texture_coordinates.y).as_vector() * diffuse
         } else {
             Vector {
                 x: 0.0,
@@ -187,34 +149,61 @@ impl Renderer {
 
     fn get_color_from_ray(&self, origin: Vector, ray: Vector, recursivity: i64) -> Vector {
         if recursivity == 0 {
-            return Vector {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            }
+           return Vector {
+               x: 0.0,
+               y: 0.0,
+               z: 0.0,
+           }
         }
         let maybe_intersect = self.found_nearest_intersection(origin, ray);
 
         if let Some(intersect) = maybe_intersect {
+            // case of direct intersection with light object
             if let Some(light_touched) = intersect.light {
                 return light_touched.get_color().as_vector();
             }
-            let mut self_color = self.get_ambient(intersect.object.unwrap());
+            let mut self_color = self.get_ambient(intersect.object.unwrap(), intersect.intersection_point);
 
+            // calculation of lighting
             for light in self.lights.lights.iter() {
-                self_color = self_color + self.calculate_light(light, &intersect, ray);
+                self_color = self_color + light.calculate_light(&intersect, ray, self.camera, &self.primitives);
             }
+
             let surface_point = intersect.intersection_point + intersect.normal * self.camera.shadow_bias;
 
             self_color = self_color * (1.0 - intersect.object.unwrap().get_texture().metalness);
-            let samples_nbr = 1.0 + self.camera.reflection_samples as f64 * intersect.object.unwrap().get_texture().roughness;
+            if recursivity == 1 {
+                return self_color;
+            }
+            let samples_nbr = (1.0 + self.camera.reflection_samples as f64 * intersect.object.unwrap().get_texture().roughness).powf(intersect.object.unwrap().get_texture().sampling_ponderation);
             for _ in 0..samples_nbr as i32 {
                 let mut rng = rand::thread_rng();
+                // random vector used for the roughness
+                let random_a: f64 = rng.gen_range(0.0..6.28);
+                let random_b: f64 = rng.gen_range(0.0..6.28);
+                let random_vect = Vector {
+                    x: random_a.cos() * random_b.cos(),
+                    y: random_a.sin() * random_b.cos(),
+                    z: random_b.sin()
+                };
                 let mut reflection_ray = (ray.normalize() - intersect.normal.normalize() * 2.0 * intersect.normal.dot_product(ray.normalize())).normalize();
                 if intersect.object.unwrap().get_texture().roughness != 0.0 {
-                    reflection_ray.rotate(rng.gen_range(0.0..90.0 * intersect.object.unwrap().get_texture().roughness), 0.0, rng.gen_range(0.0..360.0));
+                    reflection_ray.lerp(&random_vect, intersect.object.unwrap().get_texture().roughness);
                 }
-                self_color = self_color + self.get_color_from_ray(surface_point, reflection_ray, recursivity - 1) * intersect.object.unwrap().get_texture().metalness * (1.0 / samples_nbr as f64);
+                let metalness = intersect.object.unwrap().get_texture().metalness;
+
+                let new_color = self.get_color_from_ray(surface_point, reflection_ray, recursivity - 1);
+
+                let texture_coordinates = intersect.object.unwrap().surface_position(intersect.intersection_point - intersect.object.unwrap().get_transform().pos);
+                self_color =
+                    self_color
+                    + (((new_color * (1.0 - metalness) * intersect.object.unwrap().get_texture().specular))
+                    + (new_color * intersect.object.unwrap().get_texture().texture(texture_coordinates.x, texture_coordinates.y).as_vector() * metalness))
+                    * (1.0/samples_nbr as f64);
+            }
+            if intersect.object.unwrap().get_texture().alpha != 1.0 {
+                let new_color = self.get_color_from_ray(intersect.intersection_point + ray * self.camera.shadow_bias, ray, recursivity - 1);
+                return self_color * intersect.object.unwrap().get_texture().alpha + new_color * (1.0 - intersect.object.unwrap().get_texture().alpha);
             }
             self_color
         } else {
@@ -239,8 +228,8 @@ impl Renderer {
         true
     }
 
-    pub fn render_pixel(&self, x:i64, y:i64) -> Vector {
-        if true == true {
+    pub fn render_pixel(&self, x:i64, y:i64, config: &Config) -> Vector {
+        if config.fast_mode != 0 {
             return self.get_color_from_ray_fast(self.camera.transform.pos, self.camera.get_pixel_vectors(x, y, 1)[0]);
         }
 
@@ -256,7 +245,7 @@ impl Renderer {
         self.combine_pixel(&samples)
     }
 
-    pub fn naive_thread_renderer(&self, pixel_states:Arc<Mutex<Vec<bool>>>, pixels:Arc<Mutex<Vec<u8>>>, progression:Arc<Mutex<u64>>) {
+    pub fn naive_thread_renderer(&self, pixel_states:Arc<Mutex<Vec<bool>>>, pixels:Arc<Mutex<Vec<u8>>>, progression:Arc<Mutex<u64>>, config: &Config) {
         //println!("thread {id:?} started");
         let mut pixel_id: usize;
         let mut line_state_id: usize;
@@ -274,7 +263,7 @@ impl Renderer {
             let mut local_pixel_line: Vec<u8> = vec![0; (self.camera.lens.width * 3) as usize];
             for j in 0..self.camera.lens.width {
                 pixel_id = (j * 3) as usize;
-                let calculated_pixel = self.render_pixel(j, i);
+                let calculated_pixel = self.render_pixel(j, i, &config);
 
                 local_pixel_line[pixel_id + 0] = (self.camera.aces_curve(calculated_pixel.x).powf(1.0/2.2) * 255.0) as u8;
                 local_pixel_line[pixel_id + 1] = (self.camera.aces_curve(calculated_pixel.y).powf(1.0/2.2) * 255.0) as u8;
@@ -297,7 +286,7 @@ impl Renderer {
         let mut last_progression:u64 = 0;
 
         while last_progression as u64 != self.camera.lens.height as u64 {
-            thread::sleep(time::Duration::from_millis(1000));
+            thread::sleep(time::Duration::from_millis(50));
             let locked_progression = progression.lock().unwrap();
             print!("rendered [");
             for _i in 0..(((*locked_progression + (self.camera.lens.height as u64 * buf_step)) * 100) / (self.camera.lens.height as u64 * buf_size)) {
@@ -311,28 +300,63 @@ impl Renderer {
         }
     }
 
-    pub fn render(&self) -> Vec<u8> {
+    pub fn merge_image(&self, config: &Config, last_image: &mut Vec<u8>, new_image: &Vec<u8>, image_nbr: u64) {
+        let buf_size = if config.fast_mode != 0 { 1 } else { self.camera.image_buffer_size };
+
+        for i in 0..last_image.len() {
+            last_image[i] = (((last_image[i] as u64 * (image_nbr - 1)) + new_image[i] as u64) / image_nbr) as u8;
+        }
+    }
+
+    pub fn pull_new_image(&self, config: &Config) -> Vec<u8> {
+        let pixels:Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize]));
+        let pixels_state:Arc<Mutex<Vec<bool>>> = Arc::new(Mutex::new(vec![false; self.camera.lens.height as usize]));
+        let progression:Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
+
+        thread::scope(|scope| {
+            for _ in 0..self.camera.threads {
+                let clone_pixels = Arc::clone(&pixels);
+                let clone_pixels_state = Arc::clone(&pixels_state);
+                let clone_progression = Arc::clone(&progression);
+                scope.spawn(move || {
+                    self.naive_thread_renderer(clone_pixels_state, clone_pixels, clone_progression, &config);
+                });
+            }
+
+            if self.camera.progression == true {
+                self.print_progression(progression, 0, 1);
+            }
+        });
+        let final_pixels = pixels.lock().unwrap().to_vec();
+        final_pixels
+    }
+
+    pub fn render(&self, config: &Config) -> Vec<u8> {
         let mut result: Vec<u8> = Vec::new();
-        let buf_size = if true == false { self.camera.image_buffer_size } else { 1 };
+        let buf_size = if config.fast_mode != 0 { 1 } else { self.camera.image_buffer_size };
+
         for n in 0..buf_size {
             let pixels:Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize]));
             let pixels_state:Arc<Mutex<Vec<bool>>> = Arc::new(Mutex::new(vec![false; self.camera.lens.height as usize]));
             let progression:Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
+
             thread::scope(|scope| {
                 for _ in 0..self.camera.threads {
                     let clone_pixels = Arc::clone(&pixels);
                     let clone_pixels_state = Arc::clone(&pixels_state);
                     let clone_progression = Arc::clone(&progression);
                     scope.spawn(move || {
-                        self.naive_thread_renderer(clone_pixels_state, clone_pixels, clone_progression);
+                        self.naive_thread_renderer(clone_pixels_state, clone_pixels, clone_progression, &config);
                     });
                 }
 
                 if self.camera.progression == true {
-                    self.print_progression(progression, n, buf_size);
+                    self.print_progression(progression, 0, buf_size);
                 }
             });
+
             let final_pixels = pixels.lock().unwrap().to_vec();
+
             if result.len() != final_pixels.len() {
                 for i in 0..final_pixels.len() {
                     result.push(final_pixels[i]);
@@ -346,11 +370,59 @@ impl Renderer {
         result
     }
 
-    pub fn get_renderer_from_file(file: String, height: i64, width: i64) -> Option<Renderer> {
+    pub fn grender(&self, config: &Config, window: &mut RenderWindow) -> Vec<u8> {
+        let mut results: Vec<Vec<u8>> = vec![vec![0; (config.width * config.height) as usize]; (config.width * config.height) as usize];
+        let buf_size = if config.fast_mode != 0 { 1 } else { self.camera.image_buffer_size };
+
+        for n in 0..buf_size {
+            let pixels: Arc<Mutex<Vec<u8>>> =
+                Arc::new(Mutex::new(vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize]));
+            let pixels_state: Arc<Mutex<Vec<bool>>> =
+                Arc::new(Mutex::new(vec![false; self.camera.lens.height as usize]));
+            let progression: Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
+
+            thread::scope(|scope| {
+                for _ in 0..self.camera.threads {
+                    let clone_pixels = Arc::clone(&pixels);
+                    let clone_pixels_state = Arc::clone(&pixels_state);
+                    let clone_progression = Arc::clone(&progression);
+                    scope.spawn(move || {
+                        self.naive_thread_renderer(clone_pixels_state, clone_pixels, clone_progression, &config);
+                    });
+                }
+
+                if self.camera.progression {
+                    self.print_progression(progression, n, buf_size);
+                }
+            });
+
+            let final_pixels = pixels.lock().unwrap().to_vec();
+
+            if results.is_empty() {
+                results.push(final_pixels);
+            } else {
+                let result = &mut results[0];
+                if result.len() != final_pixels.len() {
+                    result.extend_from_slice(&final_pixels);
+                } else {
+                    for i in 0..result.len() {
+                        result[i] = (((result[i] as u64 * (n - 1)) + final_pixels[i] as u64) / n) as u8;
+                    }
+                }
+            }
+            poll_event(window);
+            PPMInterface::new(&config.save_file).write(config.width, config.height, results[0].clone());
+            draw_buffer(&config, window);
+            window.display();
+        }
+        results.into_iter().flatten().collect()
+    }
+
+    pub fn get_renderer_from_file(config: &Config) -> Option<Renderer> {
         let mut _result: Option<Renderer> = None;
         let parser = Parser{};
-        if parser.get_json(&file).is_some() {
-            _result = Some(parser.get_renderer_from_json(&parser.get_json(&file).unwrap(), height, width));
+        if parser.get_json(&config.config_file).is_some() {
+            _result = Some(parser.get_renderer_from_json(&parser.get_json(&config.config_file).unwrap(), config.height, config.width));
             return _result
         }
         None
