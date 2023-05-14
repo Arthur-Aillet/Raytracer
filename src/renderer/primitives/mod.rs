@@ -197,19 +197,11 @@ impl Object for Sphere {
         if smallest_result == None {
             found_intersection
         } else {
-            let mut point = Vector {
+            let point = Vector {
                 x: origin.x + ray.x * smallest_result.unwrap(),
                 y: origin.y + ray.y * smallest_result.unwrap(),
                 z: origin.z + ray.z * smallest_result.unwrap(),
             };
-
-            let surface_pos = self.surface_position(point - self.transform.pos);
-            let normal_map = self.normal_map.texture(surface_pos.x, surface_pos.y);
-            // point = point + Vector {
-            //     x: (normal_map.r - 128.0) / 128.0,
-            //     y: (normal_map.g - 128.0) / 128.0,
-            //     z: (normal_map.b) / 255.0,
-            // };
             if (point - origin).len() < smallest_distance {
                 Some ( Intersection {
                     normal: point - self.transform.pos,
@@ -288,19 +280,10 @@ impl Object for Plane {
             y: origin.y + ray.y * progress,
             z: origin.z + ray.z * progress
         };
-
-        let surface_pos = self.surface_position(intersection_point - self.transform.pos);
-        let normal_map = self.normal_map.texture(surface_pos.x, surface_pos.y);
-        let normal = self.normal_applied + Vector {
-            x: (normal_map.r - 128.0) / 128.0,
-            y: (normal_map.g - 128.0) / 128.0,
-            z: (normal_map.b) / 255.0,
-        };
-        normal.normalize();
         if (intersection_point - origin).len() < smallest_distance {
             found_intersection = Some ( Intersection {
             intersection_point,
-            normal,
+            normal: self.normal_applied,
             object: Some(self),
             light: None,
             })
@@ -437,15 +420,8 @@ impl Object for Cylinder {
         let intersection_point = origin + ray * *smallest_result.unwrap();
 
         if -self.height_applied / 2.0 <= (intersection_point - self.transform.pos).dot_product(self.axis) && (intersection_point - self.transform.pos).dot_product(self.axis) <= self.height_applied / 2.0 { // too far from center
-            let mut normal = intersection_point - (self.base + self.axis * (intersection_point - self.base).dot_product(self.axis)); // Cos(teta) = A/H
+            let normal = intersection_point - (self.base + self.axis * (intersection_point - self.base).dot_product(self.axis)); // Cos(teta) = A/H
 
-            let surface_pos = self.surface_position(intersection_point - self.transform.pos);
-            let normal_map = self.normal_map.texture(surface_pos.x, surface_pos.y);
-            normal = intersection_point - (self.base + self.axis * (intersection_point - self.base).dot_product(self.axis)) + Vector {
-                x: (normal_map.r - 128.0) / 128.0,
-                y: (normal_map.g - 128.0) / 128.0,
-                z: (normal_map.b) / 255.0,
-            };
             if (intersection_point - origin).len() < smallest_distance {
             return Some ( Intersection {
                 intersection_point,
@@ -551,14 +527,7 @@ impl Object for Cone {
         let intersection_point = origin + ray * *smallest_result.unwrap();
         if 0.0 <= (intersection_point - self.base).dot_product(self.axis) && (intersection_point - self.base).dot_product(self.axis) <= self.height_applied { // too far from center*/
             let cos_angle = self.axis.dot_product(self.top - intersection_point);
-            let mut normal = (intersection_point - (self.top - self.axis * ((self.top - intersection_point).len2() / cos_angle))).normalize();
-            let surface_pos = self.surface_position(intersection_point - self.transform.pos);
-            let normal_map = self.normal_map.texture(surface_pos.x, surface_pos.y);
-            normal = (intersection_point - (self.base + self.axis * (intersection_point - self.base).dot_product(self.axis))) + Vector {
-                x: (normal_map.r - 128.0) / 128.0,
-                y: (normal_map.g - 128.0) / 128.0,
-                z: (normal_map.b) / 255.0,
-            };
+            let normal = (intersection_point - (self.top - self.axis * ((self.top - intersection_point).len2() / cos_angle))).normalize();
             if (intersection_point - origin).len() < smallest_distance {
                 return Some ( Intersection {
                     intersection_point,
@@ -668,17 +637,10 @@ impl Object for Triangle {
         if self.normal.dot_product(cross) < 0.0 {
             return found_intersection;
         }
-        let surface_pos = self.surface_position(intersection_point - self.transform.pos);
-        let normal_map = self.normal_map.texture(surface_pos.x, surface_pos.y);
-        let normal = (if self.normal.dot_product(origin - intersection_point) < 0.0 { self.normal * -1.0 } else { self.normal }) + Vector {
-            x: (normal_map.r - 128.0) / 128.0,
-            y: (normal_map.g - 128.0) / 128.0,
-            z: (normal_map.b) / 255.0,
-        };
         if (intersection_point - origin).len() < smallest_distance {
             found_intersection = Some ( Intersection {
                 intersection_point,
-                normal: normal,
+                normal: self.normal,
                 object: Some(self),
                 light: None,
             })
