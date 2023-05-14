@@ -21,6 +21,7 @@ use crate::ppm_interface::PPMInterface;
 use crate::renderer::renderer_common::Transform;
 
 use layout::Layout;
+use crate::nannou_interface::layout::ComponentType;
 
 // Model struct for nannou_interface
 
@@ -96,6 +97,19 @@ fn merge_camera_transform(renderer: &mut Renderer, camera_transform: &Transform)
     renderer.camera.transform.scale = camera_transform.scale;
 }
 
+fn merge_interactions_layout(app: &App, model: &mut Model) {
+    if model.layout.get_interactions(app, "fast".to_string(), ComponentType::Button) == true {
+        if model.config.fast_mode == 0 {
+            fancy_to_fast(model);
+        }
+    }
+    if model.layout.get_interactions(app, "fancy".to_string(), ComponentType::Button) == true {
+        if model.config.fast_mode > 0 {
+            fast_to_fancy(model);
+        }
+    }
+}
+
 fn update(_app: &App, model: &mut Model, _update: Update) {
     let renderer = Renderer::get_renderer_from_file(&model.config);
 
@@ -160,7 +174,7 @@ fn event(_app: &App, model: &mut Model, event: WindowEvent) {
         },
         _ => {}
     }
-
+    merge_interactions_layout(&_app, model);
 }
 
 pub fn draw_canvas(draw: &Draw, pixels: &[u8], model: &Model, app: &App) {
@@ -186,7 +200,6 @@ pub fn draw_canvas(draw: &Draw, pixels: &[u8], model: &Model, app: &App) {
 
 fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw();
-    // create nanncou color
     let color = nannou::color::rgb_u32(0x302B34);
     draw.background().color(color);
 
