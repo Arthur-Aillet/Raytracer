@@ -92,7 +92,7 @@ pub struct Mesh {
 
 pub trait Object: erased_serde::Serialize {
     fn apply_transform(&mut self);
-    fn intersection(&mut self, ray: Vector, origin: Vector) -> Option<Intersection>;
+    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection>;
     fn surface_position(&self, position: Vector) -> Vector;
     fn get_transform(&self) -> Transform;
     fn move_obj(&mut self, offset: Transform);
@@ -108,7 +108,7 @@ impl Object for Sphere {
         self.radius_applied = self.radius * self.transform.scale;
     }
 
-    fn intersection(&mut self, ray: Vector, origin: Vector) -> Option<Intersection> {
+    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
         let diff = origin - self.transform.pos;
         let result = resolve_quadratic_equation(ray.dot_product(ray), // could be 1 if normalized
                                                 2.0 * (ray.dot_product(diff)),
@@ -171,7 +171,7 @@ impl Object for Plane {
         self.normal_applied.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
     }
 
-    fn intersection(&mut self, ray: Vector, origin: Vector) -> Option<Intersection> {
+    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
         let denom = ray.normalize().dot_product(self.normal_applied);
         if denom == 0.0 {
             return None
@@ -187,19 +187,19 @@ impl Object for Plane {
         };
         let surface_pos = self.surface_position(intersection_point - self.transform.pos);
         let normal_map = self.normal_map.texture(surface_pos.x, surface_pos.y);
-        self.normal_applied = self.normal + Vector {
+        let normal = self.normal + Vector {
             x: (normal_map.r - 128.0) / 128.0,
             y: (normal_map.g - 128.0) / 128.0,
             z: (normal_map.b) / 255.0,
         };
-        self.normal_applied.normalize();
+        normal.normalize();
         Some ( Intersection {
             intersection_point: Vector{
                 x: origin.x + ray.x * progress,
                 y: origin.y + ray.y * progress,
                 z: origin.z + ray.z * progress
             },
-            normal: self.normal_applied,
+            normal,
             object: Some(self),
             light: None,
         })
@@ -299,7 +299,7 @@ impl Object for Cylinder {
         self.height_applied = self.height * self.transform.scale;
     }
 
-    fn intersection(&mut self, ray: Vector, origin: Vector) -> Option<Intersection> {
+    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
         let distance = origin - self.base; // W
 
         let a = 1.0 /*ray.dot_product(ray) car normalisé */ - (ray.dot_product(self.axis)).powi(2);
@@ -314,8 +314,15 @@ impl Object for Cylinder {
         let intersection_point = origin + ray * *smallest_result.unwrap();
 
         if -self.height_applied / 2.0 <= (intersection_point - self.transform.pos).dot_product(self.axis) && (intersection_point - self.transform.pos).dot_product(self.axis) <= self.height_applied / 2.0 { // too far from center
-            let normal = intersection_point - (self.base + self.axis * (intersection_point - self.base).dot_product(self.axis)); // Cos(teta) = A/H
+            let mut normal = intersection_point - (self.base + self.axis * (intersection_point - self.base).dot_product(self.axis)); // Cos(teta) = A/H
 
+            let surface_pos = self.surface_position(intersection_point - self.transform.pos);
+            let normal_map = self.normal_map.texture(surface_pos.x, surface_pos.y);
+            normal = intersection_point - (self.base + self.axis * (intersection_point - self.base).dot_product(self.axis)) + Vector {
+                x: (normal_map.r - 128.0) / 128.0,
+                y: (normal_map.g - 128.0) / 128.0,
+                z: (normal_map.b) / 255.0,
+            };
             return Some ( Intersection {
                 intersection_point,
                 normal,
@@ -370,7 +377,7 @@ impl Object for Cone {
         self.height_applied = self.height * self.transform.scale;
     }
 
-    fn intersection(&mut self, ray: Vector, origin: Vector) -> Option<Intersection> {
+    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
         let distance = origin - self.top; // W
 
         let radius_constant = self.radius_applied.powi(2) / self.height_applied.powi(2);
@@ -387,8 +394,15 @@ impl Object for Cone {
         let intersection_point = origin + ray * *smallest_result.unwrap();
         if 0.0 <= (intersection_point - self.base).dot_product(self.axis) && (intersection_point - self.base).dot_product(self.axis) <= self.height_applied { // too far from center*/
             let cos_angle = self.axis.dot_product(self.top - intersection_point);
-            let normal = (intersection_point - (self.top - self.axis * ((self.top - intersection_point).len2() / cos_angle))).normalize();
+            let mut normal = (intersection_point - (self.top - self.axis * ((self.top - intersection_point).len2() / cos_angle))).normalize();
 
+            let surface_pos = self.surface_position(intersection_point - self.transform.pos);
+            let normal_map = self.normal_map.texture(surface_pos.x, surface_pos.y);
+            normal = (intersection_point - (self.base + self.axis * (intersection_point - self.base).dot_product(self.axis))) + Vector {
+                x: (normal_map.r - 128.0) / 128.0,
+                y: (normal_map.g - 128.0) / 128.0,
+                z: (normal_map.b) / 255.0,
+            };
             return Some ( Intersection {
                 intersection_point,
                 normal,
@@ -440,7 +454,7 @@ impl Object for Triangle {
         self.normal = (self.point_b_applied - self.point_a_applied).cross_product(self.point_c_applied - self.point_a_applied).normalize();
     }
 
-    fn intersection(&mut self, ray: Vector, origin: Vector) -> Option<Intersection> {
+    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
         let denom = ray.normalize().dot_product(self.normal);
         if denom == 0.0 {
             return None
@@ -469,10 +483,16 @@ impl Object for Triangle {
         if self.normal.dot_product(cross) < 0.0 {
             return None;
         }
-
+        let surface_pos = self.surface_position(intersection_point - self.transform.pos);
+        let normal_map = self.normal_map.texture(surface_pos.x, surface_pos.y);
+        let normal = (if self.normal.dot_product(origin - intersection_point) < 0.0 { self.normal * -1.0 } else { self.normal }) + Vector {
+            x: (normal_map.r - 128.0) / 128.0,
+            y: (normal_map.g - 128.0) / 128.0,
+            z: (normal_map.b) / 255.0,
+        };
         Some ( Intersection {
             intersection_point,
-            normal: if self.normal.dot_product(origin - intersection_point) < 0.0 { self.normal * -1.0 } else { self.normal },
+            normal: normal,
             object: Some(self),
             light: None,
         })

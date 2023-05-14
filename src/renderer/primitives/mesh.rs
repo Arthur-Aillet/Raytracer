@@ -182,7 +182,7 @@ impl Object for Mesh {
         }
     }
 
-    fn intersection(&mut self, ray: Vector, origin: Vector) -> Option<Intersection> {
+    fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
         let mut first_intersection: Option<Intersection> = None;
 
         for face in &self.triangles {

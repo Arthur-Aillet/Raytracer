@@ -386,6 +386,7 @@ impl Parser {
     }
 
     pub fn get_json(&self, file: &String) -> Option<Value> {
+        print!("{}\n", file);
         let data = fs::read_to_string(file).expect("Unable to read file");
         serde_json::from_str(&data.to_string()).unwrap_or(None)
     }
