@@ -56,6 +56,9 @@ impl Parser {
             super_sampling_precision: json["super_sampling_precision"].as_u64().unwrap_or(10),
             image_buffer_size: json["image_buffer_size"].as_u64().unwrap_or(1),
             reflecion_samples: json["reflection_samples"].as_f64().unwrap_or(16.0),
+            display_normals: json["display_normals"].as_bool().unwrap_or(false),
+            display_location: json["display_location"].as_bool().unwrap_or(false),
+            display_dot_product: json["display_dot_product"].as_bool().unwrap_or(false),
         };
         camera.calculate_lens_distance();
         let vector_director = Vector {x: 0.0, y: camera.lens.distance, z: 0.0};

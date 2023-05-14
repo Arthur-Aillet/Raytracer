@@ -204,11 +204,16 @@ impl Renderer {
         let maybe_intersect = self.found_nearest_intersection(origin, ray);
 
         if let Some(intersect) = maybe_intersect {
-            //return intersect.normal.normalize() * 0.5 + 0.5; // afficher les normales
-            //return intersect.intersection_point * 2.0;
-            //return Vector { x: intersect.normal.normalize().dot_product(ray.normalize()) * 0.5 + 0.5,
-            //                y: intersect.normal.normalize().dot_product(ray.normalize()) * 0.5 + 0.5,
-            //                z: intersect.normal.normalize().dot_product(ray.normalize()) * 0.5 + 0.5};
+            if self.camera.display_normals {
+                return intersect.normal.normalize() * 0.5 + 0.5;
+            } else if self.camera.display_location {
+                return intersect.intersection_point * 0.5 + 0.5;
+            } else if self.camera.display_dot_product {
+                return Vector { x: intersect.normal.normalize().dot_product(ray.normalize()) * 0.5 + 0.5,
+                               y: intersect.normal.normalize().dot_product(ray.normalize()) * 0.5 + 0.5,
+                               z: intersect.normal.normalize().dot_product(ray.normalize()) * 0.5 + 0.5};
+            }
+
             // case of direct intersection with light object
             if let Some(light_touched) = intersect.light {
                 return light_touched.get_color().as_vector();

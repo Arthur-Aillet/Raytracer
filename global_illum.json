@@ -28,7 +28,11 @@
         "reflection_samples": 8,
         "diffuse_samples": 50,
         "threads": 20,
-        "progression": true
+        "progression": true,
+        "aces_tone_mappinng": true,
+        "display_normals": false,
+        "display_location": false,
+        "display_dot_product": false
     },
     "primitives": [
         {
@@ -63,7 +67,8 @@
                 "shininess": 64.0,
                 "metalness": 1.0,
                 "roughness": 0,
-                "transmission": 1.0
+                "transmission": 1.0,
+                "ior": 1.45
             },
             "radius": 0.5
         },
