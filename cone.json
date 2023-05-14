@@ -1,0 +1,105 @@
+{
+  "camera": {
+    "transform": {
+      "pos": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": 1.0
+    },
+    "fov": 90,
+    "diffuse": 0.8,
+    "ambient": 0.5,
+    "specular": 0.3,
+    "smooth_shadow": false,
+    "smooth_shadow_step": 32,
+    "shadow_bias": 1e-7,
+    "threads": 8,
+    "progression": true,
+    "image_buffer_size": 1,
+    "super_sampling": 1,
+    "recursivity": 20,
+    "reflection_samples": 30,
+    "aces_tone_mapping": true
+  },
+  "primitives": [
+      {
+        "type": "cone",
+        "transform": {
+          "pos": {
+            "x": 0,
+            "y": 5,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "scale": 1.0
+        },
+        "texture": {
+          "texture_type": 1,
+          "color": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          },
+          "diffuse": 0.7,
+          "ambient": 0.5,
+          "specular": 0.2,
+          "shininess": 4.0,
+          "metalness": 0.5,
+          "roughness": 0
+        },
+        "radius": 1,
+        "height": 3
+      }
+    ],
+  "lights": {
+    "objects": {
+      "point": [
+        {
+          "transform": {
+            "pos": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+          "scale": 1.0
+          },
+          "color": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          },
+          "strength": 20.0,
+          "falloff": 2,
+          "radius": 0.1,
+          "visible": false
+        }
+      ]
+    },
+    "ambient": [
+      {
+        "color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "strength": 1.0
+      }
+    ]
+  }
+}

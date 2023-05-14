@@ -12,21 +12,27 @@ mod parsing;
 mod renderer_common;
 use nannou::draw::background::new;
 use nannou::prelude::Float;
+
 use serde::{Serialize};
 
 use std::mem;
 use std::cmp;
 use rand::Rng;
 use crate::renderer::primitives::{Object, Intersection};
-use crate::renderer::lights::Light;
 use std::thread;
 use std::time;
 use std::sync::{Arc, Mutex};
 use camera::{Camera};
 use lights::Lights;
 use parsing::Parser;
+use crate::sfml_interface::SfmlInterface;
 use crate::config::Config;
+use crate::ppm_interface::PPMInterface;
 use crate::vectors::Vector;
+use sfml::graphics::{RenderWindow};
+use crate::nannou_interface::Model;
+use crate::sfml_interface::draw_buffer;
+use crate::sfml_interface::poll_event;
 
 #[derive(Serialize)]
 pub struct Renderer {
@@ -242,7 +248,6 @@ impl Renderer {
                     reflection_ray.lerp(&random_vect, intersect.object.unwrap().get_texture().roughness);
                 }
                 let metalness = intersect.object.unwrap().get_texture().metalness;
-
                 let new_color;
                 if intersect.object.unwrap().get_texture().transmission == 0.0 {
                     recursivity.general -= 1;
@@ -256,6 +261,10 @@ impl Renderer {
                     recursivity.transmission = 2;
                     self_color = self.transmission(&intersect, ray, recursivity);
                 }
+            }
+            if intersect.object.unwrap().get_texture().alpha != 1.0 {
+                let new_color = self.get_color_from_ray(intersect.intersection_point + ray * self.camera.shadow_bias, ray, recursivity - 1);
+                return self_color * intersect.object.unwrap().get_texture().alpha + new_color * (1.0 - intersect.object.unwrap().get_texture().alpha);
             }
             self_color
         } else {
@@ -339,7 +348,7 @@ impl Renderer {
         let mut last_progression:u64 = 0;
 
         while last_progression as u64 != self.camera.lens.height as u64 {
-            thread::sleep(time::Duration::from_millis(1000));
+            thread::sleep(time::Duration::from_millis(250));
             let locked_progression = progression.lock().unwrap();
             print!("rendered [");
             for _i in 0..(((*locked_progression + (self.camera.lens.height as u64 * buf_step)) * 100) / (self.camera.lens.height as u64 * buf_size)) {
@@ -353,13 +362,46 @@ impl Renderer {
         }
     }
 
+    pub fn merge_image(&self, config: &Config, last_image: &mut Vec<u8>, new_image: &Vec<u8>, image_nbr: u64) {
+        let buf_size = if config.fast_mode != 0 { 1 } else { self.camera.image_buffer_size };
+
+        for i in 0..last_image.len() {
+            last_image[i] = (((last_image[i] as u64 * (image_nbr - 1)) + new_image[i] as u64) / image_nbr) as u8;
+        }
+    }
+
+    pub fn pull_new_image(&self, config: &Config) -> Vec<u8> {
+        let pixels:Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize]));
+        let pixels_state:Arc<Mutex<Vec<bool>>> = Arc::new(Mutex::new(vec![false; self.camera.lens.height as usize]));
+        let progression:Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
+
+        thread::scope(|scope| {
+            for _ in 0..self.camera.threads {
+                let clone_pixels = Arc::clone(&pixels);
+                let clone_pixels_state = Arc::clone(&pixels_state);
+                let clone_progression = Arc::clone(&progression);
+                scope.spawn(move || {
+                    self.naive_thread_renderer(clone_pixels_state, clone_pixels, clone_progression, &config);
+                });
+            }
+
+            if self.camera.progression == true {
+                self.print_progression(progression, 0, 1);
+            }
+        });
+        let final_pixels = pixels.lock().unwrap().to_vec();
+        final_pixels
+    }
+
     pub fn render(&self, config: &Config) -> Vec<u8> {
         let mut result: Vec<u8> = Vec::new();
         let buf_size = if config.fast_mode != 0 { 1 } else { self.camera.image_buffer_size };
+
         for n in 0..buf_size {
             let pixels:Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize]));
             let pixels_state:Arc<Mutex<Vec<bool>>> = Arc::new(Mutex::new(vec![false; self.camera.lens.height as usize]));
             let progression:Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
+
             thread::scope(|scope| {
                 for _ in 0..self.camera.threads {
                     let clone_pixels = Arc::clone(&pixels);
@@ -371,10 +413,12 @@ impl Renderer {
                 }
 
                 if self.camera.progression == true {
-                    self.print_progression(progression, n, buf_size);
+                    self.print_progression(progression, 0, buf_size);
                 }
             });
+
             let final_pixels = pixels.lock().unwrap().to_vec();
+
             if result.len() != final_pixels.len() {
                 for i in 0..final_pixels.len() {
                     result.push(final_pixels[i]);
@@ -386,6 +430,54 @@ impl Renderer {
             }
         }
         result
+    }
+
+    pub fn grender(&self, config: &Config, window: &mut RenderWindow) -> Vec<u8> {
+        let mut results: Vec<Vec<u8>> = vec![vec![0; (config.width * config.height) as usize]; (config.width * config.height) as usize];
+        let buf_size = if config.fast_mode != 0 { 1 } else { self.camera.image_buffer_size };
+
+        for n in 0..buf_size {
+            let pixels: Arc<Mutex<Vec<u8>>> =
+                Arc::new(Mutex::new(vec![0; (self.camera.lens.height * self.camera.lens.width * 3) as usize]));
+            let pixels_state: Arc<Mutex<Vec<bool>>> =
+                Arc::new(Mutex::new(vec![false; self.camera.lens.height as usize]));
+            let progression: Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
+
+            thread::scope(|scope| {
+                for _ in 0..self.camera.threads {
+                    let clone_pixels = Arc::clone(&pixels);
+                    let clone_pixels_state = Arc::clone(&pixels_state);
+                    let clone_progression = Arc::clone(&progression);
+                    scope.spawn(move || {
+                        self.naive_thread_renderer(clone_pixels_state, clone_pixels, clone_progression, &config);
+                    });
+                }
+
+                if self.camera.progression {
+                    self.print_progression(progression, n, buf_size);
+                }
+            });
+
+            let final_pixels = pixels.lock().unwrap().to_vec();
+
+            if results.is_empty() {
+                results.push(final_pixels);
+            } else {
+                let result = &mut results[0];
+                if result.len() != final_pixels.len() {
+                    result.extend_from_slice(&final_pixels);
+                } else {
+                    for i in 0..result.len() {
+                        result[i] = (((result[i] as u64 * (n - 1)) + final_pixels[i] as u64) / n) as u8;
+                    }
+                }
+            }
+            poll_event(window);
+            PPMInterface::new(&config.save_file).write(config.width, config.height, results[0].clone());
+            draw_buffer(&config, window);
+            window.display();
+        }
+        results.into_iter().flatten().collect()
     }
 
     pub fn get_renderer_from_file(config: &Config) -> Option<Renderer> {
