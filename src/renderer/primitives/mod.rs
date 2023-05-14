@@ -341,7 +341,7 @@ impl Cone {
         }
         Some ( Intersection {
             intersection_point,
-            normal,
+            normal: normal,
             object: Some(self),
             light: None,
         })
@@ -369,7 +369,7 @@ impl Cylinder {
         }
         Some ( Intersection {
             intersection_point,
-            normal,
+            normal: normal,
             object: Some(self),
             light: None,
         })
@@ -425,7 +425,7 @@ impl Object for Cylinder {
             if (intersection_point - origin).len() < smallest_distance {
             return Some ( Intersection {
                 intersection_point,
-                normal,
+                normal: normal,
                 object: Some(self),
                 light: None,
             })} else {
@@ -450,6 +450,7 @@ impl Object for Cylinder {
         }
         found_intersection
     }
+
     fn surface_position(&self, position: Vector) -> Vector {
         let mut rotated_position = position;
 
