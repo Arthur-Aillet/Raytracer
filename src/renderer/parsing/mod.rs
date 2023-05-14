@@ -105,6 +105,8 @@ impl Parser {
             roughness: 0.0,
             sampling_ponderation: 0.0,
             alpha: 0.0,
+            ior: 1.45,
+            transmission: 0.0,
         }
     }
 
