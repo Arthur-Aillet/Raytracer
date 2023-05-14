@@ -28,6 +28,7 @@
     },
     "primitives": [
         {
+            "name": "sphere 1"
             "type": "sphere",
             "transform": {
                 "pos": {
@@ -43,6 +44,7 @@
                 "scale": 1.0
             },
             "texture": {
+                "texture_type": 1,
                 "texture_type": 0,
                 "color": {
                     "r": 255,
@@ -153,6 +155,7 @@
                 "z": 1.0
             },
             "texture": {
+                "texture_type": 1,
                 "texture_type": 0,
                 "color": {
                     "r": 255,

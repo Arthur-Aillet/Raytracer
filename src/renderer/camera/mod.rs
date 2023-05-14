@@ -82,11 +82,7 @@ impl Camera {
             reflecion_samples: 16.0,
         };
         camera.calculate_lens_distance();
-        let vector_director = Vector {x: 0.0, y: camera.lens.distance, z: 0.0};
-        camera.lens.vector_to_first_pixel = Vector {x: camera.transform.pos.x, y: camera.transform.pos.y, z: camera.transform.pos.z};
-        camera.lens.vector_to_first_pixel = camera.lens.vector_to_first_pixel + Vector {x:0.0, y:0.0, z:1.0} * (camera.lens.height as f64 / 2.0);
-        camera.lens.vector_to_first_pixel = camera.lens.vector_to_first_pixel + vector_director;
-        camera.lens.vector_to_first_pixel = camera.lens.vector_to_first_pixel + Vector {x: -1.0, y: 0.0, z: 0.0} * (camera.lens.width as f64 / 2.0);
+        camera.calculate_lens_size();
         camera
     }
 
@@ -122,6 +118,15 @@ impl Camera {
             result.push(self.get_pixel_vector(x as f64 + 0.5, y as f64 + 0.5,));
         }
         result
+    }
+
+    pub(crate) fn calculate_lens_size(&mut self) {
+        let vector_director = Vector {x: 0.0, y: self.lens.distance, z: 0.0};
+
+        self.lens.vector_to_first_pixel = Vector {x: self.transform.pos.x, y: self.transform.pos.y, z: self.transform.pos.z};
+        self.lens.vector_to_first_pixel = self.lens.vector_to_first_pixel + Vector {x:0.0, y:0.0, z:1.0} * (self.lens.height as f64 / 2.0);
+        self.lens.vector_to_first_pixel = self.lens.vector_to_first_pixel + vector_director;
+        self.lens.vector_to_first_pixel = self.lens.vector_to_first_pixel + Vector {x: -1.0, y: 0.0, z: 0.0} * (self.lens.width as f64 / 2.0);
     }
 
     pub(crate) fn calculate_lens_distance(&mut self) {
