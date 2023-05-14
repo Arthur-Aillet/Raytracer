@@ -14,6 +14,7 @@ pub struct Config {
     pub save_file: String,
     pub config_file: String,
     pub graphic: i64,
+    pub layout: bool,
     pub fast_mode: i64,
     pub help: bool,
 }
@@ -42,6 +43,7 @@ impl Config {
             save_file: String::from("scene_example.ppm"),
             config_file: String::from("example.json"),
             graphic: 0,
+            layout: false,
             fast_mode: 0,
             help: false,
         }
@@ -90,6 +92,9 @@ impl Config {
         if let Some(graphic) = Config::get_flag_content(args, "-g") {
             config.graphic = graphic.parse().unwrap_or(config.graphic);
         }
+        if Config::is_flag(args, "--layout") {
+            config.layout = true;
+        }
         if Config::is_flag(args, "--help") {
             config.help = true;
         }
@@ -105,6 +110,7 @@ impl Config {
         println!("|\tsave_file:\t{}", self.save_file);
         println!("|\tconfig_file:\t{}\n|", self.config_file);
         println!("|\tgraphic:\t{}", self.graphic);
+        println!("|\tlayout:\t\t{}", self.layout);
         println!("|\tfast_mode:\t{}", self.fast_mode);
         println!("+----------------------------------------------]");
     }

@@ -49,7 +49,7 @@ fn model(app: &App) -> Model {
     let window = app
         .new_window()
         .title("Rustracer")
-        .size(config.width as u32 + layout.rect.w() as u32, config.height as u32)
+        .size(config.width as u32 + if config.layout == true { layout.rect.w() as u32 } else { 0 }, config.height as u32)
         .view(view)
         .event(event)
         .build()
@@ -132,7 +132,9 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
     } else {
         println!("Invalid Config!")
     }
-    model.layout.display(&_app, &model.draw);
+    if model.config.layout == true {
+        model.layout.display(&_app, &model.draw);
+    }
 }
 
 // Event function for nannou_interface
@@ -191,7 +193,9 @@ pub fn draw_canvas(draw: &Draw, pixels: &[u8], model: &Model, app: &App) {
     if let Ok(img) = image::open(img_path) {
         let texture = wgpu::Texture::from_path(app, img_path).unwrap();
         let mut window_rect = app.window_rect();
-        window_rect.x.end -= model.layout.rect.w();
+        if model.config.layout == true {
+            window_rect.x.end -= model.layout.rect.w();
+        }
         draw.texture(&texture)
             .xy(window_rect.xy())
             .wh(window_rect.wh());
