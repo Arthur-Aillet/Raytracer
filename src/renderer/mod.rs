@@ -89,6 +89,7 @@ impl Renderer {
                 let distance_found = (inters.intersection_point - origin).len();
                 if distance_found < smallest_distance {
                     smallest_distance = distance_found;
+                    inters.normal.normalize();
                     found_intersection = Some(inters);
                 }
             }
@@ -104,6 +105,7 @@ impl Renderer {
                 let distance_found = (inters.intersection_point - origin).len();
                 if distance_found < smallest_distance {
                     smallest_distance = distance_found;
+                    inters.normal.normalize();
                     found_intersection = Some(inters);
                 }
             }
@@ -158,26 +160,26 @@ impl Renderer {
 
     fn refract(&self, normal: Vector, incident: Vector, ior1: f64, ior2: f64) -> Option<Vector> {
         let ratio = ior1 / ior2;
-        let cos_i = normal.normalize().dot_product(incident.normalize()) * -1.0;
+        let cos_i = normal.dot_product(incident) * -1.0;
         let sin_t2 = ratio * ratio * (1.0 - cos_i * cos_i);
         if sin_t2 > 1.0 {
             return None;
         }
         let cos_t = (1.0 - sin_t2).sqrt();
-        let final_vect = (incident.normalize() * ratio + normal.normalize() * (ratio * cos_i - cos_t)).normalize();
+        let final_vect = (incident * ratio + normal * (ratio * cos_i - cos_t)).normalize();
         return Some(final_vect);
     }
 
     fn transmission(&self, intersect: &Intersection, incident_ray: Vector, recursivity: &mut Recursivity) -> Vector {
-        let normal = intersect.normal.normalize();
+        let normal = intersect.normal;
         let other_ior = 1.0;
         let object_ior = intersect.object.unwrap().get_texture().ior;
 
         let maybe_new_ray;
         if recursivity.transmission <= 1 {
-            maybe_new_ray = self.refract(normal.normalize() * -1.0, incident_ray.normalize(), object_ior, other_ior);
+            maybe_new_ray = self.refract(normal * -1.0, incident_ray, object_ior, other_ior);
         } else {
-            maybe_new_ray = self.refract(normal.normalize(), incident_ray.normalize(), other_ior, object_ior);
+            maybe_new_ray = self.refract(normal, incident_ray, other_ior, object_ior);
         }
         if let Some(new_ray) = maybe_new_ray {
             let maybe_intersect = self.found_nearest_intersection(intersect.intersection_point + new_ray * self.camera.shadow_bias, new_ray);
@@ -207,15 +209,10 @@ impl Renderer {
                z: 0.0,
            }
         }
+        ray.normalize();
         let maybe_intersect = self.found_nearest_intersection(origin, ray);
 
         if let Some(intersect) = maybe_intersect {
-            //return intersect.normal.normalize() * 0.5 + 0.5; // afficher les normales
-            //return intersect.intersection_point * 2.0;
-            //return Vector { x: intersect.normal.normalize().dot_product(ray.normalize()) * 0.5 + 0.5,
-            //                y: intersect.normal.normalize().dot_product(ray.normalize()) * 0.5 + 0.5,
-            //                z: intersect.normal.normalize().dot_product(ray.normalize()) * 0.5 + 0.5};
-            // case of direct intersection with light object
             if let Some(light_touched) = intersect.light {
                 return light_touched.get_color().as_vector();
             }
@@ -243,7 +240,7 @@ impl Renderer {
                     y: random_a.sin() * random_b.cos(),
                     z: random_b.sin()
                 };
-                let mut reflection_ray = (ray.normalize() - (intersect.normal.normalize() * 2.0 * intersect.normal.normalize().dot_product(ray.normalize()))).normalize();
+                let mut reflection_ray = (ray - (intersect.normal * 2.0 * intersect.normal.dot_product(ray))).normalize();
                 if intersect.object.unwrap().get_texture().roughness != 0.0 {
                     reflection_ray.lerp(&random_vect, intersect.object.unwrap().get_texture().roughness);
                 }

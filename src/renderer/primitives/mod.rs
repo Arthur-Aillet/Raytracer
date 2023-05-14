@@ -117,7 +117,7 @@ impl Object for Sphere {
                 z: origin.z + ray.z * smallest_result.unwrap(),
             };
             Some ( Intersection {
-                normal: (point - self.transform.pos).normalize(),
+                normal: point - self.transform.pos,
                 intersection_point: point,
                 object: Some(self),
                 light: None
@@ -206,7 +206,7 @@ impl Cone {
         }
         Some ( Intersection {
             intersection_point,
-            normal,
+            normal: normal,
             object: Some(self),
             light: None,
         })
@@ -234,7 +234,7 @@ impl Cylinder {
         }
         Some ( Intersection {
             intersection_point,
-            normal,
+            normal: normal,
             object: Some(self),
             light: None,
         })
@@ -274,7 +274,7 @@ impl Object for Cylinder {
 
             return Some ( Intersection {
                 intersection_point,
-                normal,
+                normal: normal,
                 object: Some(self),
                 light: None,
             })
@@ -287,6 +287,7 @@ impl Object for Cylinder {
         }
         None
     }
+
     fn surface_position(&self, position: Vector) -> Vector {
         let mut rotated_position = position;
 
@@ -340,7 +341,7 @@ impl Object for Cone {
 
             return Some ( Intersection {
                 intersection_point,
-                normal,
+                normal: normal,
                 object: Some(self),
                 light: None,
             });
