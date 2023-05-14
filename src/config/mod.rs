@@ -52,10 +52,10 @@ impl Config {
     fn get_flag_content(args: &[String], flag: &str) -> Option<String> {
         for (i, arg) in args.iter().enumerate() {
             if arg == flag {
-                if i + 1 < args.len() {
-                    return Some(args[i + 1].clone());
+                return if i + 1 < args.len() {
+                    Some(args[i + 1].clone())
                 } else {
-                    return None;
+                    None
                 }
             }
         }
