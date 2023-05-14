@@ -101,7 +101,7 @@
           "metalness": 0.5,
           "roughness": 0
         },
-        "radius": 100
+        "radius": 200
       },
       {
         "name": "sphere 3",

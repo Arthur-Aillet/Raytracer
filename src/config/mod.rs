@@ -41,7 +41,7 @@ impl Config {
             width: 960,
             height: 540,
             save_file: String::from("scene_example.ppm"),
-            config_file: String::from("example.json"),
+            config_file: String::from("config_files/example.json"),
             graphic: 0,
             layout: false,
             fast_mode: 0,

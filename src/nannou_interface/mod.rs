@@ -9,10 +9,7 @@ use std::env;
 use nannou::prelude::*;
 use nannou::Frame;
 use nannou::App;
-use nannou::image::{open, DynamicImage};
 use nannou::image;
-use nannou::color::chromatic_adaptation::AdaptInto;
-use nannou::event;
 
 use crate::config;
 use crate::renderer::Renderer;
