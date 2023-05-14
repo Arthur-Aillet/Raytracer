@@ -37,6 +37,7 @@ pub struct Model {
     pub img_buf: String,
     pub camera_transform: Transform,
     pub fov: i64,
+    pub exit: bool,
 }
 
 // model function for nannou_interface
@@ -70,6 +71,7 @@ fn model(app: &App) -> Model {
         img_buf: imageBuffer.to_string(),
         camera_transform: Transform::default(),
         fov: renderer.camera.fov,
+        exit: false,
     }
 }
 
@@ -115,6 +117,9 @@ fn merge_interactions_layout(app: &App, model: &mut Model) {
         if model.config.fast_mode > 0 {
             fast_to_fancy(model);
         }
+    }
+    if model.layout.get_buttons_interactions(app, "exit".to_string()) == true {
+        std::process::exit(0);
     }
     if model.layout.get_sliders_interactions(app, "fov".to_string()) != -1 {
         model.fov = model.layout.get_sliders_interactions(app, "fov".to_string());

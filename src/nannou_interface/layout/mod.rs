@@ -48,6 +48,7 @@ impl Layout {
         let mut buttons = vec![
             Button::new("fast".to_string(), width - 260.0, height - 50.0, 120.0, 50.0, String::from("FAST")),
             Button::new("fancy".to_string(), width - 100.0, height - 50.0, 120.0, 50.0, String::from("FANCY")),
+            Button::new("exit".to_string(), width - 180.0, -height + 50.0, 280.0, 50.0, String::from("EXIT")),
         ];
         let mut sliders = vec![
             Slider::new("fov".to_string(), width - 180.0, height - 120.0, 280.0, 50.0, String::from("FOV"), renderer.camera.fov, 0, 180),
