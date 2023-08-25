@@ -7,56 +7,32 @@
 
 use raytracer::vectors;
 use vectors::resolve_quadratic_equation;
-//use vectors::Segment;
 use vectors::Vector;
 
 #[cfg(test)]
 mod tests {
     use super::*;
-/*
+
     #[test]
     fn test_add() {
-        let vec1 = Segment {
-            origin: Vector {
-                x: 1.0,
-                y: 2.0,
-                z: 3.0,
-            },
-            end: Vector {
-                x: 4.0,
-                y: 5.0,
-                z: 6.0,
-            },
+        let fst = Vector {
+            x: 1.0,
+            y: 2.0,
+            z: 3.0,
+        };
+        let snd = Vector {
+            x: 4.0,
+            y: 5.0,
+            z: 6.0,
         };
 
-        let vec2 = Segment {
-            origin: Vector {
-                x: 7.0,
-                y: 8.0,
-                z: 9.0,
-            },
-            end: Vector {
-                x: 10.0,
-                y: 11.0,
-                z: 12.0,
-            },
-        };
-
-        let result = vec1.clone() + vec2.clone();
+        let result = fst + snd;
 
         assert_eq!(
-            result.origin,
+            result,
             Vector {
-                x: 1.0,
-                y: 2.0,
-                z: 3.0,
-            }
-        );
-        assert_eq!(
-            result.end,
-            Vector {
-                x: 7.0,
-                y: 8.0,
+                x: 5.0,
+                y: 7.0,
                 z: 9.0,
             }
         );
@@ -64,29 +40,28 @@ mod tests {
 
     #[test]
     fn test_rotate() {
-        let mut vec = Segment {
-            origin: Vector {
-                x: 1.0,
-                y: 2.0,
-                z: 3.0,
-            },
-            end: Vector {
-                x: 4.0,
-                y: 5.0,
-                z: 6.0,
-            },
+        let mut vec = Vector {
+            x: 1.,
+            y: 2.,
+            z: 3.,
         };
         vec.rotate(0.0, 0.0, 90.0);
+        assert_eq!(vec.x as f32, -2.);
+        assert_eq!(vec.y as f32, 1.);
+        assert_eq!(vec.z as f32, 3.);
+        /* float error far in the decimals, could be neglected
+        // { x: -2.0, y: 1.0000000000000002, z: 3.0 }
         assert_eq!(
-            vec.end,
+            vec,
             Vector {
-                x: -5.0,
-                y: 4.0,
-                z: 6.0,
+                x: -2.0,
+                y: 1.0,
+                z: 3.0,
             }
         );
+        */
     }
- */
+
     #[test]
     fn test_dot_product() {
         let p1 = Vector {
