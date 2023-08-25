@@ -50,14 +50,14 @@ pub trait Light: erased_serde::Serialize {
         intersect: &Intersection,
         normal_vector: Vector,
         camera: Camera,
-        primitives: &Vec<Box<dyn Object + Send + Sync>>,
+        primitives: &[Box<dyn Object + Send + Sync>],
     ) -> bool;
     fn calculate_light(
         &self,
         intersect: &Intersection,
         camera_to_pixel: Vector,
         camera: Camera,
-        primitives: &Vec<Box<dyn Object + Send + Sync>>,
+        primitives: &[Box<dyn Object + Send + Sync>],
     ) -> Vector;
 }
 
@@ -111,13 +111,11 @@ impl Light for Point {
             .filter(|number| **number > 0.0)
             .min_by(|a, b| a.partial_cmp(b).unwrap());
 
-        if smallest_result.is_none() {
-            None
-        } else {
+        if let Some(smallest) = smallest_result {
             let point = Vector {
-                x: origin.x + ray.x * smallest_result.unwrap(),
-                y: origin.y + ray.y * smallest_result.unwrap(),
-                z: origin.z + ray.z * smallest_result.unwrap(),
+                x: origin.x + ray.x * smallest,
+                y: origin.y + ray.y * smallest,
+                z: origin.z + ray.z * smallest,
             };
             Some(Intersection {
                 normal: point - self.transform.pos,
@@ -125,6 +123,8 @@ impl Light for Point {
                 object: None,
                 light: Some(self),
             })
+        } else {
+            None
         }
     }
     fn light_is_intersected(
@@ -133,7 +133,7 @@ impl Light for Point {
         intersect: &Intersection,
         normal_vector: Vector,
         camera: Camera,
-        primitives: &Vec<Box<dyn Object + Send + Sync>>,
+        primitives: &[Box<dyn Object + Send + Sync>],
     ) -> bool {
         for object_current in primitives.iter() {
             match object_current.intersection(
@@ -157,7 +157,7 @@ impl Light for Point {
         intersect: &Intersection,
         camera_to_pixel: Vector,
         camera: Camera,
-        primitives: &Vec<Box<dyn Object + Send + Sync>>,
+        primitives: &[Box<dyn Object + Send + Sync>],
     ) -> Vector {
         let normal_vector = intersect.normal.normalize();
         let light_vector = (self.get_transform().pos - intersect.intersection_point).normalize();
@@ -269,21 +269,20 @@ impl Light for Directional {
             .filter(|number| **number > 0.0)
             .min_by(|a, b| a.partial_cmp(b).unwrap());
 
-        if smallest_result.is_none() {
-            None
-        } else {
+        if let Some(smallest) = smallest_result {
             let point = Vector {
-                x: origin.x + ray.x * smallest_result.unwrap(),
-                y: origin.y + ray.y * smallest_result.unwrap(),
-                z: origin.z + ray.z * smallest_result.unwrap(),
+                x: origin.x + ray.x * smallest,
+                y: origin.y + ray.y * smallest,
+                z: origin.z + ray.z * smallest,
             };
-            Some(Intersection {
+            return Some(Intersection {
                 normal: point - self.transform.pos,
                 intersection_point: point,
                 object: None,
                 light: Some(self),
-            })
+            });
         }
+        None
     }
 
     fn light_is_intersected(
@@ -292,7 +291,7 @@ impl Light for Directional {
         intersect: &Intersection,
         normal_vector: Vector,
         camera: Camera,
-        primitives: &Vec<Box<dyn Object + Send + Sync>>,
+        primitives: &[Box<dyn Object + Send + Sync>],
     ) -> bool {
         for object_current in primitives.iter() {
             match object_current.intersection(
@@ -316,7 +315,7 @@ impl Light for Directional {
         intersect: &Intersection,
         camera_to_pixel: Vector,
         camera: Camera,
-        primitives: &Vec<Box<dyn Object + Send + Sync>>,
+        primitives: &[Box<dyn Object + Send + Sync>],
     ) -> Vector {
         let normal_vector = intersect.normal.normalize();
         let mut light_uncovered = 1.0;

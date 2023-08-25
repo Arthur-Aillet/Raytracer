@@ -74,10 +74,7 @@ impl Button {
 impl Slider {
     pub fn new(
         name: String,
-        x: f32,
-        y: f32,
-        w: f32,
-        h: f32,
+        dimensions: Rect,
         text: String,
         value: i64,
         min: i64,
@@ -85,7 +82,7 @@ impl Slider {
     ) -> Slider {
         Slider {
             name,
-            rect: Rect::from_x_y_w_h(x, y, w, h),
+            rect: dimensions,
             text,
             min,
             max,

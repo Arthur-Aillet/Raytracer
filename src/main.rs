@@ -17,7 +17,7 @@ mod vectors;
 use std::env;
 
 fn print_help() {
-    let config = config::Config::new();
+    let config = config::Config::default();
     println!("USAGE: ./rustracer [OPTIONS]\n");
     println!("OPTIONS:");
     println!("\t--help\t\t\tDisplay this help");

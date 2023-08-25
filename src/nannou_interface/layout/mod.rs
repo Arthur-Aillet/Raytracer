@@ -54,10 +54,7 @@ impl Layout {
         ];
         let sliders = vec![Slider::new(
             "fov".to_string(),
-            width - 180.0,
-            height - 120.0,
-            280.0,
-            50.0,
+            Rect::from_x_y_w_h(width - 180.0, height - 120.0, 280.0, 50.0),
             String::from("FOV : "),
             renderer.camera.fov,
             0,

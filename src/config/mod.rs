@@ -30,8 +30,8 @@ fn config_is_correct(config: &mut Config) -> bool {
     true
 }
 
-impl Config {
-    pub fn new() -> Config {
+impl Default for Config {
+    fn default() -> Self {
         Config {
             width: 960,
             height: 540,
@@ -43,7 +43,9 @@ impl Config {
             help: false,
         }
     }
+}
 
+impl Config {
     fn get_flag_content(args: &[String], flag: &str) -> Option<String> {
         for (i, arg) in args.iter().enumerate() {
             if arg == flag {
@@ -67,7 +69,7 @@ impl Config {
     }
 
     pub fn from_args(args: &[String]) -> Config {
-        let mut config = Config::new();
+        let mut config = Config::default();
 
         if let Some(width) = Config::get_flag_content(args, "-w") {
             config.width = width.parse().unwrap_or(config.width);

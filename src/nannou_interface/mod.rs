@@ -180,9 +180,8 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
 // Event function for nannou_interface
 
 fn event(_app: &App, model: &mut Model, event: WindowEvent) {
-    match event {
-        // Gérer les événements de la fenêtre comme la souris, le clavier, le redimensionnement, etc. ici.
-        KeyPressed(key) => {
+    // Gérer les événements de la fenêtre comme la souris, le clavier, le redimensionnement, etc. ici.
+    if let KeyPressed(key) = event {
             if key == Key::G {
                 if model.config.fast_mode >= 1 {
                     fast_to_fancy(model);
@@ -236,8 +235,6 @@ fn event(_app: &App, model: &mut Model, event: WindowEvent) {
                     model.last_image.clone(),
                 );
             }
-        }
-        _ => {}
     }
     merge_interactions_layout(_app, model);
 }

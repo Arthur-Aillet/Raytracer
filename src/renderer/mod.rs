@@ -110,7 +110,7 @@ impl Renderer {
         self_color
     }
 
-    fn combine_pixel(&self, samples: &Vec<Vector>) -> Vector {
+    fn combine_pixel(&self, samples: &[Vector]) -> Vector {
         let mut result: Vector = samples[0];
 
         for (index, &sample) in samples.iter().enumerate().skip(1) {
@@ -486,7 +486,7 @@ impl Renderer {
     pub fn merge_image(
         &self,
         last_image: &mut Vec<u8>,
-        new_image: &Vec<u8>,
+        new_image: &[u8],
         image_nbr: u64,
     ) {
         for i in 0..last_image.len() {

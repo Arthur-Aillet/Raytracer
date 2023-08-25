@@ -604,15 +604,12 @@ impl Parser {
     }
 
     pub fn get_ambient_from_json(&self, json: &Value) -> Ambient {
-        let color_val: Color;
-
-        if json["color"].is_object() {
-            color_val = self.get_color_from_json(&json["color"]);
-        } else {
-            color_val = Color::default();
-        }
         Ambient {
-            color: color_val,
+            color: if json["color"].is_object() {
+                self.get_color_from_json(&json["color"])
+            } else {
+                Color::default()
+            },
             strength: json["strength"].as_f64().unwrap_or(80.0),
         }
     }
@@ -629,15 +626,12 @@ impl Parser {
     }
 
     pub fn get_lights_from_json(&self, json: &Value) -> Lights {
-        let objects: Vec<Box<dyn Light + Send + Sync>>;
-
-        if json["objects"].is_object() {
-            objects = self.get_object_lights_from_json(&json["objects"]);
-        } else {
-            objects = Vec::new()
-        }
         Lights {
-            lights: objects,
+            lights: if json["objects"].is_object() {
+                self.get_object_lights_from_json(&json["objects"])
+            } else {
+                Vec::new()
+            },
             ambient: self.get_ambients_from_json(json),
         }
     }

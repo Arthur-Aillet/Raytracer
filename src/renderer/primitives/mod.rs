@@ -144,10 +144,7 @@ impl Object for Parent {
         let mut smallest_distance: f64 = f64::INFINITY;
 
         for object in self.children.iter() {
-            let intersect = object.intersection(ray, origin);
-
-            if intersect.is_some() {
-                let inters = intersect.unwrap();
+            if let Some(inters) = object.intersection(ray, origin) {
                 let distance_found = (inters.intersection_point - origin).len();
                 if distance_found < smallest_distance {
                     smallest_distance = distance_found;
@@ -196,10 +193,7 @@ impl Object for Sphere {
         let mut smallest_distance: f64 = f64::INFINITY;
 
         for object in self.children.iter() {
-            let intersect = object.intersection(ray, origin);
-
-            if intersect.is_some() {
-                let inters = intersect.unwrap();
+            if let Some(inters) = object.intersection(ray, origin) {
                 let distance_found = (inters.intersection_point - origin).len();
                 if distance_found < smallest_distance {
                     smallest_distance = distance_found;
@@ -219,25 +213,23 @@ impl Object for Sphere {
             .filter(|number| **number > 0.0)
             .min_by(|a, b| a.partial_cmp(b).unwrap());
 
-        if smallest_result.is_none() {
-            found_intersection
-        } else {
+        if let Some(smallest) = smallest_result {
             let point = Vector {
-                x: origin.x + ray.x * smallest_result.unwrap(),
-                y: origin.y + ray.y * smallest_result.unwrap(),
-                z: origin.z + ray.z * smallest_result.unwrap(),
+                x: origin.x + ray.x * smallest,
+                y: origin.y + ray.y * smallest,
+                z: origin.z + ray.z * smallest,
             };
+
             if (point - origin).len() < smallest_distance {
-                Some(Intersection {
+                return Some(Intersection {
                     normal: point - self.transform.pos,
                     intersection_point: point,
                     object: Some(self),
                     light: None,
-                })
-            } else {
-                found_intersection
+                });
             }
         }
+        found_intersection
     }
 
     fn surface_position(&self, position: Vector) -> Vector {
@@ -315,10 +307,7 @@ impl Object for Plane {
         let mut smallest_distance: f64 = f64::INFINITY;
 
         for object in self.children.iter() {
-            let intersect = object.intersection(ray, origin);
-
-            if intersect.is_some() {
-                let inters = intersect.unwrap();
+            if let Some(inters) = object.intersection(ray, origin) {
                 let distance_found = (inters.intersection_point - origin).len();
                 if distance_found < smallest_distance {
                     smallest_distance = distance_found;
@@ -488,10 +477,7 @@ impl Object for Cylinder {
         let mut smallest_distance: f64 = f64::INFINITY;
 
         for object in self.children.iter() {
-            let intersect = object.intersection(ray, origin);
-
-            if intersect.is_some() {
-                let inters = intersect.unwrap();
+            if let Some(inters) = object.intersection(ray, origin) {
                 let distance_found = (inters.intersection_point - origin).len();
                 if distance_found < smallest_distance {
                     smallest_distance = distance_found;
@@ -636,10 +622,7 @@ impl Object for Cone {
         let mut smallest_distance: f64 = f64::INFINITY;
 
         for object in self.children.iter() {
-            let intersect = object.intersection(ray, origin);
-
-            if intersect.is_some() {
-                let inters = intersect.unwrap();
+            if let Some(inters) = object.intersection(ray, origin) {
                 let distance_found = (inters.intersection_point - origin).len();
                 if distance_found < smallest_distance {
                     smallest_distance = distance_found;

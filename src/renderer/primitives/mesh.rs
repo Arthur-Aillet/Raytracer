@@ -190,39 +190,37 @@ impl Mesh {
         if let Ok(obj) = file {
             let mut vertexes: Vec<Vector> = Vec::new();
 
-            for option_line in BufReader::new(obj).lines() {
-                if let Ok(line) = option_line {
-                    if line.chars().all(|x| x.is_ascii_whitespace())
-                        || line.starts_with('#')
-                        || line.starts_with("o ")
-                        || line.starts_with("vn ")
-                        || line.starts_with("vt ")
-                        || line.starts_with("s ")
-                        || line.starts_with("mtllib ")
-                    {
-                        continue;
-                    } else if line.starts_with("v ") {
-                        if let Some(vertex) = self.parse_vertex(line) {
-                            vertexes.push(vertex);
-                        } else {
-                            println!("Invalid vertexes in \"{}\" !", file_name);
-                            return;
-                        }
-                    } else if line.starts_with("f ") {
-                        let face_parsed = self.parse_face(line, &vertexes);
-                        if let Some(face_fst) = face_parsed.0 {
-                            self.triangles.push(face_fst);
-                            if let Some(face_snd) = face_parsed.1 {
-                                self.triangles.push(face_snd);
-                            }
-                        } else {
-                            println!("Invalid face in \"{}\" !", file_name);
-                            return;
-                        }
+            for line in BufReader::new(obj).lines().flatten() {
+                if line.chars().all(|x| x.is_ascii_whitespace())
+                    || line.starts_with('#')
+                    || line.starts_with("o ")
+                    || line.starts_with("vn ")
+                    || line.starts_with("vt ")
+                    || line.starts_with("s ")
+                    || line.starts_with("mtllib ")
+                {
+                    continue;
+                } else if line.starts_with("v ") {
+                    if let Some(vertex) = self.parse_vertex(line) {
+                        vertexes.push(vertex);
                     } else {
-                        println!("Invalid \"{}\" mesh file!", file_name);
+                        println!("Invalid vertexes in \"{}\" !", file_name);
                         return;
                     }
+                } else if line.starts_with("f ") {
+                    let face_parsed = self.parse_face(line, &vertexes);
+                    if let Some(face_fst) = face_parsed.0 {
+                        self.triangles.push(face_fst);
+                        if let Some(face_snd) = face_parsed.1 {
+                            self.triangles.push(face_snd);
+                        }
+                    } else {
+                        println!("Invalid face in \"{}\" !", file_name);
+                        return;
+                    }
+                } else {
+                    println!("Invalid \"{}\" mesh file!", file_name);
+                    return;
                 }
             }
         } else {
@@ -245,10 +243,7 @@ impl Object for Mesh {
         let mut smallest_distance: f64 = f64::INFINITY;
 
         for object in self.children.iter() {
-            let intersect = object.intersection(ray, origin);
-
-            if intersect.is_some() {
-                let inters = intersect.unwrap();
+            if let Some(inters) = object.intersection(ray, origin) {
                 let distance_found = (inters.intersection_point - origin).len();
                 if distance_found < smallest_distance {
                     smallest_distance = distance_found;

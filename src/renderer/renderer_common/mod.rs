@@ -41,8 +41,8 @@ pub struct Transform {
     pub scale: f64,
 }
 
-impl Transform {
-    pub fn default() -> Transform {
+impl Default for Transform {
+    fn default() -> Transform {
         Transform {
             pos: Vector {
                 x: 0.0,
@@ -105,15 +105,17 @@ pub struct Color {
     pub b: f64,
 }
 
-impl Color {
-    pub fn default() -> Color {
+impl Default for Color {
+    fn default() -> Color {
         Color {
             r: 255.0,
             g: 255.0,
             b: 255.0,
         }
     }
+}
 
+impl Color {
     pub fn normal_map_default() -> Color {
         Color {
             r: 128.0,
@@ -138,8 +140,8 @@ pub struct Image {
     pub height: i64,
 }
 
-impl Image {
-    pub fn default() -> Image {
+impl Default for Image {
+    fn default() -> Image {
         Image {
             file: "missing_image.ppm".to_string(),
             height: 0,
@@ -168,8 +170,8 @@ pub struct Texture {
     pub alpha: f64,
 }
 
-impl Texture {
-    pub fn default() -> Texture {
+impl Default for Texture {
+    fn default() -> Texture {
         Texture {
             texture_type: TexturesTypes::Color as u64,
             color: Color::default(),
@@ -189,7 +191,9 @@ impl Texture {
             alpha: 1.0,
         }
     }
+}
 
+impl Texture {
     pub fn normal_map_default() -> Texture {
         Texture {
             texture_type: TexturesTypes::Color as u64,
