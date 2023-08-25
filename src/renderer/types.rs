@@ -312,7 +312,7 @@ impl Texture {
         let img_y = (((1.0 - v) * self.mod2 % 1.0) * self.image.height as f64) as usize;
         let mut reader = Reader::open(&self.image.file)
             .unwrap_or(
-                Reader::open("missing_texture.ppm").expect("missing missing texture texture\n"),
+                Reader::open("assets/missing_texture.ppm").expect("missing missing texture texture\n"),
             )
             .decode()
             .expect("file invalid\n");

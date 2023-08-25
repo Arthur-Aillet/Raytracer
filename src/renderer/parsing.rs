@@ -105,11 +105,11 @@ impl Parser {
     pub fn get_image_from_json(&self, json: &Value) -> Image {
         let filename = json["image"]
             .as_str()
-            .unwrap_or("missing_texture.ppm")
+            .unwrap_or("assets/missing_texture.ppm")
             .to_string();
         let mut reader = Reader::open(&filename)
             .unwrap_or(
-                Reader::open("missing_texture.ppm").expect("missing missing texture texture\n"),
+                Reader::open("assets/missing_texture.ppm").expect("missing missing texture texture\n"),
             )
             .decode()
             .expect("file invalid\n");
