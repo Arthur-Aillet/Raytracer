@@ -145,8 +145,7 @@ impl Slider {
             .color(nannou::color::IntoLinSrgba::<f32>::into_lin_srgba(
                 nannou::color::rgb_u32(0xFFFFFF),
             ));
-        self.value = (((cursor_rect.x() - (self.rect.x() - (self.rect.w() / 2.0)))
-            / self.rect.w())
+        self.value = (((cursor_rect.x() - (self.rect.x() - (self.rect.w() / 2.0))) / self.rect.w())
             * (self.max - self.min) as f32
             + self.min as f32) as i64;
         draw.text(self.value.to_string().as_str())

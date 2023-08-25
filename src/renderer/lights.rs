@@ -7,8 +7,8 @@
 
 use super::camera::Camera;
 use super::primitives::{Intersection, Object};
-use super::renderer_common::{Color, Transform};
-use crate::vectors::{resolve_quadratic_equation, Vector};
+use super::types::{Color, Transform};
+use crate::vector::{resolve_quadratic_equation, Vector};
 use erased_serde::serialize_trait_object;
 use serde::{Deserialize, Serialize};
 
@@ -65,39 +65,51 @@ impl Light for Point {
     fn move_obj(&mut self, offset: Transform) {
         self.transform = self.transform + offset
     }
+
     fn get_transform(&self) -> Transform {
         self.transform
     }
+
     fn set_transform(&mut self, new: Transform) {
         self.transform = new
     }
+
     fn get_color(&self) -> Color {
         self.color
     }
+
     fn get_visible(&self) -> bool {
         self.visible
     }
+
     fn set_color(&mut self, new: Color) {
         self.color = new
     }
+
     fn get_strength(&self) -> f64 {
         self.strength
     }
+
     fn set_strength(&mut self, new: f64) {
         self.strength = new
     }
+
     fn get_radius(&self) -> f64 {
         self.radius
     }
+
     fn set_radius(&mut self, new: f64) {
         self.radius = new
     }
+
     fn get_falloff(&self) -> i32 {
         self.falloff
     }
+
     fn set_falloff(&mut self, new: i32) {
         self.falloff = new
     }
+
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
         let diff = origin - self.transform.pos;
         let result = resolve_quadratic_equation(
@@ -127,6 +139,7 @@ impl Light for Point {
             None
         }
     }
+
     fn light_is_intersected(
         &self,
         light_vector: Vector,
@@ -152,6 +165,7 @@ impl Light for Point {
         }
         false
     }
+
     fn calculate_light(
         &self,
         intersect: &Intersection,
@@ -227,34 +241,44 @@ impl Light for Directional {
     fn move_obj(&mut self, offset: Transform) {
         self.transform = self.transform + offset
     }
+
     fn get_transform(&self) -> Transform {
         self.transform
     }
+
     fn set_transform(&mut self, new: Transform) {
         self.transform = new
     }
+
     fn get_color(&self) -> Color {
         self.color
     }
+
     fn get_visible(&self) -> bool {
         self.visible
     }
+
     fn set_color(&mut self, new: Color) {
         self.color = new
     }
+
     fn get_strength(&self) -> f64 {
         self.strength
     }
+
     fn set_strength(&mut self, new: f64) {
         self.strength = new
     }
+
     fn get_radius(&self) -> f64 {
         1.0
     }
+
     fn set_radius(&mut self, _new: f64) {}
     fn get_falloff(&self) -> i32 {
         0
     }
+
     fn set_falloff(&mut self, _new: i32) {}
     fn intersection(&self, ray: Vector, origin: Vector) -> Option<Intersection> {
         let diff = origin - self.transform.pos;
@@ -310,6 +334,7 @@ impl Light for Directional {
         }
         false
     }
+
     fn calculate_light(
         &self,
         intersect: &Intersection,

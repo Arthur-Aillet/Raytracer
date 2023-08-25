@@ -5,12 +5,12 @@
 // camera
 //
 
-use crate::vectors;
+use crate::vector;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-use super::renderer_common::Transform;
-use vectors::Vector;
+use super::types::Transform;
+use vector::Vector;
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub struct Lens {

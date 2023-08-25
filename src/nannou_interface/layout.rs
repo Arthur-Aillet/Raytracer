@@ -3,12 +3,10 @@
 // File description:
 // layout nannou
 
-mod components;
-
 use nannou::prelude::*;
 
 use crate::config::Config;
-use crate::nannou_interface::layout::components::{Button, Slider, Text};
+use crate::nannou_interface::components::{Button, Slider, Text};
 use crate::renderer::Renderer;
 
 pub struct Layout {
@@ -135,7 +133,10 @@ impl Layout {
 
     pub fn get_buttons_interactions(&self, app: &App, name: String) -> bool {
         for button in &self.buttons {
-            if button.name == name && button.rect.contains(app.mouse.position()) && app.mouse.buttons.left().is_down() {
+            if button.name == name
+                && button.rect.contains(app.mouse.position())
+                && app.mouse.buttons.left().is_down()
+            {
                 return true;
             }
         }

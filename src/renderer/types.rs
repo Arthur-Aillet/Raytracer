@@ -5,12 +5,12 @@
 // common structures to the renderer
 //
 
-use crate::vectors;
+use crate::vector;
 use nannou::image::io::Reader;
 
 use serde::{Deserialize, Serialize};
 use std::ops::{Add, Mul, Sub};
-use vectors::Vector;
+use vector::Vector;
 
 #[derive(Debug, Clone, Copy)]
 pub enum TexturesTypes {

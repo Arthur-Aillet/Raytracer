@@ -5,9 +5,9 @@
 // vector tests
 //
 
-use raytracer::vectors;
-use vectors::resolve_quadratic_equation;
-use vectors::Vector;
+use raytracer::vector;
+use vector::resolve_quadratic_equation;
+use vector::Vector;
 
 #[cfg(test)]
 mod tests {

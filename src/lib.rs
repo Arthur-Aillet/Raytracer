@@ -3,4 +3,4 @@ pub mod matrix;
 pub mod nannou_interface;
 pub mod ppm_interface;
 pub mod renderer;
-pub mod vectors;
+pub mod vector;

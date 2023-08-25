@@ -12,7 +12,7 @@ mod matrix;
 mod nannou_interface;
 mod ppm_interface;
 mod renderer;
-mod vectors;
+mod vector;
 
 use std::env;
 

@@ -9,11 +9,11 @@ mod camera;
 mod lights;
 mod parsing;
 mod primitives;
-pub mod renderer_common;
+pub mod types;
 
 use crate::config::Config;
 use crate::renderer::primitives::{Intersection, Object};
-use crate::vectors::Vector;
+use crate::vector::Vector;
 use camera::Camera;
 use lights::Lights;
 use parsing::Parser;
@@ -22,7 +22,7 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time;
 
-use self::renderer_common::Texture;
+use self::types::Texture;
 
 pub struct Renderer {
     pub camera: Camera,
@@ -483,12 +483,7 @@ impl Renderer {
         }
     }
 
-    pub fn merge_image(
-        &self,
-        last_image: &mut Vec<u8>,
-        new_image: &[u8],
-        image_nbr: u64,
-    ) {
+    pub fn merge_image(&self, last_image: &mut Vec<u8>, new_image: &[u8], image_nbr: u64) {
         for i in 0..last_image.len() {
             last_image[i] = (((last_image[i] as u64 * (image_nbr - 1)) + new_image[i] as u64)
                 / image_nbr) as u8;

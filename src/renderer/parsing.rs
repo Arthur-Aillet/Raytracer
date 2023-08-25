@@ -11,12 +11,15 @@ use std::fs;
 use super::camera::{Camera, Lens};
 use super::lights::{Ambient, Directional, Light, Lights, Point};
 use super::primitives::mesh::Mesh;
-use super::primitives::{Cone, Cylinder, Object, Parent, Plane, Sphere, Triangle};
-use super::renderer_common::{Color, Image, Texture, Transform};
+use super::primitives::{
+    cone::Cone, cylinder::Cylinder, parent::Parent, plane::Plane, sphere::Sphere,
+    triangle::Triangle, Object,
+};
+use super::types::{Color, Image, Texture, Transform};
 use super::Renderer;
-use crate::vectors;
+use crate::vector;
 use serde_json::Value;
-use vectors::Vector;
+use vector::Vector;
 
 pub struct Parser {}
 

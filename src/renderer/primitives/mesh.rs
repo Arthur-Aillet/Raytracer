@@ -5,9 +5,9 @@
 // mesh
 //
 
-use crate::renderer::primitives::{Intersection, Object, Triangle};
-use crate::renderer::renderer_common::{Texture, Transform};
-use crate::vectors::Vector;
+use crate::renderer::primitives::{triangle::Triangle, Intersection, Object};
+use crate::renderer::types::{Texture, Transform};
+use crate::vector::Vector;
 use serde::Serialize;
 use std::fs::OpenOptions;
 use std::io::{BufRead, BufReader};
@@ -273,6 +273,7 @@ impl Object for Mesh {
         }
         found_intersection
     }
+
     fn surface_position(&self, _: Vector) -> Vector {
         Vector {
             x: 0.5,
@@ -280,26 +281,33 @@ impl Object for Mesh {
             z: 0.0,
         }
     }
+
     fn get_transform(&self) -> Transform {
         self.transform
     }
+
     fn get_name(&self) -> String {
         self.name.clone()
     }
+
     fn get_type(&self) -> String {
         self.obj_type.clone()
     }
+
     fn move_obj(&mut self, offset: Transform) {
         self.transform = self.transform + offset;
         self.apply_transform();
     }
+
     fn set_transform(&mut self, new: Transform) {
         self.transform = new;
         self.apply_transform();
     }
+
     fn get_texture(&self) -> Texture {
         self.texture.clone()
     }
+
     fn set_texture(&mut self, new: Texture) {
         self.texture = new
     }
@@ -307,6 +315,7 @@ impl Object for Mesh {
     fn get_normal_map(&self) -> Texture {
         self.normal_map.clone()
     }
+
     fn set_normal_map(&mut self, new: Texture) {
         self.normal_map = new
     }

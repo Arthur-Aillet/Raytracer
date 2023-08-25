@@ -4,6 +4,7 @@
 // nannou interface module
 
 mod layout;
+mod components;
 
 use nannou::image;
 use nannou::prelude::*;
@@ -14,7 +15,7 @@ use std::env;
 use crate::config;
 use crate::config::Config;
 use crate::ppm_interface::PPMInterface;
-use crate::renderer::renderer_common::Transform;
+use crate::renderer::types::Transform;
 use crate::renderer::Renderer;
 
 use layout::Layout;
@@ -65,15 +66,15 @@ fn model(app: &App) -> Model {
     let last_image = vec![0; (config.height * config.width * 3) as usize];
 
     config.height /= if config.fast_mode == 0 {
-            1
-        } else {
-            config.fast_mode
-        };
+        1
+    } else {
+        config.fast_mode
+    };
     config.width /= if config.fast_mode == 0 {
-            1
-        } else {
-            config.fast_mode
-        };
+        1
+    } else {
+        config.fast_mode
+    };
     Model {
         window,
         draw: app.draw(),
@@ -128,12 +129,16 @@ fn merge_camera_transform(renderer: &mut Renderer, model: &Model) {
 fn merge_interactions_layout(app: &App, model: &mut Model) {
     if model
         .layout
-        .get_buttons_interactions(app, "fast".to_string()) && model.config.fast_mode == 0 {
+        .get_buttons_interactions(app, "fast".to_string())
+        && model.config.fast_mode == 0
+    {
         fancy_to_fast(model);
     }
     if model
         .layout
-        .get_buttons_interactions(app, "fancy".to_string()) && model.config.fast_mode > 0 {
+        .get_buttons_interactions(app, "fancy".to_string())
+        && model.config.fast_mode > 0
+    {
         fast_to_fancy(model);
     }
     if model
@@ -142,14 +147,8 @@ fn merge_interactions_layout(app: &App, model: &mut Model) {
     {
         std::process::exit(0);
     }
-    if model
-        .layout
-        .get_sliders_interactions("fov".to_string())
-        != -1
-    {
-        model.fov = model
-            .layout
-            .get_sliders_interactions("fov".to_string());
+    if model.layout.get_sliders_interactions("fov".to_string()) != -1 {
+        model.fov = model.layout.get_sliders_interactions("fov".to_string());
     }
 }
 
@@ -161,11 +160,7 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
         model.image_nbr += 1;
         if model.config.fast_mode == 0 {
             let new_image = render.pull_new_image(&model.config);
-            render.merge_image(
-                &mut model.last_image,
-                &new_image,
-                model.image_nbr,
-            );
+            render.merge_image(&mut model.last_image, &new_image, model.image_nbr);
         } else {
             model.last_image = render.pull_new_image(&model.config);
         }
@@ -182,59 +177,59 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
 fn event(_app: &App, model: &mut Model, event: WindowEvent) {
     // Gérer les événements de la fenêtre comme la souris, le clavier, le redimensionnement, etc. ici.
     if let KeyPressed(key) = event {
-            if key == Key::G {
-                if model.config.fast_mode >= 1 {
-                    fast_to_fancy(model);
-                } else {
-                    fancy_to_fast(model);
-                }
+        if key == Key::G {
+            if model.config.fast_mode >= 1 {
+                fast_to_fancy(model);
+            } else {
+                fancy_to_fast(model);
             }
-            if key == Key::Escape {
-                std::process::exit(0);
-            }
-            if key == Key::Space {
-                model.camera_transform.pos.z += 1.0;
-            }
-            if key == Key::LControl {
-                model.camera_transform.pos.z -= 1.0;
-            }
-            if key == Key::Z {
-                model.camera_transform.pos.y += 1.0;
-            }
-            if key == Key::S {
-                model.camera_transform.pos.y -= 1.0;
-            }
-            if key == Key::D {
-                model.camera_transform.pos.x += 1.0;
-            }
-            if key == Key::Q {
-                model.camera_transform.pos.x -= 1.0;
-            }
-            if key == Key::Right {
-                model.camera_transform.rotation.z -= 2.0;
-            }
-            if key == Key::Left {
-                model.camera_transform.rotation.z += 2.0;
-            }
-            if key == Key::Down {
-                model.camera_transform.rotation.x -= 2.0;
-            }
-            if key == Key::Up {
-                model.camera_transform.rotation.x += 2.0;
-            }
-            if key == Key::A {
-                model.camera_transform.rotation.y -= 2.0;
-            }
-            if key == Key::E {
-                model.camera_transform.rotation.y += 2.0;
-            }
-            if key == Key::P {
-                PPMInterface::new(&model.config.save_file).write(
-                    model.config.width,
-                    model.config.height,
-                    model.last_image.clone(),
-                );
-            }
+        }
+        if key == Key::Escape {
+            std::process::exit(0);
+        }
+        if key == Key::Space {
+            model.camera_transform.pos.z += 1.0;
+        }
+        if key == Key::LControl {
+            model.camera_transform.pos.z -= 1.0;
+        }
+        if key == Key::Z {
+            model.camera_transform.pos.y += 1.0;
+        }
+        if key == Key::S {
+            model.camera_transform.pos.y -= 1.0;
+        }
+        if key == Key::D {
+            model.camera_transform.pos.x += 1.0;
+        }
+        if key == Key::Q {
+            model.camera_transform.pos.x -= 1.0;
+        }
+        if key == Key::Right {
+            model.camera_transform.rotation.z -= 2.0;
+        }
+        if key == Key::Left {
+            model.camera_transform.rotation.z += 2.0;
+        }
+        if key == Key::Down {
+            model.camera_transform.rotation.x -= 2.0;
+        }
+        if key == Key::Up {
+            model.camera_transform.rotation.x += 2.0;
+        }
+        if key == Key::A {
+            model.camera_transform.rotation.y -= 2.0;
+        }
+        if key == Key::E {
+            model.camera_transform.rotation.y += 2.0;
+        }
+        if key == Key::P {
+            PPMInterface::new(&model.config.save_file).write(
+                model.config.width,
+                model.config.height,
+                model.last_image.clone(),
+            );
+        }
     }
     merge_interactions_layout(_app, model);
 }
