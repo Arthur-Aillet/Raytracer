@@ -20,3 +20,4 @@ raytracer
 
 # ppm files
 *.ppm*
+!assets/missing_texture.ppm

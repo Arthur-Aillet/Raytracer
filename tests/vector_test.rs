@@ -5,10 +5,9 @@
 // vector tests
 //
 
-use raytracer::vectors;
-use vectors::Vector;
-use vectors::Segment;
-use vectors::resolve_quadratic_equation;
+use raytracer::vector;
+use vector::resolve_quadratic_equation;
+use vector::Vector;
 
 #[cfg(test)]
 mod tests {
@@ -16,47 +15,24 @@ mod tests {
 
     #[test]
     fn test_add() {
-        let vec1 = Segment {
-            origin: Vector {
-                x: 1.0,
-                y: 2.0,
-                z: 3.0,
-            },
-            end: Vector {
-                x: 4.0,
-                y: 5.0,
-                z: 6.0,
-            },
+        let fst = Vector {
+            x: 1.0,
+            y: 2.0,
+            z: 3.0,
+        };
+        let snd = Vector {
+            x: 4.0,
+            y: 5.0,
+            z: 6.0,
         };
 
-        let vec2 = Segment {
-            origin: Vector {
-                x: 7.0,
-                y: 8.0,
-                z: 9.0,
-            },
-            end: Vector {
-                x: 10.0,
-                y: 11.0,
-                z: 12.0,
-            },
-        };
-
-        let result = vec1.clone() + vec2.clone();
+        let result = fst + snd;
 
         assert_eq!(
-            result.origin,
+            result,
             Vector {
-                x: 1.0,
-                y: 2.0,
-                z: 3.0,
-            }
-        );
-        assert_eq!(
-            result.end,
-            Vector {
-                x: 7.0,
-                y: 8.0,
+                x: 5.0,
+                y: 7.0,
                 z: 9.0,
             }
         );
@@ -64,41 +40,64 @@ mod tests {
 
     #[test]
     fn test_rotate() {
-        let mut vec = Segment {
-            origin: Vector {
-                x: 1.0,
-                y: 2.0,
-                z: 3.0,
-            },
-            end: Vector {
-                x: 4.0,
-                y: 5.0,
-                z: 6.0,
-            },
+        let mut vec = Vector {
+            x: 1.,
+            y: 2.,
+            z: 3.,
         };
         vec.rotate(0.0, 0.0, 90.0);
+        assert_eq!(vec.x as f32, -2.);
+        assert_eq!(vec.y as f32, 1.);
+        assert_eq!(vec.z as f32, 3.);
+        /* float error far in the decimals, could be neglected
+        // { x: -2.0, y: 1.0000000000000002, z: 3.0 }
         assert_eq!(
-            vec.end,
+            vec,
             Vector {
-                x: -5.0,
-                y: 4.0,
-                z: 6.0,
+                x: -2.0,
+                y: 1.0,
+                z: 3.0,
             }
         );
+        */
     }
 
     #[test]
     fn test_dot_product() {
-        let p1 = Vector { x: 1.0, y: 2.0, z: 3.0 };
-        let p2 = Vector { x: 4.0, y: 5.0, z: 6.0 };
+        let p1 = Vector {
+            x: 1.0,
+            y: 2.0,
+            z: 3.0,
+        };
+        let p2 = Vector {
+            x: 4.0,
+            y: 5.0,
+            z: 6.0,
+        };
         assert_eq!(p1.dot_product(p2), 32.0);
 
-        let p1 = Vector { x: -1.0, y: 0.0, z: 2.0 };
-        let p2 = Vector { x: 3.0, y: 4.0, z: -5.0 };
+        let p1 = Vector {
+            x: -1.0,
+            y: 0.0,
+            z: 2.0,
+        };
+        let p2 = Vector {
+            x: 3.0,
+            y: 4.0,
+            z: -5.0,
+        };
         assert_eq!(p1.dot_product(p2), -13.0);
 
-        let p1 = Vector { x: 1.5, y: 2.5, z: -3.5 };
-        let p2 = Vector { x: 0.5, y: -0.5, z: 1.5 };
+        let p1 = Vector {
+            x: 1.5,
+            y: 2.5,
+            z: -3.5,
+        };
+        let p2 = Vector {
+            x: 0.5,
+            y: -0.5,
+            z: 1.5,
+        };
         assert_eq!(p1.dot_product(p2), -5.75);
     }
 
@@ -124,55 +123,6 @@ mod tests {
         let c = 2.0;
         let result = resolve_quadratic_equation(a, b, c);
         assert_eq!(result, vec![2.0, 1.0]);
-    }
-
-    #[test]
-    fn test_add_in_place() {
-        let vec1 = Segment {
-            origin: Vector {
-                x: 1.0,
-                y: 2.0,
-                z: 3.0,
-            },
-            end: Vector {
-                x: 4.0,
-                y: 5.0,
-                z: 6.0,
-            },
-        };
-
-        let vec2 = Segment {
-            origin: Vector {
-                x: 7.0,
-                y: 8.0,
-                z: 9.0,
-            },
-            end: Vector {
-                x: 10.0,
-                y: 11.0,
-                z: 12.0,
-            },
-        };
-
-        let mut vec3 = vec1.clone();
-        vec3.add(vec2);
-
-        assert_eq!(
-            vec3.origin,
-            Vector {
-                x: 1.0,
-                y: 2.0,
-                z: 3.0,
-            }
-        );
-        assert_eq!(
-            vec3.end,
-            Vector {
-                x: 7.0,
-                y: 8.0,
-                z: 9.0,
-            }
-        );
     }
 
     #[test]

@@ -5,20 +5,19 @@
 // main
 //
 
-use raytracer::{config};
+use raytracer::config;
 use renderer::Renderer;
 
-mod ppm_interface;
-mod vectors;
 mod matrix;
-mod renderer;
 mod nannou_interface;
+mod ppm_interface;
+mod renderer;
+mod vector;
 
 use std::env;
-use std::fmt::Error;
 
 fn print_help() {
-    let config = config::Config::new();
+    let config = config::Config::default();
     println!("USAGE: ./rustracer [OPTIONS]\n");
     println!("OPTIONS:");
     println!("\t--help\t\t\tDisplay this help");
@@ -58,10 +57,14 @@ fn main() -> std::io::Result<()> {
         std::process::exit(84);
     }
 
-    if config.graphic == true {
-        nannou_interface::NannouInterface::new(config.width, config.height).run()
+    if config.graphic {
+        nannou_interface::run_nannou_interface();
     } else {
-        ppm_interface::PPMInterface::new(&config.save_file).write(config.width, config.height, renderer.unwrap().render(&config))
+        ppm_interface::PPMInterface::new(&config.save_file).write(
+            config.width,
+            config.height,
+            renderer.unwrap().render(&config),
+        )
     }
 
     Ok(())

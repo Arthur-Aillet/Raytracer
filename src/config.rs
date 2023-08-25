@@ -5,8 +5,6 @@
 // config
 //
 
-
-
 #[derive(Debug, Clone)]
 pub struct Config {
     pub width: i64,
@@ -19,11 +17,11 @@ pub struct Config {
     pub help: bool,
 }
 
-fn config_is_correct(mut config: &mut Config) -> bool {
+fn config_is_correct(config: &mut Config) -> bool {
     if config.width <= 0 || config.height <= 0 {
         config.help = true;
     }
-    if config.save_file == "" || config.config_file == "" {
+    if config.save_file.is_empty() || config.config_file.is_empty() {
         config.help = true;
     }
     if config.fast_mode < 0 {
@@ -32,20 +30,22 @@ fn config_is_correct(mut config: &mut Config) -> bool {
     true
 }
 
-impl Config {
-    pub fn new() -> Config {
+impl Default for Config {
+    fn default() -> Self {
         Config {
             width: 960,
             height: 540,
             save_file: String::from("scene_example.ppm"),
-            config_file: String::from("example.json"),
+            config_file: String::from("examples/example.json"),
             graphic: false,
             layout: false,
             fast_mode: 0,
             help: false,
         }
     }
+}
 
+impl Config {
     fn get_flag_content(args: &[String], flag: &str) -> Option<String> {
         for (i, arg) in args.iter().enumerate() {
             if arg == flag {
@@ -53,7 +53,7 @@ impl Config {
                     Some(args[i + 1].clone())
                 } else {
                     None
-                }
+                };
             }
         }
         None
@@ -69,7 +69,7 @@ impl Config {
     }
 
     pub fn from_args(args: &[String]) -> Config {
-        let mut config = Config::new();
+        let mut config = Config::default();
 
         if let Some(width) = Config::get_flag_content(args, "-w") {
             config.width = width.parse().unwrap_or(config.width);
@@ -96,7 +96,7 @@ impl Config {
             config.help = true;
         }
         config_is_correct(&mut config);
-        return config;
+        config
     }
 
     pub fn print(&self) {

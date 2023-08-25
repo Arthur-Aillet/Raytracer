@@ -7,10 +7,6 @@
 
 use raytracer::matrix::Matrix;
 
-fn test_matrix() {
-    let _matrix = Matrix::new(2, 3);
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -54,11 +50,11 @@ mod tests {
         let mut matrix = Matrix::euler_rotation(0.0, 90.0, 0.0);
 
         for i in 0..9 {
-            matrix.data[i/3][i%3] = (matrix.data[i/3][i%3] * 10000000.0).round() / 10000000.0;
+            matrix.data[i / 3][i % 3] =
+                (matrix.data[i / 3][i % 3] * 10000000.0).round() / 10000000.0;
         }
         assert_eq!(
             matrix.data,
-
             vec![
                 vec![0.0, 0.0, 1.0],
                 vec![0.0, 1.0, 0.0],

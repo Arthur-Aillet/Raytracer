@@ -14,7 +14,8 @@ pub struct PPMInterface {
 
 impl PPMInterface {
     pub fn new(file_path: &String) -> Self {
-        let file = File::create(file_path).unwrap();
+        std::fs::create_dir_all(".raytracer/").expect("Invalid File Path");
+        let file = File::create(file_path).expect("Invalid File Path");
         PPMInterface { file }
     }
 
