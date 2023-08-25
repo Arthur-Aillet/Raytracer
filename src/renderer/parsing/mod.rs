@@ -699,7 +699,7 @@ impl Parser {
                             Transform::default()
                         },
                     );
-                    if path_taken.contains(&filename) == false {
+                    if !path_taken.contains(&filename) {
                         path_taken.push(filename);
                         self.get_scenes_from_json(renderer, &scene_json, path_taken);
                         path_taken.pop();

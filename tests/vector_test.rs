@@ -7,7 +7,6 @@
 
 use raytracer::vectors;
 use vectors::resolve_quadratic_equation;
-use vectors::Segment;
 use vectors::Vector;
 
 #[cfg(test)]
@@ -16,7 +15,7 @@ mod tests {
 
     #[test]
     fn test_add() {
-        let vec1 = Segment {
+        let vec1 = Vector {
             origin: Vector {
                 x: 1.0,
                 y: 2.0,

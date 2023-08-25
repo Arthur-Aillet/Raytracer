@@ -8,8 +8,7 @@
 use crate::renderer::primitives::{Intersection, Object, Triangle};
 use crate::renderer::renderer_common::{Texture, Transform};
 use crate::vectors::Vector;
-use erased_serde::serialize_trait_object;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::fs::OpenOptions;
 use std::io::{BufRead, BufReader};
 
@@ -193,15 +192,14 @@ impl Mesh {
 
             for option_line in BufReader::new(obj).lines() {
                 if let Ok(line) = option_line {
-                    if line.chars().all(|x| x.is_ascii_whitespace()) {
-                        continue;
-                    } else if line.starts_with('#') {
-                        continue;
-                    } else if line.starts_with("o ") {
-                        continue;
-                    } else if line.starts_with("vn ") {
-                        continue;
-                    } else if line.starts_with("vt ") {
+                    if line.chars().all(|x| x.is_ascii_whitespace())
+                        || line.starts_with('#')
+                        || line.starts_with("o ")
+                        || line.starts_with("vn ")
+                        || line.starts_with("vt ")
+                        || line.starts_with("s ")
+                        || line.starts_with("mtllib ")
+                    {
                         continue;
                     } else if line.starts_with("v ") {
                         if let Some(vertex) = self.parse_vertex(line) {
@@ -210,8 +208,6 @@ impl Mesh {
                             println!("Invalid vertexes in \"{}\" !", file_name);
                             return;
                         }
-                    } else if line.starts_with("s ") {
-                        continue;
                     } else if line.starts_with("f ") {
                         let face_parsed = self.parse_face(line, &vertexes);
                         if let Some(face_fst) = face_parsed.0 {
@@ -223,8 +219,6 @@ impl Mesh {
                             println!("Invalid face in \"{}\" !", file_name);
                             return;
                         }
-                    } else if line.starts_with("mtllib ") {
-                        continue;
                     } else {
                         println!("Invalid \"{}\" mesh file!", file_name);
                         return;
@@ -284,7 +278,7 @@ impl Object for Mesh {
         }
         found_intersection
     }
-    fn surface_position(&self, position: Vector) -> Vector {
+    fn surface_position(&self, _: Vector) -> Vector {
         Vector {
             x: 0.5,
             y: 0.5,

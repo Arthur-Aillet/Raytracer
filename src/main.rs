@@ -15,7 +15,6 @@ mod renderer;
 mod vectors;
 
 use std::env;
-use std::fmt::Error;
 
 fn print_help() {
     let config = config::Config::new();
@@ -59,7 +58,7 @@ fn main() -> std::io::Result<()> {
     }
 
     if config.graphic {
-        nannou_interface::NannouInterface::new(config.width, config.height).run()
+        nannou_interface::run_nannou_interface();
     } else {
         ppm_interface::PPMInterface::new(&config.save_file).write(
             config.width,

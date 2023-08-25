@@ -7,10 +7,6 @@
 
 use raytracer::matrix::Matrix;
 
-fn test_matrix() {
-    let _matrix = Matrix::new(2, 3);
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

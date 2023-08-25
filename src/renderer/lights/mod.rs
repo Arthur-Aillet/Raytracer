@@ -163,7 +163,7 @@ impl Light for Point {
         let light_vector = (self.get_transform().pos - intersect.intersection_point).normalize();
         let mut light_uncovered = 1.0;
 
-        if camera.smooth_shadow == false {
+        if !camera.smooth_shadow {
             if self.light_is_intersected(light_vector, intersect, normal_vector, camera, primitives)
             {
                 return Vector {
@@ -178,14 +178,13 @@ impl Light for Point {
                 let inter_to_light = self.get_transform().pos
                     + Vector::get_random_point_in_sphere(self.get_radius())
                     - intersect.intersection_point;
-                if self.light_is_intersected(
+                if !self.light_is_intersected(
                     inter_to_light.normalize(),
                     intersect,
                     normal_vector,
                     camera,
                     primitives,
-                ) == false
-                {
+                ) {
                     light_reached += 1;
                 }
             }
@@ -322,7 +321,7 @@ impl Light for Directional {
         let normal_vector = intersect.normal.normalize();
         let mut light_uncovered = 1.0;
 
-        if camera.smooth_shadow == false {
+        if !camera.smooth_shadow {
             if self.light_is_intersected(
                 self.transform.pos,
                 intersect,
@@ -341,14 +340,13 @@ impl Light for Directional {
             for _ in 0..camera.smooth_shadow_step {
                 let inter_to_light = self.transform.pos + Vector::get_random_point_in_sphere(0.0)
                     - intersect.intersection_point;
-                if self.light_is_intersected(
+                if !self.light_is_intersected(
                     inter_to_light.normalize(),
                     intersect,
                     normal_vector,
                     camera,
                     primitives,
-                ) == false
-                {
+                ) {
                     light_reached += 1;
                 }
             }

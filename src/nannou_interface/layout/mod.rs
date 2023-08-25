@@ -8,19 +8,8 @@ mod components;
 use nannou::prelude::*;
 
 use crate::config::Config;
-use crate::nannou_interface::layout::components::{Button, Checkbox, Image, Input, Slider, Text};
-use crate::nannou_interface::Model;
+use crate::nannou_interface::layout::components::{Button, Slider, Text};
 use crate::renderer::Renderer;
-
-#[derive(PartialEq)]
-pub enum ComponentType {
-    Button,
-    Slider,
-    Input,
-    Checkbox,
-    Text,
-    Image,
-}
 
 pub struct Layout {
     pub config: Config,
@@ -28,10 +17,7 @@ pub struct Layout {
     pub rect: Rect,
     pub buttons: Vec<Button>,
     pub sliders: Vec<Slider>,
-    pub inputs: Vec<Input>,
-    pub checkboxes: Vec<Checkbox>,
     pub texts: Vec<Text>,
-    pub image: Vec<Image>,
 }
 
 impl Layout {
@@ -39,10 +25,6 @@ impl Layout {
         let renderer = Renderer::get_renderer_from_file(&config).unwrap();
         let height = config.height as f32 / 2.0;
         let width = (config.width as f32 + 360.0) / 2.0;
-
-        let inputs = Vec::new();
-        let checkboxes = Vec::new();
-        let image = Vec::new();
 
         let buttons = vec![
             Button::new(
@@ -96,14 +78,11 @@ impl Layout {
             rect: Rect::from_x_y_w_h(width, height, 360.0, config.height as f32),
             buttons,
             sliders,
-            inputs,
-            checkboxes,
             texts,
-            image,
         }
     }
 
-    pub fn refresh_objects(&mut self, app: &App, draw: &Draw, renderer: &Renderer) {
+    pub fn refresh_objects(&mut self, renderer: &Renderer) {
         let nb_objects_futur = renderer.primitives.len();
         let nb_objects = self.texts.len();
         let mut count = 1;
@@ -144,7 +123,7 @@ impl Layout {
     }
 
     pub fn display(&mut self, app: &App, draw: &Draw, renderer: &Renderer) {
-        self.refresh_objects(app, draw, renderer);
+        self.refresh_objects(renderer);
 
         for button in &mut self.buttons {
             button.display(app, draw);
@@ -152,17 +131,8 @@ impl Layout {
         for slider in &mut self.sliders {
             slider.display(app, draw);
         }
-        for input in &mut self.inputs {
-            input.display(app, draw);
-        }
-        for checkbox in &mut self.checkboxes {
-            checkbox.display(app, draw);
-        }
         for text in &mut self.texts {
             text.display(app, draw);
-        }
-        for image in &mut self.image {
-            image.display(app, draw);
         }
     }
 
@@ -179,7 +149,7 @@ impl Layout {
         return false;
     }
 
-    pub fn get_sliders_interactions(&self, app: &App, name: String) -> i64 {
+    pub fn get_sliders_interactions(&self, name: String) -> i64 {
         for slider in &self.sliders {
             if slider.name == name {
                 return slider.value;

@@ -23,8 +23,6 @@ use camera::Camera;
 use lights::Lights;
 use parsing::Parser;
 use rand::Rng;
-use std::cmp;
-use std::mem;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time;
@@ -44,18 +42,6 @@ struct Recursivity {
 }
 
 impl Renderer {
-    pub fn new(height: i64, width: i64) -> Renderer {
-        Renderer {
-            camera: Camera::default(height, width),
-            primitives: Vec::new(),
-            lights: Lights {
-                lights: Vec::new(),
-                ambient: Vec::new(),
-            },
-            skybox: Texture::default(),
-        }
-    }
-
     fn found_nearest_intersection_fast(&self, origin: Vector, ray: Vector) -> Option<Intersection> {
         let mut found_intersection: Option<Intersection> = None;
         let mut smallest_distance: f64 = f64::INFINITY;
@@ -63,8 +49,7 @@ impl Renderer {
         for object in self.primitives.iter() {
             let intersect = object.intersection(ray, origin);
 
-            if intersect.is_some() {
-                let inters = intersect.unwrap();
+            if let Some(inters) = intersect {
                 let distance_found = (inters.intersection_point - origin).len();
                 if distance_found < smallest_distance {
                     smallest_distance = distance_found;
@@ -82,8 +67,7 @@ impl Renderer {
         for object in self.primitives.iter() {
             let intersect = object.intersection(ray, origin);
 
-            if intersect.is_some() {
-                let inters = intersect.unwrap();
+            if let Some(inters) = intersect {
                 let distance_found = (inters.intersection_point - origin).len();
                 if distance_found < smallest_distance {
                     smallest_distance = distance_found;
@@ -92,13 +76,12 @@ impl Renderer {
             }
         }
         for light in self.lights.lights.iter() {
-            if light.get_visible() == false {
+            if light.get_visible() {
                 continue;
             }
             let intersect = light.intersection(ray, origin);
 
-            if intersect.is_some() {
-                let inters = intersect.unwrap();
+            if let Some(inters) = intersect {
                 let distance_found = (inters.intersection_point - origin).len();
                 if distance_found < smallest_distance {
                     smallest_distance = distance_found;
@@ -109,7 +92,7 @@ impl Renderer {
         found_intersection
     }
 
-    fn get_ambient<'a>(&self, object: &'a dyn Object, position: Vector) -> Vector {
+    fn get_ambient(&self, object: &dyn Object, position: Vector) -> Vector {
         let mut self_color = Vector {
             x: 0.0,
             y: 0.0,
@@ -135,14 +118,14 @@ impl Renderer {
     fn combine_pixel(&self, samples: &Vec<Vector>) -> Vector {
         let mut result: Vector = samples[0];
 
-        for i in 1..samples.len() {
-            result = ((result * (i - 1) as f64) + (samples[i])) / i as f64;
+        for (index, &sample) in samples.iter().enumerate().skip(1) {
+            result = ((result * (index - 1) as f64) + (sample)) / index as f64;
         }
         result
     }
 
     fn skybox_position(&self, position: Vector) -> Vector {
-        let vec = Vector {
+        Vector {
             x: (2.0 * (1.0 - (position.x.atan2(position.y) / (2.0 * std::f64::consts::PI) + 0.5)))
                 % 1.0,
             y: 1.0
@@ -151,8 +134,7 @@ impl Renderer {
                 .acos()
                     / std::f64::consts::PI,
             z: 0.0,
-        };
-        vec
+        }
     }
 
     fn get_color_from_ray_fast(&self, origin: Vector, ray: Vector) -> Vector {
@@ -206,7 +188,7 @@ impl Renderer {
         let final_vect = (incident.normalize() * ratio
             + normal.normalize() * (ratio * cos_i - cos_t))
             .normalize();
-        return Some(final_vect);
+        Some(final_vect)
     }
 
     fn transmission(
@@ -219,22 +201,21 @@ impl Renderer {
         let other_ior = 1.0;
         let object_ior = intersect.object.unwrap().get_texture().ior;
 
-        let maybe_new_ray;
-        if recursivity.transmission <= 1 {
-            maybe_new_ray = self.refract(
+        let maybe_new_ray = if recursivity.transmission <= 1 {
+            self.refract(
                 normal.normalize() * -1.0,
                 incident_ray.normalize(),
                 object_ior,
                 other_ior,
-            );
+            )
         } else {
-            maybe_new_ray = self.refract(
+            self.refract(
                 normal.normalize(),
                 incident_ray.normalize(),
                 other_ior,
                 object_ior,
-            );
-        }
+            )
+        };
         if let Some(new_ray) = maybe_new_ray {
             let maybe_intersect = self.found_nearest_intersection(
                 intersect.intersection_point + new_ray * self.camera.shadow_bias,
@@ -246,13 +227,6 @@ impl Renderer {
                 {
                     recursivity.transmission = 1;
                     return self.transmission(&new_intersect, new_ray, recursivity);
-                } else if recursivity.transmission == 2 {
-                    recursivity.general -= 1;
-                    return self.get_color_from_ray(
-                        intersect.intersection_point + new_ray * self.camera.shadow_bias,
-                        new_ray,
-                        recursivity,
-                    );
                 } else {
                     recursivity.general -= 1;
                     return self.get_color_from_ray(
@@ -331,8 +305,8 @@ impl Renderer {
             for _ in 0..samples_nbr as i32 {
                 let mut rng = rand::thread_rng();
                 // random vector used for the roughness
-                let random_a: f64 = rng.gen_range(0.0..6.28);
-                let random_b: f64 = rng.gen_range(0.0..6.28);
+                let random_a: f64 = rng.gen_range(0.0..std::f64::consts::TAU);
+                let random_b: f64 = rng.gen_range(0.0..std::f64::consts::TAU);
                 let random_vect = Vector {
                     x: random_a.cos() * random_b.cos(),
                     y: random_a.sin() * random_b.cos(),
@@ -361,7 +335,7 @@ impl Renderer {
                             + (new_color
                                 * intersect.object.unwrap().get_texture().color.as_vector()
                                 * metalness))
-                            * (1.0 / samples_nbr as f64);
+                            * (1.0 / samples_nbr);
                 } else {
                     recursivity.transmission = 2;
                     self_color = self.transmission(&intersect, ray, recursivity);
@@ -386,10 +360,10 @@ impl Renderer {
 
     fn check_pixels_proximity(&self, samples: &Vec<Vector>) -> bool {
         let px: Vector = self.combine_pixel(samples);
-        for i in 0..samples.len() {
-            if (((samples[i].x as i16 - px.x as i16)
-                + (samples[i].y as i16 - px.y as i16)
-                + (samples[i].z as i16 - px.y as i16)) as i64)
+        for sample in samples {
+            if (((sample.x as i16 - px.x as i16)
+                + (sample.y as i16 - px.y as i16)
+                + (sample.z as i16 - px.y as i16)) as i64)
                 .abs()
                 > self.camera.super_sampling_precision as i64
             {
@@ -445,7 +419,7 @@ impl Renderer {
             line_state_id = i as usize;
             let mut locked_pixel_states = pixel_states.lock().unwrap(); // lock
 
-            if locked_pixel_states[line_state_id] == true {
+            if locked_pixel_states[line_state_id] {
                 continue;
             }
             locked_pixel_states[line_state_id] = true;
@@ -454,9 +428,9 @@ impl Renderer {
             let mut local_pixel_line: Vec<u8> = vec![0; (self.camera.lens.width * 3) as usize];
             for j in 0..self.camera.lens.width {
                 pixel_id = (j * 3) as usize;
-                let calculated_pixel = self.render_pixel(j, i, &config);
+                let calculated_pixel = self.render_pixel(j, i, config);
 
-                local_pixel_line[pixel_id + 0] =
+                local_pixel_line[pixel_id] =
                     (self.camera.aces_curve(calculated_pixel.x).powf(1.0 / 2.2) * 255.0) as u8;
                 local_pixel_line[pixel_id + 1] =
                     (self.camera.aces_curve(calculated_pixel.y).powf(1.0 / 2.2) * 255.0) as u8;
@@ -466,7 +440,7 @@ impl Renderer {
             let mut locked_pixels = pixels.lock().unwrap(); // lock
             for k in 0..(self.camera.lens.width * 3) {
                 pixel_id = (k + (i * self.camera.lens.width * 3)) as usize;
-                locked_pixels[pixel_id as usize] = local_pixel_line[k as usize];
+                locked_pixels[pixel_id] = local_pixel_line[k as usize];
             }
 
             if self.camera.progression {
@@ -483,9 +457,9 @@ impl Renderer {
         buf_size: u64,
         config: &Config,
     ) {
-        let mut last_progression: u64 = 0;
+        let mut last_progression = 0_u64;
 
-        while last_progression as u64 != self.camera.lens.height as u64 {
+        while last_progression != self.camera.lens.height as u64 {
             if config.fast_mode == 0 {
                 thread::sleep(time::Duration::from_millis(250));
             } else {
@@ -521,12 +495,6 @@ impl Renderer {
         new_image: &Vec<u8>,
         image_nbr: u64,
     ) {
-        let buf_size = if config.fast_mode != 0 {
-            1
-        } else {
-            self.camera.image_buffer_size
-        };
-
         for i in 0..last_image.len() {
             last_image[i] = (((last_image[i] as u64 * (image_nbr - 1)) + new_image[i] as u64)
                 / image_nbr) as u8;
@@ -553,13 +521,13 @@ impl Renderer {
                         clone_pixels_state,
                         clone_pixels,
                         clone_progression,
-                        &config,
+                        config,
                     );
                 });
             }
 
-            if self.camera.progression == true {
-                self.print_progression(progression, 0, 1, &config);
+            if self.camera.progression {
+                self.print_progression(progression, 0, 1, config);
             }
         });
         let final_pixels = pixels.lock().unwrap().to_vec();
@@ -594,21 +562,21 @@ impl Renderer {
                             clone_pixels_state,
                             clone_pixels,
                             clone_progression,
-                            &config,
+                            config,
                         );
                     });
                 }
 
-                if self.camera.progression == true {
-                    self.print_progression(progression, 0, buf_size, &config);
+                if self.camera.progression {
+                    self.print_progression(progression, 0, buf_size, config);
                 }
             });
 
             let final_pixels = pixels.lock().unwrap().to_vec();
 
             if result.len() != final_pixels.len() {
-                for i in 0..final_pixels.len() {
-                    result.push(final_pixels[i]);
+                for pixel in final_pixels.iter() {
+                    result.push(*pixel);
                 }
             } else {
                 for i in 0..result.len() {

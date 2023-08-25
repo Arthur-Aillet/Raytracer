@@ -13,11 +13,9 @@ use std::env;
 
 use crate::config;
 use crate::config::Config;
-use crate::nannou_interface::layout::ComponentType;
 use crate::ppm_interface::PPMInterface;
 use crate::renderer::renderer_common::Transform;
 use crate::renderer::Renderer;
-use crate::vectors::Vector;
 
 use layout::Layout;
 
@@ -47,13 +45,13 @@ fn model(app: &App) -> Model {
     if renderer.is_none() {
         std::process::exit(84);
     }
-    let mut layout = Layout::new(config.clone());
+    let layout = Layout::new(config.clone());
     let window = app
         .new_window()
         .title("Rustracer")
         .size(
             config.width as u32
-                + if config.layout == true {
+                + if config.layout {
                     layout.rect.w() as u32
                 } else {
                     0
@@ -133,7 +131,6 @@ fn merge_interactions_layout(app: &App, model: &mut Model) {
     if model
         .layout
         .get_buttons_interactions(app, "fast".to_string())
-        == true
     {
         if model.config.fast_mode == 0 {
             fancy_to_fast(model);
@@ -142,7 +139,6 @@ fn merge_interactions_layout(app: &App, model: &mut Model) {
     if model
         .layout
         .get_buttons_interactions(app, "fancy".to_string())
-        == true
     {
         if model.config.fast_mode > 0 {
             fast_to_fancy(model);
@@ -151,18 +147,17 @@ fn merge_interactions_layout(app: &App, model: &mut Model) {
     if model
         .layout
         .get_buttons_interactions(app, "exit".to_string())
-        == true
     {
         std::process::exit(0);
     }
     if model
         .layout
-        .get_sliders_interactions(app, "fov".to_string())
+        .get_sliders_interactions("fov".to_string())
         != -1
     {
         model.fov = model
             .layout
-            .get_sliders_interactions(app, "fov".to_string());
+            .get_sliders_interactions("fov".to_string());
     }
 }
 
@@ -183,7 +178,7 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
         } else {
             model.last_image = render.pull_new_image(&model.config);
         }
-        if model.config.layout == true {
+        if model.config.layout {
             model.layout.display(&_app, &model.draw, &render);
         }
     } else {
@@ -260,10 +255,10 @@ pub fn draw_canvas(draw: &Draw, pixels: &[u8], model: &Model, app: &App) {
     let img_path = &model.img_buf;
     PPMInterface::new(img_path).write(model.config.width, model.config.height, pixels.to_vec());
 
-    if let Ok(img) = image::open(img_path) {
+    if image::open(img_path).is_ok() {
         let texture = wgpu::Texture::from_path(app, img_path).unwrap();
         let mut window_rect = app.window_rect();
-        if model.config.layout == true {
+        if model.config.layout {
             window_rect.x.end -= model.layout.rect.w();
         }
         draw.texture(&texture)
@@ -278,46 +273,12 @@ pub fn draw_canvas(draw: &Draw, pixels: &[u8], model: &Model, app: &App) {
 
 fn view(app: &App, model: &Model, frame: Frame) {
     let color = nannou::color::rgb_u32(0x302B34);
+
     model.draw.background().color(color);
-
-    let window = app.window_rect();
-    let view = window.pad(100.0);
-
     draw_canvas(&model.draw, &model.last_image, &model, &app);
-
     model.draw.to_frame(app, &frame).unwrap();
 }
 
-// Nannou interface struct
-
-pub struct NannouInterface {
-    height: i64,
-    width: i64,
-    vec_pixels: Vec<u8>,
-}
-
-// Nannou interface implementation
-
-impl NannouInterface {
-    pub fn new(width: i64, height: i64) -> Self {
-        let vec_pixels = vec![0; (width * height * 3) as usize];
-        NannouInterface {
-            height,
-            width,
-            vec_pixels,
-        }
-    }
-
-    pub fn run(&self) {
-        nannou::app(model).update(update).run();
-    }
-
-    pub fn write(&mut self, x: i64, y: i64, color: Vec<u8>) {
-        let index = ((y * self.width + x) * 3) as usize;
-        self.vec_pixels[index..index + 3].copy_from_slice(&color);
-    }
-
-    pub fn get_pixels(&self) -> &[u8] {
-        &self.vec_pixels
-    }
+pub fn run_nannou_interface() {
+    nannou::app(model).update(update).run()
 }

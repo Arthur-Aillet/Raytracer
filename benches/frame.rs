@@ -1,26 +1,17 @@
-/*
-use raytracer::renderer;
-use criterion::{
-    black_box,
-    criterion_main,
-    criterion_group,
-    Criterion
-};
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use raytracer::{config::Config, renderer};
 
-pub fn frame_benchmark1(c: &mut Criterion) {
-    let renderer : renderer::Renderer = renderer::Renderer::get_renderer_from_file(String::from("benches/bench1.json"), 9, 16);
-    c.bench_function("bench 1 json (16x9)", |b| b.iter(|| renderer.pull_new_image()));
+pub fn frame_benchmark(c: &mut Criterion) {
+    let config = Config::from_args(&[
+        "-w".to_string(),
+        "40".to_string(),
+        "-h".to_string(),
+        "40".to_string(),
+    ]);
+    let renderer = renderer::Renderer::get_renderer_from_file(&config).unwrap();
+    c.bench_function("bench 3 json (64x36)", |b| {
+        b.iter(|| renderer.pull_new_image(&config))
+    });
 }
-
-pub fn frame_benchmark2(c: &mut Criterion) {
-    let renderer : renderer::Renderer = renderer::Renderer::get_renderer_from_file(String::from("benches/bench1.json"), 18, 32);
-    c.bench_function("bench 2 json (32x18)", |b| b.iter(|| renderer.pull_new_image()));
-}
-
-pub fn frame_benchmark3(c: &mut Criterion) {
-    let renderer : renderer::Renderer = renderer::Renderer::get_renderer_from_file(String::from("benches/bench1.json"), 36, 64);
-    c.bench_function("bench 3 json (64x36)", |b| b.iter(|| renderer.pull_new_image()));
-}
-*/
-//criterion_group!(frame, frame_benchmark1, frame_benchmark2, frame_benchmark3);
-//criterion_main!(frame);
+criterion_group!(frame, frame_benchmark);
+criterion_main!(frame);

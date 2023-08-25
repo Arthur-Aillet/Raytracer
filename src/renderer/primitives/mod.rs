@@ -763,14 +763,14 @@ impl Object for Triangle {
             self.transform.rotation.z,
         );
         self.point_a_applied = self.point_a_applied + self.transform.pos;
-        self.point_b_applied = self.point_b.clone();
+        self.point_b_applied = self.point_b;
         self.point_b_applied.rotate(
             self.transform.rotation.x,
             self.transform.rotation.y,
             self.transform.rotation.z,
         );
         self.point_b_applied = self.point_b_applied + self.transform.pos;
-        self.point_c_applied = self.point_c.clone();
+        self.point_c_applied = self.point_c;
         self.point_c_applied.rotate(
             self.transform.rotation.x,
             self.transform.rotation.y,
@@ -789,8 +789,7 @@ impl Object for Triangle {
         for object in self.children.iter() {
             let intersect = object.intersection(ray, origin);
 
-            if intersect.is_some() {
-                let inters = intersect.unwrap();
+            if let Some(inters) = intersect {
                 let distance_found = (inters.intersection_point - origin).len();
                 if distance_found < smallest_distance {
                     smallest_distance = distance_found;

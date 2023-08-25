@@ -168,27 +168,15 @@ impl Vector {
     }
 }
 
-pub fn number_of_solution(a: f64, b: f64, c: f64) -> i8 {
-    let delta: f64 = (b.powi(2)) - (4 as f64 * a * c);
-
-    return if delta < 0 as f64 {
-        0
-    } else if delta == 0 as f64 {
-        1
-    } else {
-        2
-    };
-}
-
 pub fn resolve_quadratic_equation(a: f64, b: f64, c: f64) -> Vec<f64> {
-    let delta: f64 = (b.powi(2)) - (4 as f64 * a * c);
+    let delta: f64 = (b.powi(2)) - (4. * a * c);
     let mut results: Vec<f64> = Vec::new();
 
-    if delta == 0 as f64 {
-        results.push(-b / (2 as f64 * a));
-    } else if delta > 0 as f64 {
-        results.push((-b + delta.sqrt()) / (2 as f64 * a));
-        results.push((-b - delta.sqrt()) / (2 as f64 * a));
+    if delta == 0. {
+        results.push(-b / (2. * a));
+    } else if delta > 0. {
+        results.push((-b + delta.sqrt()) / (2. * a));
+        results.push((-b - delta.sqrt()) / (2. * a));
     }
-    return results;
+    results
 }

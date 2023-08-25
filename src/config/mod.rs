@@ -17,7 +17,7 @@ pub struct Config {
     pub help: bool,
 }
 
-fn config_is_correct(mut config: &mut Config) -> bool {
+fn config_is_correct(config: &mut Config) -> bool {
     if config.width <= 0 || config.height <= 0 {
         config.help = true;
     }

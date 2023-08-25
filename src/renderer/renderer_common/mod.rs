@@ -231,9 +231,9 @@ impl Texture {
         a + t * (b - a)
     }
 
-    fn noise2(&self, x: i64, y: i64, HASH: [i32; 256]) -> i32 {
-        let tmp = HASH[(y + self.mod1 as i64) as usize % 256];
-        HASH[(tmp + x as i32) as usize % 256]
+    fn noise2(&self, x: i64, y: i64, hash: [i32; 256]) -> i32 {
+        let tmp = hash[(y + self.mod1 as i64) as usize % 256];
+        hash[(tmp + x as i32) as usize % 256]
     }
 
     fn lin_inter(&self, x: f64, y: f64, s: f64) -> f64 {
@@ -244,15 +244,15 @@ impl Texture {
         self.lin_inter(x, y, s * s * (3.0 - 2.0 * s))
     }
 
-    fn noise(&self, x: f64, y: f64, HASH: [i32; 256]) -> f64 {
+    fn noise(&self, x: f64, y: f64, hash: [i32; 256]) -> f64 {
         let x_int = x as i64;
         let y_int = y as i64;
         let x_frac = x - x_int as f64;
         let y_frac = y - y_int as f64;
-        let s = self.noise2(x_int, y_int, HASH) as f64;
-        let t = self.noise2(x_int + 1, y_int, HASH) as f64;
-        let u = self.noise2(x_int, y_int + 1, HASH) as f64;
-        let v = self.noise2(x_int + 1, y_int + 1, HASH) as f64;
+        let s = self.noise2(x_int, y_int, hash) as f64;
+        let t = self.noise2(x_int + 1, y_int, hash) as f64;
+        let u = self.noise2(x_int, y_int + 1, hash) as f64;
+        let v = self.noise2(x_int + 1, y_int + 1, hash) as f64;
         let low = self.smooth_inter(s, t, x_frac);
         let high = self.smooth_inter(u, v, x_frac);
         self.smooth_inter(low, high, y_frac)
@@ -333,7 +333,7 @@ impl Texture {
             TexturesTypes::Color => self.color,
             TexturesTypes::Gradient => self.gradient_color(x, y),
             TexturesTypes::Perlin => self.perlin_noise(x, y),
-            TexturesTypes::Checkers => return self.checkers_color(x, y),
+            TexturesTypes::Checkers => self.checkers_color(x, y),
             TexturesTypes::Image => self.image_color(x, y),
         }
     }
