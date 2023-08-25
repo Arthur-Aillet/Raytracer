@@ -1,4 +1,4 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 use raytracer::{config::Config, renderer};
 
 pub fn frame_benchmark(c: &mut Criterion) {

@@ -109,8 +109,9 @@ impl Vector {
         let mut rng = rand::thread_rng();
         let theta = rng.gen_range(0.0..PI * 2.0);
         let v: f64 = rng.gen_range(0.0..1.0);
+        let r_rng: f64 = rng.gen_range(0.0..1.0);
         let phi = ((2.0 * v) - 1.0).acos();
-        let r = (rng.gen_range(0.0..1.0) as f64).powf(1.0 / 3.0);
+        let r = r_rng.powf(1.0 / 3.0);
         Vector {
             x: r * phi.sin() * theta.cos() * radius,
             y: r * phi.sin() * theta.sin() * radius,

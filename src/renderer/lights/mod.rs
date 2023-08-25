@@ -111,7 +111,7 @@ impl Light for Point {
             .filter(|number| **number > 0.0)
             .min_by(|a, b| a.partial_cmp(b).unwrap());
 
-        if smallest_result == None {
+        if smallest_result.is_none() {
             None
         } else {
             let point = Vector {
@@ -269,7 +269,7 @@ impl Light for Directional {
             .filter(|number| **number > 0.0)
             .min_by(|a, b| a.partial_cmp(b).unwrap());
 
-        if smallest_result == None {
+        if smallest_result.is_none() {
             None
         } else {
             let point = Vector {

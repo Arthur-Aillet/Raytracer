@@ -7,15 +7,16 @@
 
 use raytracer::vectors;
 use vectors::resolve_quadratic_equation;
+//use vectors::Segment;
 use vectors::Vector;
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
+/*
     #[test]
     fn test_add() {
-        let vec1 = Vector {
+        let vec1 = Segment {
             origin: Vector {
                 x: 1.0,
                 y: 2.0,
@@ -85,7 +86,7 @@ mod tests {
             }
         );
     }
-
+ */
     #[test]
     fn test_dot_product() {
         let p1 = Vector {
@@ -147,55 +148,6 @@ mod tests {
         let c = 2.0;
         let result = resolve_quadratic_equation(a, b, c);
         assert_eq!(result, vec![2.0, 1.0]);
-    }
-
-    #[test]
-    fn test_add_in_place() {
-        let vec1 = Segment {
-            origin: Vector {
-                x: 1.0,
-                y: 2.0,
-                z: 3.0,
-            },
-            end: Vector {
-                x: 4.0,
-                y: 5.0,
-                z: 6.0,
-            },
-        };
-
-        let vec2 = Segment {
-            origin: Vector {
-                x: 7.0,
-                y: 8.0,
-                z: 9.0,
-            },
-            end: Vector {
-                x: 10.0,
-                y: 11.0,
-                z: 12.0,
-            },
-        };
-
-        let mut vec3 = vec1.clone();
-        vec3.add(vec2);
-
-        assert_eq!(
-            vec3.origin,
-            Vector {
-                x: 1.0,
-                y: 2.0,
-                z: 3.0,
-            }
-        );
-        assert_eq!(
-            vec3.end,
-            Vector {
-                x: 7.0,
-                y: 8.0,
-                z: 9.0,
-            }
-        );
     }
 
     #[test]

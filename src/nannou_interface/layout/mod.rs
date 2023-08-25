@@ -74,7 +74,7 @@ impl Layout {
 
         Layout {
             config: config.clone(),
-            renderer: renderer,
+            renderer,
             rect: Rect::from_x_y_w_h(width, height, 360.0, config.height as f32),
             buttons,
             sliders,
@@ -138,15 +138,11 @@ impl Layout {
 
     pub fn get_buttons_interactions(&self, app: &App, name: String) -> bool {
         for button in &self.buttons {
-            if button.name == name {
-                if button.rect.contains(app.mouse.position()) {
-                    if app.mouse.buttons.left().is_down() {
-                        return true;
-                    }
-                }
+            if button.name == name && button.rect.contains(app.mouse.position()) && app.mouse.buttons.left().is_down() {
+                return true;
             }
         }
-        return false;
+        false
     }
 
     pub fn get_sliders_interactions(&self, name: String) -> i64 {
@@ -155,6 +151,6 @@ impl Layout {
                 return slider.value;
             }
         }
-        return -1;
+        -1
     }
 }

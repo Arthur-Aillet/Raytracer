@@ -64,14 +64,12 @@ fn model(app: &App) -> Model {
         .expect("Failed to build the window");
     let last_image = vec![0; (config.height * config.width * 3) as usize];
 
-    config.height = config.height
-        / if config.fast_mode == 0 {
+    config.height /= if config.fast_mode == 0 {
             1
         } else {
             config.fast_mode
         };
-    config.width = config.width
-        / if config.fast_mode == 0 {
+    config.width /= if config.fast_mode == 0 {
             1
         } else {
             config.fast_mode
@@ -98,16 +96,16 @@ fn model(app: &App) -> Model {
 pub fn fancy_to_fast(model: &mut Model) {
     model.config.fast_mode = model.base_fast_mode;
     model.image_nbr = 0;
-    model.config.width = model.config.width / model.base_fast_mode;
-    model.config.height = model.config.height / model.base_fast_mode;
+    model.config.width /= model.base_fast_mode;
+    model.config.height /= model.base_fast_mode;
     model.last_image = vec![0; (model.config.height * model.config.width * 3) as usize];
 }
 
 pub fn fast_to_fancy(model: &mut Model) {
     model.config.fast_mode = 0;
     model.image_nbr = 0;
-    model.config.width = model.config.width * model.base_fast_mode;
-    model.config.height = model.config.height * model.base_fast_mode;
+    model.config.width *= model.base_fast_mode;
+    model.config.height *= model.base_fast_mode;
     model.last_image = vec![0; (model.config.height * model.config.width * 3) as usize];
 }
 
@@ -130,19 +128,13 @@ fn merge_camera_transform(renderer: &mut Renderer, model: &Model) {
 fn merge_interactions_layout(app: &App, model: &mut Model) {
     if model
         .layout
-        .get_buttons_interactions(app, "fast".to_string())
-    {
-        if model.config.fast_mode == 0 {
-            fancy_to_fast(model);
-        }
+        .get_buttons_interactions(app, "fast".to_string()) && model.config.fast_mode == 0 {
+        fancy_to_fast(model);
     }
     if model
         .layout
-        .get_buttons_interactions(app, "fancy".to_string())
-    {
-        if model.config.fast_mode > 0 {
-            fast_to_fancy(model);
-        }
+        .get_buttons_interactions(app, "fancy".to_string()) && model.config.fast_mode > 0 {
+        fast_to_fancy(model);
     }
     if model
         .layout
@@ -165,12 +157,11 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
     let renderer = Renderer::get_renderer_from_file(&model.config);
 
     if let Some(mut render) = renderer {
-        merge_camera_transform(&mut render, &model);
+        merge_camera_transform(&mut render, model);
         model.image_nbr += 1;
         if model.config.fast_mode == 0 {
             let new_image = render.pull_new_image(&model.config);
             render.merge_image(
-                &model.config,
                 &mut model.last_image,
                 &new_image,
                 model.image_nbr,
@@ -179,7 +170,7 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
             model.last_image = render.pull_new_image(&model.config);
         }
         if model.config.layout {
-            model.layout.display(&_app, &model.draw, &render);
+            model.layout.display(_app, &model.draw, &render);
         }
     } else {
         println!("Error: Renderer not found");
@@ -248,7 +239,7 @@ fn event(_app: &App, model: &mut Model, event: WindowEvent) {
         }
         _ => {}
     }
-    merge_interactions_layout(&_app, model);
+    merge_interactions_layout(_app, model);
 }
 
 pub fn draw_canvas(draw: &Draw, pixels: &[u8], model: &Model, app: &App) {
@@ -275,7 +266,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
     let color = nannou::color::rgb_u32(0x302B34);
 
     model.draw.background().color(color);
-    draw_canvas(&model.draw, &model.last_image, &model, &app);
+    draw_canvas(&model.draw, &model.last_image, model, app);
     model.draw.to_frame(app, &frame).unwrap();
 }
 

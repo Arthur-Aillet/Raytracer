@@ -92,7 +92,7 @@ impl Camera {
 
     pub fn get_random_pixel_vector(&self, x: i64, y: i64) -> Vector {
         let mut rng = rand::thread_rng();
-        let mut pixel_vector = self.lens.vector_to_first_pixel.clone();
+        let mut pixel_vector = self.lens.vector_to_first_pixel;
 
         pixel_vector = pixel_vector
             + Vector {
@@ -116,7 +116,7 @@ impl Camera {
 
     fn get_pixel_vector(&self, x: f64, y: f64) -> Vector {
         let mut _rng = rand::thread_rng();
-        let mut pixel_vector = self.lens.vector_to_first_pixel.clone();
+        let mut pixel_vector = self.lens.vector_to_first_pixel;
 
         pixel_vector = pixel_vector
             + Vector {
@@ -144,7 +144,7 @@ impl Camera {
         if n <= 1 {
             result.push(self.get_pixel_vector(x as f64, y as f64))
         }
-        if n >= 2 && n <= 4 {
+        if (2..=4).contains(&n) {
             for _i in 0..n {
                 result.push(self.get_random_pixel_vector(x, y));
             }

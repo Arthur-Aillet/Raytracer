@@ -36,7 +36,7 @@ impl Mesh {
             .collect();
         let vertices_available = verteces.len();
         let len = points.len();
-        if len < 3 || len > 4 {
+        if !(3..=4).contains(&len) {
             return (None, None);
         }
 
@@ -159,7 +159,7 @@ impl Mesh {
             normal_map: Texture::normal_map_default(),
         };
         snd_triangle.apply_transform();
-        return (Some(fst_triangle), Some(snd_triangle));
+        (Some(fst_triangle), Some(snd_triangle))
     }
 
     pub fn parse_vertex(&mut self, line: String) -> Option<Vector> {

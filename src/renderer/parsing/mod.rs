@@ -133,7 +133,7 @@ impl Parser {
                 Color::normal_map_default()
             },
             image: if json["image"].is_string() {
-                self.get_image_from_json(&json)
+                self.get_image_from_json(json)
             } else {
                 Image::default()
             },
@@ -166,7 +166,7 @@ impl Parser {
                 Color::default()
             },
             image: if json["image"].is_string() {
-                self.get_image_from_json(&json)
+                self.get_image_from_json(json)
             } else {
                 Image::default()
             },
@@ -638,7 +638,7 @@ impl Parser {
         }
         Lights {
             lights: objects,
-            ambient: self.get_ambients_from_json(&json),
+            ambient: self.get_ambients_from_json(json),
         }
     }
 

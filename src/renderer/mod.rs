@@ -10,13 +10,8 @@ mod lights;
 mod parsing;
 mod primitives;
 pub mod renderer_common;
-use nannou::draw::background::new;
-use nannou::prelude::Float;
-
-use serde::Serialize;
 
 use crate::config::Config;
-use crate::ppm_interface::PPMInterface;
 use crate::renderer::primitives::{Intersection, Object};
 use crate::vectors::Vector;
 use camera::Camera;
@@ -490,7 +485,6 @@ impl Renderer {
 
     pub fn merge_image(
         &self,
-        config: &Config,
         last_image: &mut Vec<u8>,
         new_image: &Vec<u8>,
         image_nbr: u64,

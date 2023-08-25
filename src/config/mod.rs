@@ -21,7 +21,7 @@ fn config_is_correct(config: &mut Config) -> bool {
     if config.width <= 0 || config.height <= 0 {
         config.help = true;
     }
-    if config.save_file == "" || config.config_file == "" {
+    if config.save_file.is_empty() || config.config_file.is_empty() {
         config.help = true;
     }
     if config.fast_mode < 0 {
@@ -94,7 +94,7 @@ impl Config {
             config.help = true;
         }
         config_is_correct(&mut config);
-        return config;
+        config
     }
 
     pub fn print(&self) {

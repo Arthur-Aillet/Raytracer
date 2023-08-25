@@ -219,7 +219,7 @@ impl Object for Sphere {
             .filter(|number| **number > 0.0)
             .min_by(|a, b| a.partial_cmp(b).unwrap());
 
-        if smallest_result == None {
+        if smallest_result.is_none() {
             found_intersection
         } else {
             let point = Vector {
@@ -515,7 +515,7 @@ impl Object for Cylinder {
             .iter()
             .filter(|number| **number > 0.0)
             .min_by(|fst, snd| fst.partial_cmp(snd).unwrap());
-        if smallest_result == None {
+        if smallest_result.is_none() {
             return found_intersection;
         }
 
@@ -669,9 +669,7 @@ impl Object for Cone {
             .iter()
             .filter(|number| **number > 0.0)
             .min_by(|fst, snd| fst.partial_cmp(snd).unwrap());
-        if smallest_result == None {
-            return None;
-        }
+        smallest_result?;
 
         let intersection_point = origin + ray * *smallest_result.unwrap();
         if 0.0 <= (intersection_point - self.base).dot_product(self.axis)
@@ -756,7 +754,7 @@ impl Object for Cone {
 
 impl Object for Triangle {
     fn apply_transform(&mut self) {
-        self.point_a_applied = self.point_a.clone();
+        self.point_a_applied = self.point_a;
         self.point_a_applied.rotate(
             self.transform.rotation.x,
             self.transform.rotation.y,

@@ -97,7 +97,7 @@ impl Slider {
         let mouse_position = app.mouse.position();
         let percent = (self.value - self.min) as f32 / (self.max - self.min) as f32;
         let mut cursor_rect = Rect::from_x_y_w_h(
-            self.rect.x() - (self.rect.w() / 2.0) + (self.rect.w() * percent as f32),
+            self.rect.x() - (self.rect.w() / 2.0) + (self.rect.w() * percent),
             self.rect.y(),
             self.rect.h() / 1.8,
             self.rect.h() / 1.8,
@@ -127,7 +127,7 @@ impl Slider {
         //draw curent value bar
         draw.rect()
             .x_y(
-                (self.rect.x() - (self.rect.w() / 2.0)) + ((self.rect.w() * percent as f32) / 2.0),
+                (self.rect.x() - (self.rect.w() / 2.0)) + ((self.rect.w() * percent) / 2.0),
                 self.rect.y(),
             )
             .w_h(self.rect.w() * percent, self.rect.h() / 2.2)
@@ -148,8 +148,8 @@ impl Slider {
             .color(nannou::color::IntoLinSrgba::<f32>::into_lin_srgba(
                 nannou::color::rgb_u32(0xFFFFFF),
             ));
-        self.value = (((cursor_rect.x() - (self.rect.x() - (self.rect.w() / 2.0))) as f32
-            / self.rect.w()) as f32
+        self.value = (((cursor_rect.x() - (self.rect.x() - (self.rect.w() / 2.0)))
+            / self.rect.w())
             * (self.max - self.min) as f32
             + self.min as f32) as i64;
         draw.text(self.value.to_string().as_str())
