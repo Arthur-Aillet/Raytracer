@@ -5,21 +5,20 @@
 // json parsing
 //
 
-use std::fs;
 use nannou::image::io::Reader;
+use std::fs;
 
+use super::camera::{Camera, Lens};
+use super::lights::{Ambient, Directional, Light, Lights, Point};
+use super::primitives::mesh::Mesh;
+use super::primitives::{Cone, Cylinder, Object, Parent, Plane, Sphere, Triangle};
+use super::renderer_common::{Color, Image, Texture, Transform};
+use super::Renderer;
 use crate::vectors;
 use serde_json::Value;
 use vectors::Vector;
-use super::Renderer;
-use super::camera::{Lens, Camera};
-use super::primitives::{Sphere, Plane, Cylinder, Cone, Object, Triangle, Parent};
-use super::primitives::mesh::Mesh;
-use super::lights::{Point, Ambient, Light, Lights, Directional};
-use super::renderer_common::{Transform, Color, Texture, Image};
 
-pub struct Parser {
-}
+pub struct Parser {}
 
 impl Parser {
     pub fn get_vector_from_json(&self, json: &Value) -> Vector {
@@ -32,15 +31,35 @@ impl Parser {
 
     fn get_transform_from_json(&self, json: &Value) -> Transform {
         Transform {
-            pos: if json["pos"].is_object() {self.get_vector_from_json(&json["pos"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
-            rotation: if json["rotation"].is_object() {self.get_vector_from_json(&json["rotation"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
+            pos: if json["pos"].is_object() {
+                self.get_vector_from_json(&json["pos"])
+            } else {
+                Vector {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 0.0,
+                }
+            },
+            rotation: if json["rotation"].is_object() {
+                self.get_vector_from_json(&json["rotation"])
+            } else {
+                Vector {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 0.0,
+                }
+            },
             scale: json["scale"].as_f64().unwrap_or(1.0),
         }
     }
 
     pub fn get_camera_from_json(&self, json: &Value, height: i64, width: i64) -> Camera {
         let mut camera = Camera {
-            transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
+            transform: if json["transform"].is_object() {
+                self.get_transform_from_json(&json["transform"])
+            } else {
+                Transform::default()
+            },
             lens: Lens::default(height, width),
             fov: json["fov"].as_i64().unwrap_or(60),
             smooth_shadow: json["smooth_shadow"].as_bool().unwrap_or(true),
@@ -81,8 +100,16 @@ impl Parser {
     }
 
     pub fn get_image_from_json(&self, json: &Value) -> Image {
-        let filename = json["image"].as_str().unwrap_or("missing_texture.ppm").to_string();
-        let mut reader = Reader::open(&filename).unwrap_or(Reader::open("missing_texture.ppm").expect("missing missing texture texture\n")).decode().expect("file invalid\n");
+        let filename = json["image"]
+            .as_str()
+            .unwrap_or("missing_texture.ppm")
+            .to_string();
+        let mut reader = Reader::open(&filename)
+            .unwrap_or(
+                Reader::open("missing_texture.ppm").expect("missing missing texture texture\n"),
+            )
+            .decode()
+            .expect("file invalid\n");
         let data = reader.as_mut_rgb8().expect("file invalid");
 
         Image {
@@ -95,9 +122,21 @@ impl Parser {
     pub fn get_normal_map_from_json(&self, json: &Value) -> Texture {
         Texture {
             texture_type: json["texture_type"].as_u64().unwrap_or(0),
-            color: if json["color"].is_object(){self.get_color_from_json(&json["color"])} else {Color::normal_map_default()},
-            secondary_color: if json["secondary_color"].is_object(){self.get_color_from_json(&json["secondary_color"])} else {Color::normal_map_default()},
-            image: if json["image"].is_string() {self.get_image_from_json(&json)} else {Image::default()},
+            color: if json["color"].is_object() {
+                self.get_color_from_json(&json["color"])
+            } else {
+                Color::normal_map_default()
+            },
+            secondary_color: if json["secondary_color"].is_object() {
+                self.get_color_from_json(&json["secondary_color"])
+            } else {
+                Color::normal_map_default()
+            },
+            image: if json["image"].is_string() {
+                self.get_image_from_json(&json)
+            } else {
+                Image::default()
+            },
             mod1: json["mod1"].as_f64().unwrap_or(2.0),
             mod2: json["mod2"].as_f64().unwrap_or(2.0),
             diffuse: 0.0,
@@ -109,16 +148,28 @@ impl Parser {
             sampling_ponderation: 0.0,
             alpha: 0.0,
             transmission: 0.0,
-            ior: 0.0
+            ior: 0.0,
         }
     }
 
     pub fn get_texture_from_json(&self, json: &Value) -> Texture {
         Texture {
             texture_type: json["texture_type"].as_u64().unwrap_or(0),
-            color: if json["color"].is_object(){self.get_color_from_json(&json["color"])} else {Color::default()},
-            secondary_color: if json["secondary_color"].is_object(){self.get_color_from_json(&json["secondary_color"])} else {Color::default()},
-            image: if json["image"].is_string() {self.get_image_from_json(&json)} else {Image::default()},
+            color: if json["color"].is_object() {
+                self.get_color_from_json(&json["color"])
+            } else {
+                Color::default()
+            },
+            secondary_color: if json["secondary_color"].is_object() {
+                self.get_color_from_json(&json["secondary_color"])
+            } else {
+                Color::default()
+            },
+            image: if json["image"].is_string() {
+                self.get_image_from_json(&json)
+            } else {
+                Image::default()
+            },
             mod1: json["mod1"].as_f64().unwrap_or(2.0),
             mod2: json["mod2"].as_f64().unwrap_or(2.0),
             diffuse: json["diffuse"].as_f64().unwrap_or(0.7),
@@ -138,12 +189,28 @@ impl Parser {
         let mut sphere = Sphere {
             name: json["name"].as_str().unwrap_or("Nan").to_string(),
             obj_type: "sphere".to_string(),
-            transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
-            texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
-            normal_map: if json["normal_map"].is_object() {self.get_normal_map_from_json(&json["normal_map"])} else {Texture::normal_map_default()},
+            transform: if json["transform"].is_object() {
+                self.get_transform_from_json(&json["transform"])
+            } else {
+                Transform::default()
+            },
+            texture: if json["texture"].is_object() {
+                self.get_texture_from_json(&json["texture"])
+            } else {
+                Texture::default()
+            },
+            normal_map: if json["normal_map"].is_object() {
+                self.get_normal_map_from_json(&json["normal_map"])
+            } else {
+                Texture::normal_map_default()
+            },
             radius: json["radius"].as_f64().unwrap_or(1.0),
             radius_applied: 0.0,
-            children: if json["children"].is_array() {self.get_objects_from_json(&json["children"])} else {Vec::new()},
+            children: if json["children"].is_array() {
+                self.get_objects_from_json(&json["children"])
+            } else {
+                Vec::new()
+            },
         };
         sphere.apply_transform();
         for i in 0..sphere.children.len() {
@@ -152,16 +219,44 @@ impl Parser {
         Box::new(sphere)
     }
 
-    pub fn get_plane_from_json(&self, json: &Value) -> Box::<Plane> {
+    pub fn get_plane_from_json(&self, json: &Value) -> Box<Plane> {
         let mut plane = Plane {
             name: json["name"].as_str().unwrap_or("Nan").to_string(),
             obj_type: "plane".to_string(),
-            transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
-            texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
-            normal_map: if json["normal_map"].is_object() {self.get_normal_map_from_json(&json["normal_map"])} else {Texture::normal_map_default()},
-            normal: if json["normal"].is_object(){self.get_vector_from_json(&json["normal"])} else {Vector {x: 0.0, y: 0.0, z: 1.0}},
-            normal_applied: Vector { x: 0.0, y: 0.0, z: 0.0, },
-            children: if json["children"].is_array() {self.get_objects_from_json(&json["children"])} else {Vec::new()},
+            transform: if json["transform"].is_object() {
+                self.get_transform_from_json(&json["transform"])
+            } else {
+                Transform::default()
+            },
+            texture: if json["texture"].is_object() {
+                self.get_texture_from_json(&json["texture"])
+            } else {
+                Texture::default()
+            },
+            normal_map: if json["normal_map"].is_object() {
+                self.get_normal_map_from_json(&json["normal_map"])
+            } else {
+                Texture::normal_map_default()
+            },
+            normal: if json["normal"].is_object() {
+                self.get_vector_from_json(&json["normal"])
+            } else {
+                Vector {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 1.0,
+                }
+            },
+            normal_applied: Vector {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            children: if json["children"].is_array() {
+                self.get_objects_from_json(&json["children"])
+            } else {
+                Vec::new()
+            },
         };
         plane.apply_transform();
         for i in 0..plane.children.len() {
@@ -170,21 +265,49 @@ impl Parser {
         Box::new(plane)
     }
 
-    pub fn get_cylinder_from_json(&self, json: &Value) -> Box::<Cylinder> {
+    pub fn get_cylinder_from_json(&self, json: &Value) -> Box<Cylinder> {
         let mut cylinder = Cylinder {
             name: json["name"].as_str().unwrap_or("Nan").to_string(),
             obj_type: "cylinder".to_string(),
-            transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
-            texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
-            normal_map: if json["normal_map"].is_object() {self.get_normal_map_from_json(&json["normal_map"])} else {Texture::normal_map_default()},
+            transform: if json["transform"].is_object() {
+                self.get_transform_from_json(&json["transform"])
+            } else {
+                Transform::default()
+            },
+            texture: if json["texture"].is_object() {
+                self.get_texture_from_json(&json["texture"])
+            } else {
+                Texture::default()
+            },
+            normal_map: if json["normal_map"].is_object() {
+                self.get_normal_map_from_json(&json["normal_map"])
+            } else {
+                Texture::normal_map_default()
+            },
             height: json["height"].as_f64().unwrap_or(2.0),
             radius: json["radius"].as_f64().unwrap_or(1.0),
-            axis: Vector { x: 0.0, y: 0.0, z: 0.0, },
-            top: Vector { x: 0.0, y: 0.0, z: 0.0, },
-            base: Vector { x: 0.0, y: 0.0, z: 0.0, },
+            axis: Vector {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            top: Vector {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            base: Vector {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
             radius_applied: 0.0,
             height_applied: 0.0,
-            children: if json["children"].is_array() {self.get_objects_from_json(&json["children"])} else {Vec::new()},
+            children: if json["children"].is_array() {
+                self.get_objects_from_json(&json["children"])
+            } else {
+                Vec::new()
+            },
         };
         cylinder.apply_transform();
         for i in 0..cylinder.children.len() {
@@ -193,21 +316,49 @@ impl Parser {
         Box::new(cylinder)
     }
 
-    pub fn get_cone_from_json(&self, json: &Value) -> Box::<Cone> {
+    pub fn get_cone_from_json(&self, json: &Value) -> Box<Cone> {
         let mut cone = Cone {
             name: json["name"].as_str().unwrap_or("Nan").to_string(),
             obj_type: "cone".to_string(),
-            transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
-            texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
-            normal_map: if json["normal_map"].is_object() {self.get_normal_map_from_json(&json["normal_map"])} else {Texture::normal_map_default()},
+            transform: if json["transform"].is_object() {
+                self.get_transform_from_json(&json["transform"])
+            } else {
+                Transform::default()
+            },
+            texture: if json["texture"].is_object() {
+                self.get_texture_from_json(&json["texture"])
+            } else {
+                Texture::default()
+            },
+            normal_map: if json["normal_map"].is_object() {
+                self.get_normal_map_from_json(&json["normal_map"])
+            } else {
+                Texture::normal_map_default()
+            },
             height: json["height"].as_f64().unwrap_or(3.0),
             radius: json["radius"].as_f64().unwrap_or(1.0),
-            axis: Vector { x: 0.0, y: 0.0, z: 0.0, },
-            top: Vector { x: 0.0, y: 0.0, z: 0.0, },
-            base: Vector { x: 0.0, y: 0.0, z: 0.0, },
+            axis: Vector {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            top: Vector {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            base: Vector {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
             radius_applied: 0.0,
             height_applied: 0.0,
-            children: if json["children"].is_array() {self.get_objects_from_json(&json["children"])} else {Vec::new()},
+            children: if json["children"].is_array() {
+                self.get_objects_from_json(&json["children"])
+            } else {
+                Vec::new()
+            },
         };
         for i in 0..cone.children.len() {
             cone.children[i].move_obj(cone.transform);
@@ -220,17 +371,73 @@ impl Parser {
         let mut triangle = Triangle {
             name: json["name"].as_str().unwrap_or("Nan").to_string(),
             obj_type: "triangle".to_string(),
-            transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
-            texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
-            normal_map: if json["normal_map"].is_object() {self.get_normal_map_from_json(&json["normal_map"])} else {Texture::normal_map_default()},
-            point_a: if json["point_a"].is_object() {self.get_vector_from_json(&json["point_a"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
-            point_b: if json["point_b"].is_object() {self.get_vector_from_json(&json["point_b"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
-            point_c: if json["point_c"].is_object() {self.get_vector_from_json(&json["point_c"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
-            point_a_applied: Vector { x: 0.0, y: 0.0, z: 0.0, },
-            point_b_applied: Vector { x: 0.0, y: 0.0, z: 0.0, },
-            point_c_applied: Vector { x: 0.0, y: 0.0, z: 0.0, },
-            normal: Vector { x: 0.0, y: 0.0, z: 0.0, },
-            children: if json["children"].is_array() {self.get_objects_from_json(&json["children"])} else {Vec::new()},
+            transform: if json["transform"].is_object() {
+                self.get_transform_from_json(&json["transform"])
+            } else {
+                Transform::default()
+            },
+            texture: if json["texture"].is_object() {
+                self.get_texture_from_json(&json["texture"])
+            } else {
+                Texture::default()
+            },
+            normal_map: if json["normal_map"].is_object() {
+                self.get_normal_map_from_json(&json["normal_map"])
+            } else {
+                Texture::normal_map_default()
+            },
+            point_a: if json["point_a"].is_object() {
+                self.get_vector_from_json(&json["point_a"])
+            } else {
+                Vector {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 0.0,
+                }
+            },
+            point_b: if json["point_b"].is_object() {
+                self.get_vector_from_json(&json["point_b"])
+            } else {
+                Vector {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 0.0,
+                }
+            },
+            point_c: if json["point_c"].is_object() {
+                self.get_vector_from_json(&json["point_c"])
+            } else {
+                Vector {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 0.0,
+                }
+            },
+            point_a_applied: Vector {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            point_b_applied: Vector {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            point_c_applied: Vector {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            normal: Vector {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            children: if json["children"].is_array() {
+                self.get_objects_from_json(&json["children"])
+            } else {
+                Vec::new()
+            },
         };
         triangle.apply_transform();
         for i in 0..triangle.children.len() {
@@ -243,11 +450,27 @@ impl Parser {
         let mut mesh = Mesh {
             name: json["name"].as_str().unwrap_or("Nan").to_string(),
             obj_type: "mesh".to_string(),
-            transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
-            texture: if json["texture"].is_object() {self.get_texture_from_json(&json["texture"])} else {Texture::default()},
-            normal_map: if json["normal_map"].is_object() {self.get_normal_map_from_json(&json["normal_map"])} else {Texture::normal_map_default()},
+            transform: if json["transform"].is_object() {
+                self.get_transform_from_json(&json["transform"])
+            } else {
+                Transform::default()
+            },
+            texture: if json["texture"].is_object() {
+                self.get_texture_from_json(&json["texture"])
+            } else {
+                Texture::default()
+            },
+            normal_map: if json["normal_map"].is_object() {
+                self.get_normal_map_from_json(&json["normal_map"])
+            } else {
+                Texture::normal_map_default()
+            },
             triangles: Vec::new(),
-            children: if json["children"].is_array() {self.get_objects_from_json(&json["children"])} else {Vec::new()},
+            children: if json["children"].is_array() {
+                self.get_objects_from_json(&json["children"])
+            } else {
+                Vec::new()
+            },
         };
         if json["file"].is_string() {
             let filename = json["file"].as_str().unwrap();
@@ -261,21 +484,27 @@ impl Parser {
     }
 
     pub fn get_parent_from_json(&self, json: &Value) -> Box<Parent> {
-    let mut parent = Box::new(
-            Parent {
-                name: json["name"].as_str().unwrap_or("Nan").to_string(),
-                obj_type: "parent".to_string(),
-                transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
-                children: if json["children"].is_array() {self.get_objects_from_json(&json["children"])} else {Vec::new()},
-            }
-        );
+        let mut parent = Box::new(Parent {
+            name: json["name"].as_str().unwrap_or("Nan").to_string(),
+            obj_type: "parent".to_string(),
+            transform: if json["transform"].is_object() {
+                self.get_transform_from_json(&json["transform"])
+            } else {
+                Transform::default()
+            },
+            children: if json["children"].is_array() {
+                self.get_objects_from_json(&json["children"])
+            } else {
+                Vec::new()
+            },
+        });
         for i in 0..parent.children.len() {
             parent.children[i].move_obj(parent.transform);
         }
         parent
     }
 
-    pub fn get_object_from_json(&self, json: &Value) -> Option<Box::<dyn Object + Send + Sync>> {
+    pub fn get_object_from_json(&self, json: &Value) -> Option<Box<dyn Object + Send + Sync>> {
         if json["type"].is_string() {
             return match json["type"].as_str().unwrap() {
                 "sphere" => Some(self.get_sphere_from_json(json)),
@@ -285,64 +514,88 @@ impl Parser {
                 "triangle" => Some(self.get_triangle_from_json(json)),
                 "mesh" => Some(self.get_mesh_from_json(json)),
                 _ => None,
-            }
+            };
         } else {
             Some(self.get_parent_from_json(json))
         }
     }
 
-    pub fn get_objects_from_json(&self, json: &Value) -> Vec::<Box::<dyn Object + Send + Sync>> {
-        let mut objects: Vec::<Box::<dyn Object + Send + Sync>> = Vec::new();
+    pub fn get_objects_from_json(&self, json: &Value) -> Vec<Box<dyn Object + Send + Sync>> {
+        let mut objects: Vec<Box<dyn Object + Send + Sync>> = Vec::new();
 
         if json.is_array() {
             for object in json.as_array().unwrap().iter() {
                 if let Some(result) = self.get_object_from_json(object) {
-                objects.push(result)
+                    objects.push(result)
                 }
             }
         }
         objects
     }
 
-    pub fn get_point_from_json(&self, json: &Value) -> Box::<Point> {
-        Box::new(
-            Point {
-                visible: json["visible"].as_bool().unwrap_or(false),
-                transform: if json["transform"].is_object() {self.get_transform_from_json(&json["transform"])} else {Transform::default()},
-                color: if json["color"].is_object() {self.get_color_from_json(&json["color"])} else {Color::default()},
-                strength: json["strength"].as_f64().unwrap_or(80.0),
-                radius: json["radius"].as_f64().unwrap_or(1.0),
-                falloff: json["falloff"].as_i64().unwrap_or(2) as i32,
-            }
-        )
+    pub fn get_point_from_json(&self, json: &Value) -> Box<Point> {
+        Box::new(Point {
+            visible: json["visible"].as_bool().unwrap_or(false),
+            transform: if json["transform"].is_object() {
+                self.get_transform_from_json(&json["transform"])
+            } else {
+                Transform::default()
+            },
+            color: if json["color"].is_object() {
+                self.get_color_from_json(&json["color"])
+            } else {
+                Color::default()
+            },
+            strength: json["strength"].as_f64().unwrap_or(80.0),
+            radius: json["radius"].as_f64().unwrap_or(1.0),
+            falloff: json["falloff"].as_i64().unwrap_or(2) as i32,
+        })
     }
 
-    pub fn get_directional_from_json(&self, json: &Value) -> Box::<Directional> {
-        let mut result = Box::new(
-            Directional {
-                transform: Transform {
-                    pos: Vector {x: 0.0, y: 0.0, z: 1.0},
-                    rotation: if json["transform"]["rotation"].is_object() {self.get_vector_from_json(&json["transform"]["rotation"])} else {Vector {x: 0.0, y: 0.0, z: 0.0}},
-                    scale: json["transform"]["scale"].as_f64().unwrap_or(1.0),
+    pub fn get_directional_from_json(&self, json: &Value) -> Box<Directional> {
+        let mut result = Box::new(Directional {
+            transform: Transform {
+                pos: Vector {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 1.0,
                 },
-                color: if json["color"].is_object() {self.get_color_from_json(&json["color"])} else {Color::default()},
-                strength: json["strength"].as_f64().unwrap_or(80.0),
-                visible: json["visible"].as_bool().unwrap_or(false),
-            }
+                rotation: if json["transform"]["rotation"].is_object() {
+                    self.get_vector_from_json(&json["transform"]["rotation"])
+                } else {
+                    Vector {
+                        x: 0.0,
+                        y: 0.0,
+                        z: 0.0,
+                    }
+                },
+                scale: json["transform"]["scale"].as_f64().unwrap_or(1.0),
+            },
+            color: if json["color"].is_object() {
+                self.get_color_from_json(&json["color"])
+            } else {
+                Color::default()
+            },
+            strength: json["strength"].as_f64().unwrap_or(80.0),
+            visible: json["visible"].as_bool().unwrap_or(false),
+        });
+        result.transform.pos.rotate(
+            result.transform.rotation.x,
+            result.transform.rotation.y,
+            result.transform.rotation.z,
         );
-        result.transform.pos.rotate(result.transform.rotation.x, result.transform.rotation.y, result.transform.rotation.z);
         result
     }
 
-    pub fn get_object_lights_from_json(&self, json: &Value) -> Vec::<Box::<dyn Light + Send + Sync>> {
-        let mut lights: Vec::<Box::<dyn Light + Send + Sync>> = Vec::new();
+    pub fn get_object_lights_from_json(&self, json: &Value) -> Vec<Box<dyn Light + Send + Sync>> {
+        let mut lights: Vec<Box<dyn Light + Send + Sync>> = Vec::new();
 
-        if json["point"].is_array(){
+        if json["point"].is_array() {
             for point in json["point"].as_array().unwrap().iter() {
                 lights.push(self.get_point_from_json(point))
             }
         }
-        if json["directional"].is_array(){
+        if json["directional"].is_array() {
             for point in json["directional"].as_array().unwrap().iter() {
                 lights.push(self.get_directional_from_json(point))
             }
@@ -353,16 +606,19 @@ impl Parser {
     pub fn get_ambient_from_json(&self, json: &Value) -> Ambient {
         let color_val: Color;
 
-        if json["color"].is_object() {color_val = self.get_color_from_json(&json["color"]);}
-        else {color_val = Color::default();}
+        if json["color"].is_object() {
+            color_val = self.get_color_from_json(&json["color"]);
+        } else {
+            color_val = Color::default();
+        }
         Ambient {
             color: color_val,
             strength: json["strength"].as_f64().unwrap_or(80.0),
         }
     }
 
-    pub fn get_ambients_from_json(&self, json: &Value) -> Vec::<Ambient> {
-        let mut lights: Vec::<Ambient> = Vec::new();
+    pub fn get_ambients_from_json(&self, json: &Value) -> Vec<Ambient> {
+        let mut lights: Vec<Ambient> = Vec::new();
 
         if json["ambient"].is_array() {
             for ambient in json["ambient"].as_array().unwrap().iter() {
@@ -373,23 +629,30 @@ impl Parser {
     }
 
     pub fn get_lights_from_json(&self, json: &Value) -> Lights {
-        let objects: Vec::<Box::<dyn Light + Send + Sync>>;
+        let objects: Vec<Box<dyn Light + Send + Sync>>;
 
-        if json["objects"].is_object() { objects = self.get_object_lights_from_json(&json["objects"]);}
-        else { objects = Vec::new()}
+        if json["objects"].is_object() {
+            objects = self.get_object_lights_from_json(&json["objects"]);
+        } else {
+            objects = Vec::new()
+        }
         Lights {
             lights: objects,
             ambient: self.get_ambients_from_json(&json),
         }
     }
 
-    fn move_primitives(&self, primitives: &mut Vec::<Box::<dyn Object + Send + Sync>>, offset: Transform) {
+    fn move_primitives(
+        &self,
+        primitives: &mut Vec<Box<dyn Object + Send + Sync>>,
+        offset: Transform,
+    ) {
         for element in primitives {
             element.move_obj(offset);
         }
     }
 
-    fn move_lights(&self, lights: &mut Vec::<Box::<dyn Light + Send + Sync>>, offset: Transform) {
+    fn move_lights(&self, lights: &mut Vec<Box<dyn Light + Send + Sync>>, offset: Transform) {
         for element in lights {
             element.move_obj(offset);
         }
@@ -406,16 +669,36 @@ impl Parser {
             self.move_lights(&mut lights, offset);
             renderer.lights.lights.extend(lights);
         }
-        renderer.lights.ambient.extend(if json["lights"]["ambiant"].is_object() {self.get_ambients_from_json(&json["lights"]["ambiant"])} else {Vec::new()});
+        renderer
+            .lights
+            .ambient
+            .extend(if json["lights"]["ambiant"].is_object() {
+                self.get_ambients_from_json(&json["lights"]["ambiant"])
+            } else {
+                Vec::new()
+            });
     }
 
-    fn get_scenes_from_json(&self, renderer: &mut Renderer, json: &Value, path_taken: &mut Vec<String>) {
+    fn get_scenes_from_json(
+        &self,
+        renderer: &mut Renderer,
+        json: &Value,
+        path_taken: &mut Vec<String>,
+    ) {
         if json["scenes"].is_array() {
             for scene in json["scenes"].as_array().unwrap().iter() {
                 let filename = scene["file"].as_str().unwrap().to_string();
                 if scene["file"].is_string() && self.get_json(&filename).is_some() {
                     let scene_json = self.get_json(&filename).unwrap();
-                    self.get_scene_from_json(renderer, &scene_json, if scene["transform"].is_object() {self.get_transform_from_json(&scene["transform"])} else {Transform::default()});
+                    self.get_scene_from_json(
+                        renderer,
+                        &scene_json,
+                        if scene["transform"].is_object() {
+                            self.get_transform_from_json(&scene["transform"])
+                        } else {
+                            Transform::default()
+                        },
+                    );
                     if path_taken.contains(&filename) == false {
                         path_taken.push(filename);
                         self.get_scenes_from_json(renderer, &scene_json, path_taken);
@@ -430,10 +713,26 @@ impl Parser {
 
     pub fn get_renderer_from_json(&self, json: &Value, height: i64, width: i64) -> Renderer {
         let mut renderer: Renderer = Renderer {
-            camera: if json["camera"].is_object() {self.get_camera_from_json(&json["camera"], height, width)} else {Camera::default(1920, 1080)},
-            primitives: if json["primitives"].is_array() {self.get_objects_from_json(&json["primitives"])} else {Vec::new()},
-            lights: if json["lights"].is_object() {self.get_lights_from_json(&json["lights"])} else {Lights::default()},
-            skybox: if json["skybox"].is_object() {self.get_texture_from_json(&json["skybox"]["texture"])} else {Texture::default()},
+            camera: if json["camera"].is_object() {
+                self.get_camera_from_json(&json["camera"], height, width)
+            } else {
+                Camera::default(1920, 1080)
+            },
+            primitives: if json["primitives"].is_array() {
+                self.get_objects_from_json(&json["primitives"])
+            } else {
+                Vec::new()
+            },
+            lights: if json["lights"].is_object() {
+                self.get_lights_from_json(&json["lights"])
+            } else {
+                Lights::default()
+            },
+            skybox: if json["skybox"].is_object() {
+                self.get_texture_from_json(&json["skybox"]["texture"])
+            } else {
+                Texture::default()
+            },
         };
         self.get_scenes_from_json(&mut renderer, json, &mut Vec::new());
         renderer

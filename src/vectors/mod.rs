@@ -5,15 +5,14 @@
 // vector
 //
 
-use std::f64::consts::PI;
 use crate::matrix;
 use matrix::Matrix;
-use std::ops::{Add, Mul, Sub, Div};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use std::f64::consts::PI;
+use std::ops::{Add, Div, Mul, Sub};
 
-#[derive(Debug, Clone, Copy)]
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub struct Vector {
     pub x: f64,
     pub y: f64,
@@ -106,12 +105,12 @@ impl Vector {
         self.z = rotated_direction_matrix.data[2][0];
     }
 
-    pub fn get_random_point_in_sphere (radius: f64) -> Vector {
+    pub fn get_random_point_in_sphere(radius: f64) -> Vector {
         let mut rng = rand::thread_rng();
         let theta = rng.gen_range(0.0..PI * 2.0);
         let v: f64 = rng.gen_range(0.0..1.0);
         let phi = ((2.0 * v) - 1.0).acos();
-        let r = (rng.gen_range(0.0..1.0) as f64).powf(1.0/3.0);
+        let r = (rng.gen_range(0.0..1.0) as f64).powf(1.0 / 3.0);
         Vector {
             x: r * phi.sin() * theta.cos() * radius,
             y: r * phi.sin() * theta.sin() * radius,
@@ -127,7 +126,7 @@ impl Vector {
         Vector {
             x: self.y * other.z - self.z * other.y,
             y: self.z * other.x - self.x * other.z,
-            z: self.x * other.y - self.y * other.x
+            z: self.x * other.y - self.y * other.x,
         }
     }
 
@@ -150,7 +149,8 @@ impl Vector {
     }
 
     pub fn distance(&self, other: Vector) -> f64 {
-        ((self.x - other.x).powi(2) + (self.y - other.y).powi(2) + (self.z - other.z).powi(2)).sqrt()
+        ((self.x - other.x).powi(2) + (self.y - other.y).powi(2) + (self.z - other.z).powi(2))
+            .sqrt()
     }
 
     pub fn len2(self) -> f64 {
@@ -161,7 +161,7 @@ impl Vector {
         (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
     }
 
-    pub fn lerp(&mut self, other: &Vector, t:f64) {
+    pub fn lerp(&mut self, other: &Vector, t: f64) {
         self.x = self.x + t * (other.x - self.x);
         self.y = self.y + t * (other.y - self.y);
         self.z = self.z + t * (other.z - self.z);
@@ -177,7 +177,7 @@ pub fn number_of_solution(a: f64, b: f64, c: f64) -> i8 {
         1
     } else {
         2
-    }
+    };
 }
 
 pub fn resolve_quadratic_equation(a: f64, b: f64, c: f64) -> Vec<f64> {

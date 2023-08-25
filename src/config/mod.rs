@@ -5,8 +5,6 @@
 // config
 //
 
-
-
 #[derive(Debug, Clone)]
 pub struct Config {
     pub width: i64,
@@ -53,7 +51,7 @@ impl Config {
                     Some(args[i + 1].clone())
                 } else {
                     None
-                }
+                };
             }
         }
         None

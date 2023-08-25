@@ -6,14 +6,13 @@
 //
 
 use crate::vectors;
-use serde::{Deserialize, Serialize};
 use rand::Rng;
+use serde::{Deserialize, Serialize};
 
 use super::renderer_common::Transform;
 use vectors::Vector;
 
-#[derive(Debug, Clone, Copy)]
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub struct Lens {
     pub height: i64,
     pub width: i64,
@@ -21,27 +20,26 @@ pub struct Lens {
     pub vector_to_first_pixel: Vector,
 }
 
-impl Lens  {
+impl Lens {
     pub fn default(height: i64, width: i64) -> Lens {
         Lens {
             height,
             width,
-            distance : 0.0,
+            distance: 0.0,
             vector_to_first_pixel: Vector {
                 x: 0.0,
                 y: 0.0,
-                z: 0.0
+                z: 0.0,
             },
         }
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub struct Camera {
     pub transform: Transform,
     pub lens: Lens,
-    pub fov : i64,
+    pub fov: i64,
     pub smooth_shadow: bool,
     pub smooth_shadow_step: i16,
     pub diffuse: f64,
@@ -96,9 +94,23 @@ impl Camera {
         let mut rng = rand::thread_rng();
         let mut pixel_vector = self.lens.vector_to_first_pixel.clone();
 
-        pixel_vector = pixel_vector + Vector {x: 1.0, y:0.0, z:0.0} * (x as f64 + rng.gen_range(0.0..1.0) - 0.5);
-        pixel_vector = pixel_vector + Vector {x:0.0, y:0.0, z: -1.0} * (y as f64 + rng.gen_range(0.0..1.0) - 0.5);
-        pixel_vector.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        pixel_vector = pixel_vector
+            + Vector {
+                x: 1.0,
+                y: 0.0,
+                z: 0.0,
+            } * (x as f64 + rng.gen_range(0.0..1.0) - 0.5);
+        pixel_vector = pixel_vector
+            + Vector {
+                x: 0.0,
+                y: 0.0,
+                z: -1.0,
+            } * (y as f64 + rng.gen_range(0.0..1.0) - 0.5);
+        pixel_vector.rotate(
+            self.transform.rotation.x,
+            self.transform.rotation.y,
+            self.transform.rotation.z,
+        );
         pixel_vector.normalize()
     }
 
@@ -106,37 +118,76 @@ impl Camera {
         let mut _rng = rand::thread_rng();
         let mut pixel_vector = self.lens.vector_to_first_pixel.clone();
 
-        pixel_vector = pixel_vector + Vector {x: 1.0, y:0.0, z:0.0} * x;
-        pixel_vector = pixel_vector + Vector {x:0.0, y:0.0, z: -1.0} * y;
-        pixel_vector.rotate(self.transform.rotation.x, self.transform.rotation.y, self.transform.rotation.z);
+        pixel_vector = pixel_vector
+            + Vector {
+                x: 1.0,
+                y: 0.0,
+                z: 0.0,
+            } * x;
+        pixel_vector = pixel_vector
+            + Vector {
+                x: 0.0,
+                y: 0.0,
+                z: -1.0,
+            } * y;
+        pixel_vector.rotate(
+            self.transform.rotation.x,
+            self.transform.rotation.y,
+            self.transform.rotation.z,
+        );
         pixel_vector.normalize()
     }
 
-    pub fn get_pixel_vectors(&self, x: i64, y: i64, n: u64) -> Vec::<Vector> {
-        let mut result : Vec::<Vector> = Vec::new();
+    pub fn get_pixel_vectors(&self, x: i64, y: i64, n: u64) -> Vec<Vector> {
+        let mut result: Vec<Vector> = Vec::new();
 
-        if n <= 1 {result.push(self.get_pixel_vector(x as f64, y as f64))}
-        if n >= 2 && n <= 4 {for _i in 0..n {result.push(self.get_random_pixel_vector(x, y));}}
+        if n <= 1 {
+            result.push(self.get_pixel_vector(x as f64, y as f64))
+        }
+        if n >= 2 && n <= 4 {
+            for _i in 0..n {
+                result.push(self.get_random_pixel_vector(x, y));
+            }
+        }
         if n > 4 {
-            result.push(self.get_pixel_vector(x as f64 - 0.5, y as f64 - 0.5,));
-            result.push(self.get_pixel_vector(x as f64 - 0.5, y as f64 + 0.5,));
-            result.push(self.get_pixel_vector(x as f64 + 0.5, y as f64 - 0.5,));
-            result.push(self.get_pixel_vector(x as f64 + 0.5, y as f64 + 0.5,));
+            result.push(self.get_pixel_vector(x as f64 - 0.5, y as f64 - 0.5));
+            result.push(self.get_pixel_vector(x as f64 - 0.5, y as f64 + 0.5));
+            result.push(self.get_pixel_vector(x as f64 + 0.5, y as f64 - 0.5));
+            result.push(self.get_pixel_vector(x as f64 + 0.5, y as f64 + 0.5));
         }
         result
     }
 
     pub(crate) fn calculate_lens_size(&mut self) {
-        let vector_director = Vector {x: 0.0, y: self.lens.distance, z: 0.0};
+        let vector_director = Vector {
+            x: 0.0,
+            y: self.lens.distance,
+            z: 0.0,
+        };
 
-        self.lens.vector_to_first_pixel = Vector {x: self.transform.pos.x, y: self.transform.pos.y, z: self.transform.pos.z};
-        self.lens.vector_to_first_pixel = self.lens.vector_to_first_pixel + Vector {x:0.0, y:0.0, z:1.0} * (self.lens.height as f64 / 2.0);
+        self.lens.vector_to_first_pixel = Vector {
+            x: self.transform.pos.x,
+            y: self.transform.pos.y,
+            z: self.transform.pos.z,
+        };
+        self.lens.vector_to_first_pixel = self.lens.vector_to_first_pixel
+            + Vector {
+                x: 0.0,
+                y: 0.0,
+                z: 1.0,
+            } * (self.lens.height as f64 / 2.0);
         self.lens.vector_to_first_pixel = self.lens.vector_to_first_pixel + vector_director;
-        self.lens.vector_to_first_pixel = self.lens.vector_to_first_pixel + Vector {x: -1.0, y: 0.0, z: 0.0} * (self.lens.width as f64 / 2.0);
+        self.lens.vector_to_first_pixel = self.lens.vector_to_first_pixel
+            + Vector {
+                x: -1.0,
+                y: 0.0,
+                z: 0.0,
+            } * (self.lens.width as f64 / 2.0);
     }
 
     pub(crate) fn calculate_lens_distance(&mut self) {
-        self.lens.distance = (self.lens.width as f64 / 2.0) / (self.fov as f64 / 2.0).to_radians().tan();
+        self.lens.distance =
+            (self.lens.width as f64 / 2.0) / (self.fov as f64 / 2.0).to_radians().tan();
     }
 
     pub fn aces_curve(self, val: f64) -> f64 {
@@ -147,7 +198,7 @@ impl Camera {
             let d = 0.59;
             let e = 0.14;
 
-            ((val * (a * val + b))/(val * (c * val + d) + e)).clamp(0.0, 1.0)
+            ((val * (a * val + b)) / (val * (c * val + d) + e)).clamp(0.0, 1.0)
         } else {
             val.clamp(0.0, 1.0)
         }

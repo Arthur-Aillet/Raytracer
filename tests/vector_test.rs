@@ -6,9 +6,9 @@
 //
 
 use raytracer::vectors;
-use vectors::Vector;
-use vectors::Segment;
 use vectors::resolve_quadratic_equation;
+use vectors::Segment;
+use vectors::Vector;
 
 #[cfg(test)]
 mod tests {
@@ -89,16 +89,40 @@ mod tests {
 
     #[test]
     fn test_dot_product() {
-        let p1 = Vector { x: 1.0, y: 2.0, z: 3.0 };
-        let p2 = Vector { x: 4.0, y: 5.0, z: 6.0 };
+        let p1 = Vector {
+            x: 1.0,
+            y: 2.0,
+            z: 3.0,
+        };
+        let p2 = Vector {
+            x: 4.0,
+            y: 5.0,
+            z: 6.0,
+        };
         assert_eq!(p1.dot_product(p2), 32.0);
 
-        let p1 = Vector { x: -1.0, y: 0.0, z: 2.0 };
-        let p2 = Vector { x: 3.0, y: 4.0, z: -5.0 };
+        let p1 = Vector {
+            x: -1.0,
+            y: 0.0,
+            z: 2.0,
+        };
+        let p2 = Vector {
+            x: 3.0,
+            y: 4.0,
+            z: -5.0,
+        };
         assert_eq!(p1.dot_product(p2), -13.0);
 
-        let p1 = Vector { x: 1.5, y: 2.5, z: -3.5 };
-        let p2 = Vector { x: 0.5, y: -0.5, z: 1.5 };
+        let p1 = Vector {
+            x: 1.5,
+            y: 2.5,
+            z: -3.5,
+        };
+        let p2 = Vector {
+            x: 0.5,
+            y: -0.5,
+            z: 1.5,
+        };
         assert_eq!(p1.dot_product(p2), -5.75);
     }
 

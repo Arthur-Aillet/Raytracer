@@ -5,19 +5,19 @@
 
 mod layout;
 
-use std::env;
-use nannou::prelude::*;
-use nannou::Frame;
-use nannou::App;
 use nannou::image;
+use nannou::prelude::*;
+use nannou::App;
+use nannou::Frame;
+use std::env;
 
 use crate::config;
-use crate::renderer::Renderer;
 use crate::config::Config;
+use crate::nannou_interface::layout::ComponentType;
 use crate::ppm_interface::PPMInterface;
 use crate::renderer::renderer_common::Transform;
+use crate::renderer::Renderer;
 use crate::vectors::Vector;
-use crate::nannou_interface::layout::ComponentType;
 
 use layout::Layout;
 
@@ -51,21 +51,43 @@ fn model(app: &App) -> Model {
     let window = app
         .new_window()
         .title("Rustracer")
-        .size(config.width as u32 + if config.layout == true { layout.rect.w() as u32 } else { 0 }, config.height as u32)
+        .size(
+            config.width as u32
+                + if config.layout == true {
+                    layout.rect.w() as u32
+                } else {
+                    0
+                },
+            config.height as u32,
+        )
         .view(view)
         .event(event)
         .build()
         .expect("Failed to build the window");
     let last_image = vec![0; (config.height * config.width * 3) as usize];
 
-    config.height = config.height / if config.fast_mode == 0 { 1 } else { config.fast_mode };
-    config.width = config.width / if config.fast_mode == 0 { 1 } else { config.fast_mode };
+    config.height = config.height
+        / if config.fast_mode == 0 {
+            1
+        } else {
+            config.fast_mode
+        };
+    config.width = config.width
+        / if config.fast_mode == 0 {
+            1
+        } else {
+            config.fast_mode
+        };
     Model {
         window,
         draw: app.draw(),
         layout,
         config: config.clone(),
-        base_fast_mode: if config.fast_mode == 0 { 1 } else { config.fast_mode },
+        base_fast_mode: if config.fast_mode == 0 {
+            1
+        } else {
+            config.fast_mode
+        },
         last_image,
         image_nbr: 0,
         img_buf: image_buffer.to_string(),
@@ -108,21 +130,39 @@ fn merge_camera_transform(renderer: &mut Renderer, model: &Model) {
 }
 
 fn merge_interactions_layout(app: &App, model: &mut Model) {
-    if model.layout.get_buttons_interactions(app, "fast".to_string()) == true {
+    if model
+        .layout
+        .get_buttons_interactions(app, "fast".to_string())
+        == true
+    {
         if model.config.fast_mode == 0 {
             fancy_to_fast(model);
         }
     }
-    if model.layout.get_buttons_interactions(app, "fancy".to_string()) == true {
+    if model
+        .layout
+        .get_buttons_interactions(app, "fancy".to_string())
+        == true
+    {
         if model.config.fast_mode > 0 {
             fast_to_fancy(model);
         }
     }
-    if model.layout.get_buttons_interactions(app, "exit".to_string()) == true {
+    if model
+        .layout
+        .get_buttons_interactions(app, "exit".to_string())
+        == true
+    {
         std::process::exit(0);
     }
-    if model.layout.get_sliders_interactions(app, "fov".to_string()) != -1 {
-        model.fov = model.layout.get_sliders_interactions(app, "fov".to_string());
+    if model
+        .layout
+        .get_sliders_interactions(app, "fov".to_string())
+        != -1
+    {
+        model.fov = model
+            .layout
+            .get_sliders_interactions(app, "fov".to_string());
     }
 }
 
@@ -134,7 +174,12 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
         model.image_nbr += 1;
         if model.config.fast_mode == 0 {
             let new_image = render.pull_new_image(&model.config);
-            render.merge_image(&model.config, &mut model.last_image, &new_image, model.image_nbr);
+            render.merge_image(
+                &model.config,
+                &mut model.last_image,
+                &new_image,
+                model.image_nbr,
+            );
         } else {
             model.last_image = render.pull_new_image(&model.config);
         }
@@ -199,9 +244,13 @@ fn event(_app: &App, model: &mut Model, event: WindowEvent) {
                 model.camera_transform.rotation.y += 2.0;
             }
             if key == Key::P {
-                PPMInterface::new(&model.config.save_file).write(model.config.width, model.config.height, model.last_image.clone());
+                PPMInterface::new(&model.config.save_file).write(
+                    model.config.width,
+                    model.config.height,
+                    model.last_image.clone(),
+                );
             }
-        },
+        }
         _ => {}
     }
     merge_interactions_layout(&_app, model);

@@ -5,14 +5,14 @@
 // main
 //
 
-use raytracer::{config};
+use raytracer::config;
 use renderer::Renderer;
 
-mod ppm_interface;
-mod vectors;
 mod matrix;
-mod renderer;
 mod nannou_interface;
+mod ppm_interface;
+mod renderer;
+mod vectors;
 
 use std::env;
 use std::fmt::Error;
@@ -58,10 +58,14 @@ fn main() -> std::io::Result<()> {
         std::process::exit(84);
     }
 
-    if config.graphic == true {
+    if config.graphic {
         nannou_interface::NannouInterface::new(config.width, config.height).run()
     } else {
-        ppm_interface::PPMInterface::new(&config.save_file).write(config.width, config.height, renderer.unwrap().render(&config))
+        ppm_interface::PPMInterface::new(&config.save_file).write(
+            config.width,
+            config.height,
+            renderer.unwrap().render(&config),
+        )
     }
 
     Ok(())
