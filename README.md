@@ -134,6 +134,16 @@ OPTIONS:
 |       fast_mode:      0
 +----------------------------------------------]
 ```
+
+## Test and benchmarks
+
+To test learn more about tests and benchmarks in rust, really basic tests and benchmarks have been added
+
+```
+cargo test
+cargo bench --bench frame -- --quick
+```
+
 ## Authors
 
 - [Axel Denis](https://github.com/axel-denis)
