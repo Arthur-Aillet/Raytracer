@@ -6,7 +6,7 @@ This project is a CPU based Raytracer, takes as input a .json describing a scene
 ### Context
 
 RayTracer is the one of the last project of our second academic year at Epitech.
-We got the task to make a raytracer within 5 weeks and in a team of up to people.
+We got the task to make a raytracer within 5 weeks and in a team of up 4 to people.
 We are proud to say that this project is the Major project at Paris Epitech in 2023.
 For all the members of the project this is the first project made in Rust, so expect lots of non idiomatic patterns. The large number of features has been made possible by an intense crunch that has lead to a limited project structure.
 
